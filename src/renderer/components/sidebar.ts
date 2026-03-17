@@ -1,12 +1,26 @@
 import { appState } from '../state.js';
 import { showModal, setModalError, closeModal } from './modal.js';
+import { showPreferencesModal } from './preferences-modal.js';
 
 const projectListEl = document.getElementById('project-list')!;
 const btnAddProject = document.getElementById('btn-add-project')!;
+const btnPreferences = document.getElementById('btn-preferences')!;
+const sidebarEl = document.getElementById('sidebar')!;
+const resizeHandle = document.getElementById('sidebar-resize-handle')!;
+
+const SIDEBAR_MIN = 150;
+const SIDEBAR_MAX = 500;
 
 export function initSidebar(): void {
   btnAddProject.addEventListener('click', promptNewProject);
-  appState.on('state-loaded', render);
+  btnPreferences.addEventListener('click', showPreferencesModal);
+  initResizeHandle();
+  appState.on('state-loaded', () => {
+    if (appState.sidebarWidth) {
+      sidebarEl.style.width = appState.sidebarWidth + 'px';
+    }
+    render();
+  });
   appState.on('project-added', render);
   appState.on('project-removed', render);
   appState.on('project-changed', render);
@@ -59,6 +73,33 @@ export function promptNewProject(): void {
 
     closeModal();
     appState.addProject(name, path);
+  });
+}
+
+function initResizeHandle(): void {
+  let dragging = false;
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    resizeHandle.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
+    sidebarEl.style.width = width + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizeHandle.classList.remove('active');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    appState.setSidebarWidth(parseInt(sidebarEl.style.width, 10));
   });
 }
 

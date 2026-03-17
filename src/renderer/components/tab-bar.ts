@@ -1,10 +1,19 @@
-import { appState } from '../state.js';
+import { appState, type ProjectRecord, type SessionRecord } from '../state.js';
 import { showModal, closeModal } from './modal.js';
-import { onChange as onStatusChange, getStatus } from '../session-activity.js';
+import { onChange as onStatusChange, getStatus, type SessionStatus } from '../session-activity.js';
 
 const tabListEl = document.getElementById('tab-list')!;
 const btnAddSession = document.getElementById('btn-add-session')!;
 const btnToggleSplit = document.getElementById('btn-toggle-split')!;
+
+let activeContextMenu: HTMLElement | null = null;
+const unreadSessions = new Set<string>();
+const prevStatus = new Map<string, SessionStatus>();
+
+function buildTooltip(status: SessionStatus, claudeSessionId?: string): string {
+  const statusLine = `Status: ${status}`;
+  return claudeSessionId ? `${statusLine}\nSession: ${claudeSessionId}` : statusLine;
+}
 
 export function initTabBar(): void {
   btnAddSession.addEventListener('click', promptNewSession);
@@ -18,13 +27,173 @@ export function initTabBar(): void {
   appState.on('layout-changed', render);
 
   onStatusChange((sessionId, status) => {
+    const prev = prevStatus.get(sessionId);
+    prevStatus.set(sessionId, status);
+
     const dot = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"] .tab-status`) as HTMLElement | null;
     if (dot) {
       dot.className = `tab-status ${status}`;
     }
+    const tab = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"]`) as HTMLElement | null;
+    if (tab) {
+      const session = appState.activeProject?.sessions.find(s => s.id === sessionId);
+      tab.title = buildTooltip(status, session?.claudeSessionId);
+    }
+
+    // Mark as unread if working → waiting and not the active session
+    if (prev === 'working' && status === 'waiting') {
+      const project = appState.activeProject;
+      if (project && sessionId !== project.activeSessionId) {
+        unreadSessions.add(sessionId);
+        const tab = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"]`);
+        if (tab) tab.classList.add('unread');
+      }
+    }
   });
 
+  appState.on('session-changed', () => {
+    const project = appState.activeProject;
+    if (project) {
+      unreadSessions.delete(project.activeSessionId);
+    }
+  });
+
+  document.addEventListener('click', hideTabContextMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTabContextMenu(); });
+
   render();
+}
+
+function startRename(tab: HTMLElement, project: ProjectRecord, session: SessionRecord): void {
+  const nameSpan = tab.querySelector('.tab-name') as HTMLElement;
+  if (nameSpan.querySelector('input')) return;
+
+  const input = document.createElement('input');
+  input.value = session.name;
+  nameSpan.textContent = '';
+  nameSpan.appendChild(input);
+  input.select();
+
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const newName = input.value.trim();
+    if (newName && newName !== session.name) {
+      appState.renameSession(project.id, session.id, newName);
+    } else {
+      nameSpan.textContent = session.name;
+    }
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      nameSpan.textContent = session.name;
+    }
+  });
+
+  input.addEventListener('blur', commit);
+}
+
+function showTabContextMenu(x: number, y: number, project: ProjectRecord, session: SessionRecord, tab: HTMLElement): void {
+  hideTabContextMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'tab-context-menu';
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+
+  const renameItem = document.createElement('div');
+  renameItem.className = 'tab-context-menu-item';
+  renameItem.textContent = 'Rename';
+  renameItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideTabContextMenu();
+    startRename(tab, project, session);
+  });
+
+  const closeItem = document.createElement('div');
+  closeItem.className = 'tab-context-menu-item';
+  closeItem.textContent = 'Close';
+  closeItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideTabContextMenu();
+    appState.removeSession(project.id, session.id);
+  });
+
+  const sessionIdx = project.sessions.findIndex((s) => s.id === session.id);
+  const totalSessions = project.sessions.length;
+
+  const separator = document.createElement('div');
+  separator.className = 'tab-context-menu-separator';
+
+  const closeAllItem = document.createElement('div');
+  closeAllItem.className = 'tab-context-menu-item';
+  closeAllItem.textContent = 'Close All';
+  closeAllItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideTabContextMenu();
+    appState.removeAllSessions(project.id);
+  });
+
+  const closeOthersItem = document.createElement('div');
+  closeOthersItem.className = 'tab-context-menu-item' + (totalSessions <= 1 ? ' disabled' : '');
+  closeOthersItem.textContent = 'Close Others';
+  if (totalSessions > 1) {
+    closeOthersItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideTabContextMenu();
+      appState.removeOtherSessions(project.id, session.id);
+    });
+  }
+
+  const closeRightItem = document.createElement('div');
+  closeRightItem.className = 'tab-context-menu-item' + (sessionIdx >= totalSessions - 1 ? ' disabled' : '');
+  closeRightItem.textContent = 'Close to the Right';
+  if (sessionIdx < totalSessions - 1) {
+    closeRightItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideTabContextMenu();
+      appState.removeSessionsFromRight(project.id, session.id);
+    });
+  }
+
+  const closeLeftItem = document.createElement('div');
+  closeLeftItem.className = 'tab-context-menu-item' + (sessionIdx <= 0 ? ' disabled' : '');
+  closeLeftItem.textContent = 'Close to the Left';
+  if (sessionIdx > 0) {
+    closeLeftItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideTabContextMenu();
+      appState.removeSessionsFromLeft(project.id, session.id);
+    });
+  }
+
+  menu.appendChild(renameItem);
+  menu.appendChild(closeItem);
+  menu.appendChild(separator);
+  menu.appendChild(closeAllItem);
+  menu.appendChild(closeOthersItem);
+  menu.appendChild(closeRightItem);
+  menu.appendChild(closeLeftItem);
+  document.body.appendChild(menu);
+  activeContextMenu = menu;
+
+  // Adjust if menu goes off-screen
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth) menu.style.left = `${window.innerWidth - rect.width - 4}px`;
+  if (rect.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - rect.height - 4}px`;
+}
+
+function hideTabContextMenu(): void {
+  if (activeContextMenu) {
+    activeContextMenu.remove();
+    activeContextMenu = null;
+  }
 }
 
 function render(): void {
@@ -34,14 +203,19 @@ function render(): void {
 
   for (const session of project.sessions) {
     const tab = document.createElement('div');
-    tab.className = 'tab-item' + (session.id === project.activeSessionId ? ' active' : '');
+    const isActive = session.id === project.activeSessionId;
+    if (isActive) unreadSessions.delete(session.id);
+    const isUnread = !isActive && unreadSessions.has(session.id);
+    tab.className = 'tab-item' + (isActive ? ' active' : '') + (isUnread ? ' unread' : '');
     tab.dataset.sessionId = session.id;
+    tab.title = buildTooltip(getStatus(session.id), session.claudeSessionId);
     tab.innerHTML = `
       <span class="tab-status ${getStatus(session.id)}"></span>
       <span class="tab-name">${esc(session.name)}</span>
       <span class="tab-close" title="Close session">&times;</span>
     `;
 
+    // Click to switch
     tab.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).classList.contains('tab-close')) return;
       if (tab.querySelector('.tab-name input')) return;
@@ -50,43 +224,92 @@ function render(): void {
       }
     });
 
-    tab.addEventListener('dblclick', () => {
-      const nameSpan = tab.querySelector('.tab-name') as HTMLElement;
-      if (nameSpan.querySelector('input')) return;
+    // Double-click to rename
+    tab.addEventListener('dblclick', () => startRename(tab, project, session));
 
-      const input = document.createElement('input');
-      input.value = session.name;
-      nameSpan.textContent = '';
-      nameSpan.appendChild(input);
-      input.select();
-
-      let committed = false;
-      const commit = () => {
-        if (committed) return;
-        committed = true;
-        const newName = input.value.trim();
-        if (newName && newName !== session.name) {
-          appState.renameSession(project.id, session.id, newName);
-        } else {
-          nameSpan.textContent = session.name;
-        }
-      };
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          commit();
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          nameSpan.textContent = session.name;
-        }
-      });
-
-      input.addEventListener('blur', commit);
+    // Right-click context menu
+    tab.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showTabContextMenu(e.clientX, e.clientY, project, session, tab);
     });
 
+    // Close button
     tab.querySelector('.tab-close')!.addEventListener('click', () => {
       appState.removeSession(project.id, session.id);
+    });
+
+    // Long-press drag-to-reorder
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+
+    tab.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        tab.draggable = true;
+        // Trigger dragstart by re-dispatching — browsers need draggable set before drag begins.
+        // We add a visual cue so the user knows drag mode is active.
+        tab.classList.add('dragging');
+      }, 300);
+    });
+
+    tab.addEventListener('mouseup', () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    });
+
+    tab.addEventListener('mouseleave', () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    });
+
+    tab.addEventListener('dragstart', (e) => {
+      if (!tab.draggable) { e.preventDefault(); return; }
+      e.dataTransfer!.effectAllowed = 'move';
+      e.dataTransfer!.setData('text/plain', session.id);
+      tab.classList.add('dragging');
+    });
+
+    tab.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'move';
+      // Determine left/right half
+      const rect = tab.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      tab.classList.remove('drag-over-left', 'drag-over-right');
+      if (e.clientX < midX) {
+        tab.classList.add('drag-over-left');
+      } else {
+        tab.classList.add('drag-over-right');
+      }
+    });
+
+    tab.addEventListener('dragleave', () => {
+      tab.classList.remove('drag-over-left', 'drag-over-right');
+    });
+
+    tab.addEventListener('drop', (e) => {
+      e.preventDefault();
+      tab.classList.remove('drag-over-left', 'drag-over-right');
+      const draggedId = e.dataTransfer!.getData('text/plain');
+      if (!draggedId || draggedId === session.id) return;
+
+      const rect = tab.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      let targetIndex = project.sessions.findIndex(s => s.id === session.id);
+      if (e.clientX >= midX) targetIndex++;
+
+      // Adjust for the fact that removing the dragged item shifts indices
+      const fromIndex = project.sessions.findIndex(s => s.id === draggedId);
+      if (fromIndex < targetIndex) targetIndex--;
+
+      appState.reorderSession(project.id, draggedId, targetIndex);
+    });
+
+    tab.addEventListener('dragend', () => {
+      tab.classList.remove('dragging');
+      tab.draggable = false;
+      // Clean up all drag indicators
+      tabListEl.querySelectorAll('.drag-over-left, .drag-over-right').forEach(el => {
+        el.classList.remove('drag-over-left', 'drag-over-right');
+      });
     });
 
     tabListEl.appendChild(tab);

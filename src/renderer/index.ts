@@ -4,8 +4,10 @@ import { initTabBar } from './components/tab-bar.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { initKeybindings } from './keybindings.js';
 import { handlePtyData, handlePtyExit, updateCostDisplay } from './components/terminal-pane.js';
-import { recordActivity, setIdle } from './session-activity.js';
+import { recordActivity, setIdle, setHookStatus } from './session-activity.js';
 import { parseCost, onChange as onCostChange } from './session-cost.js';
+import { initConfigSections } from './components/config-sections.js';
+import { initNotificationSound } from './notification-sound.js';
 
 async function main(): Promise<void> {
   // Wire PTY data/exit events from main process
@@ -19,6 +21,18 @@ async function main(): Promise<void> {
     updateCostDisplay(sessionId, cost);
   });
 
+  window.claudeIde.session.onHookStatus((sessionId, status) => {
+    setHookStatus(sessionId, status);
+  });
+
+  window.claudeIde.session.onClaudeSessionId((sessionId, claudeSessionId) => {
+    // Find the project containing this session and persist the Claude session ID
+    const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
+    if (project) {
+      appState.updateSessionClaudeId(project.id, sessionId, claudeSessionId);
+    }
+  });
+
   window.claudeIde.pty.onExit((sessionId, exitCode) => {
     handlePtyExit(sessionId, exitCode);
     setIdle(sessionId);
@@ -29,6 +43,8 @@ async function main(): Promise<void> {
   initTabBar();
   initSplitLayout();
   initKeybindings();
+  initConfigSections();
+  initNotificationSound();
 
   // Load persisted state
   await appState.load();

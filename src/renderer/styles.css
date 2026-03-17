@@ -38,12 +38,25 @@ html, body {
 /* Sidebar */
 #sidebar {
   width: 200px;
-  min-width: 200px;
+  min-width: 150px;
+  max-width: 500px;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   user-select: none;
+}
+
+#sidebar-resize-handle {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+#sidebar-resize-handle:hover,
+#sidebar-resize-handle.active {
+  background: var(--accent);
 }
 
 #sidebar-header {
@@ -62,9 +75,18 @@ html, body {
   color: var(--text-secondary);
 }
 
-#project-list {
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#sidebar-content {
   flex: 1;
   overflow-y: auto;
+}
+
+#project-list {
   padding: 4px 0;
 }
 
@@ -183,6 +205,10 @@ html, body {
   color: var(--text-primary);
 }
 
+.tab-item.unread .tab-name {
+  color: var(--accent);
+}
+
 .tab-item.active::after {
   content: '';
   position: absolute;
@@ -201,28 +227,22 @@ html, body {
   flex-shrink: 0;
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .tab-status.working {
   background: var(--accent);
-  animation: pulse 1.5s infinite;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .tab-status.waiting {
   background: #f4b400;
-  animation: attention 2s ease-in-out 0s 3;
-}
-
-@keyframes attention {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 180, 0, 0); }
-  50% { box-shadow: 0 0 6px 2px rgba(244, 180, 0, 0.6); }
 }
 
 .tab-status.idle {
   background: var(--text-muted);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
 }
 
 .tab-name input {
@@ -502,4 +522,240 @@ html, body {
 
 .modal-btn.primary:hover {
   background: var(--accent-dim);
+}
+
+/* Config sections */
+#config-sections {
+  border-top: 1px solid var(--border);
+}
+
+.config-section {
+  border-bottom: 1px solid var(--border);
+}
+
+.config-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.config-section-header:hover {
+  background: var(--bg-hover);
+}
+
+.config-section-toggle {
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+
+.config-section-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.config-section-count {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.config-section-body {
+  padding: 0 0 4px;
+}
+
+.config-section-body.hidden {
+  display: none;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.config-item-name {
+  flex-shrink: 0;
+  color: var(--text-primary);
+}
+
+.config-item-detail {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.scope-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.scope-badge.user {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.scope-badge.project {
+  background: rgba(233, 69, 96, 0.15);
+  color: var(--accent);
+}
+
+.config-empty {
+  padding: 4px 12px 4px 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.config-loading {
+  padding: 4px 12px 4px 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Preferences toggle */
+.modal-toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.modal-toggle-field label {
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.modal-toggle-field input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Preferences layout */
+#modal.modal-wide {
+  min-width: 500px;
+  max-width: 580px;
+}
+
+.preferences-layout {
+  display: flex;
+  gap: 0;
+  min-height: 180px;
+}
+
+.preferences-menu {
+  width: 140px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 4px 0;
+}
+
+.preferences-menu-item {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px 0 0 4px;
+}
+
+.preferences-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.preferences-menu-item.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.preferences-content {
+  flex: 1;
+  padding: 4px 16px;
+  min-width: 0;
+}
+
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.about-app-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.about-version {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Tab context menu */
+.tab-context-menu {
+  position: fixed;
+  z-index: 200;
+  min-width: 140px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.tab-context-menu-item {
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.tab-context-menu-item:hover:not(.disabled) {
+  background: var(--bg-hover);
+}
+
+.tab-context-menu-item.disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.tab-context-menu-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* Tab drag reorder */
+.tab-item.dragging {
+  opacity: 0.4;
+}
+
+.tab-item.drag-over-left {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.tab-item.drag-over-right {
+  box-shadow: inset -3px 0 0 var(--accent);
 }

@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain, BrowserWindow, app } from 'electron';
 import * as fs from 'fs';
 import { spawnPty, writePty, resizePty, killPty } from './pty-manager';
 import { loadState, saveState, PersistedState } from './store';
@@ -70,4 +70,6 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('claude:getConfig', async (_event, projectPath: string) => {
     return getClaudeConfig(projectPath);
   });
+
+  ipcMain.handle('app:getVersion', () => app.getVersion());
 }

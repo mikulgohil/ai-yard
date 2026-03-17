@@ -9,12 +9,22 @@ export interface ClaudeIdeApi {
     onData(callback: (sessionId: string, data: string) => void): () => void;
     onExit(callback: (sessionId: string, exitCode: number, signal?: number) => void): () => void;
   };
+  session: {
+    onHookStatus(callback: (sessionId: string, status: 'working' | 'waiting') => void): () => void;
+    onClaudeSessionId(callback: (sessionId: string, claudeSessionId: string) => void): () => void;
+  };
   fs: {
     isDirectory(path: string): Promise<boolean>;
   };
   store: {
     load(): Promise<unknown>;
     save(state: unknown): Promise<void>;
+  };
+  claude: {
+    getConfig(projectPath: string): Promise<unknown>;
+  };
+  app: {
+    getVersion(): Promise<string>;
   };
   menu: {
     onNewProject(callback: () => void): () => void;
@@ -48,12 +58,26 @@ const api: ClaudeIdeApi = {
       onChannel('pty:exit', (sessionId, exitCode, signal) =>
         callback(sessionId as string, exitCode as number, signal as number | undefined)),
   },
+  session: {
+    onHookStatus: (callback) =>
+      onChannel('session:hookStatus', (sessionId, status) =>
+        callback(sessionId as string, status as 'working' | 'waiting')),
+    onClaudeSessionId: (callback) =>
+      onChannel('session:claudeSessionId', (sessionId, claudeSessionId) =>
+        callback(sessionId as string, claudeSessionId as string)),
+  },
   fs: {
     isDirectory: (path) => ipcRenderer.invoke('fs:isDirectory', path),
+  },
+  claude: {
+    getConfig: (projectPath) => ipcRenderer.invoke('claude:getConfig', projectPath),
   },
   store: {
     load: () => ipcRenderer.invoke('store:load'),
     save: (state) => ipcRenderer.invoke('store:save', state),
+  },
+  app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion'),
   },
   menu: {
     onNewProject: (cb) => onChannel('menu:new-project', cb),

@@ -26,10 +26,16 @@ export interface ProjectRecord {
   };
 }
 
+export interface Preferences {
+  soundOnSessionWaiting: boolean;
+}
+
 export interface PersistedState {
   version: 1;
   projects: ProjectRecord[];
   activeProjectId: string | null;
+  preferences: Preferences;
+  sidebarWidth?: number;
 }
 
 type EventType =
@@ -40,12 +46,15 @@ type EventType =
   | 'session-removed'
   | 'session-changed'
   | 'layout-changed'
+  | 'preferences-changed'
   | 'state-loaded';
 
 type EventCallback = (data?: unknown) => void;
 
+const defaultPreferences: Preferences = { soundOnSessionWaiting: false };
+
 class AppState {
-  private state: PersistedState = { version: 1, projects: [], activeProjectId: null };
+  private state: PersistedState = { version: 1, projects: [], activeProjectId: null, preferences: { ...defaultPreferences } };
   private listeners = new Map<EventType, Set<EventCallback>>();
 
   on(event: EventType, cb: EventCallback): () => void {
@@ -64,6 +73,8 @@ class AppState {
     const loaded = (await window.claudeIde.store.load()) as PersistedState | null;
     if (loaded && loaded.version === 1) {
       this.state = loaded;
+      // Merge defaults for forward compatibility with old state files
+      this.state.preferences = { ...defaultPreferences, ...this.state.preferences };
     }
     this.emit('state-loaded');
   }
@@ -88,6 +99,25 @@ class AppState {
     const project = this.activeProject;
     if (!project) return undefined;
     return project.sessions.find((s) => s.id === project.activeSessionId);
+  }
+
+  get sidebarWidth(): number | undefined {
+    return this.state.sidebarWidth;
+  }
+
+  setSidebarWidth(width: number): void {
+    this.state.sidebarWidth = width;
+    this.persist();
+  }
+
+  get preferences(): Preferences {
+    return this.state.preferences;
+  }
+
+  setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]): void {
+    this.state.preferences[key] = value;
+    this.persist();
+    this.emit('preferences-changed');
   }
 
   setActiveProject(id: string | null): void {
@@ -171,6 +201,7 @@ class AppState {
     if (!session) return;
     session.claudeSessionId = claudeSessionId;
     this.persist();
+    this.emit('session-changed');
   }
 
   renameSession(projectId: string, sessionId: string, name: string): void {
@@ -222,6 +253,49 @@ class AppState {
     const project = this.activeProject;
     if (!project || index >= project.sessions.length) return;
     project.activeSessionId = project.sessions[index].id;
+    this.persist();
+    this.emit('session-changed');
+  }
+
+  removeAllSessions(projectId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const ids = project.sessions.map((s) => s.id);
+    for (const id of ids) this.removeSession(projectId, id);
+  }
+
+  removeSessionsFromRight(projectId: string, sessionId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const idx = project.sessions.findIndex((s) => s.id === sessionId);
+    if (idx === -1) return;
+    const ids = project.sessions.slice(idx + 1).map((s) => s.id);
+    for (const id of ids) this.removeSession(projectId, id);
+  }
+
+  removeSessionsFromLeft(projectId: string, sessionId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const idx = project.sessions.findIndex((s) => s.id === sessionId);
+    if (idx === -1) return;
+    const ids = project.sessions.slice(0, idx).map((s) => s.id);
+    for (const id of ids) this.removeSession(projectId, id);
+  }
+
+  removeOtherSessions(projectId: string, sessionId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const ids = project.sessions.filter((s) => s.id !== sessionId).map((s) => s.id);
+    for (const id of ids) this.removeSession(projectId, id);
+  }
+
+  reorderSession(projectId: string, sessionId: string, toIndex: number): void {
+    const project = this.state.projects.find(p => p.id === projectId);
+    if (!project) return;
+    const fromIndex = project.sessions.findIndex(s => s.id === sessionId);
+    if (fromIndex === -1 || fromIndex === toIndex) return;
+    const [session] = project.sessions.splice(fromIndex, 1);
+    project.sessions.splice(toIndex, 0, session);
     this.persist();
     this.emit('session-changed');
   }

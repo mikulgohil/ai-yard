@@ -1,15 +1,13 @@
 export type SessionStatus = 'working' | 'waiting' | 'idle';
 
-const IDLE_TIMEOUT_MS = 1500;
-const WORKING_CONFIRM_MS = 150;
+const IDLE_TIMEOUT_MS = 5000;
 
 type StatusChangeCallback = (sessionId: string, status: SessionStatus) => void;
 
 interface SessionState {
   status: SessionStatus;
   idleTimer: ReturnType<typeof setTimeout> | null;
-  confirmTimer: ReturnType<typeof setTimeout> | null;
-  dataBytes: number;
+  hookActive: boolean; // true once the first hook event has been received
 }
 
 const sessions = new Map<string, SessionState>();
@@ -22,38 +20,44 @@ function setStatus(sessionId: string, status: SessionStatus): void {
   for (const cb of listeners) cb(sessionId, status);
 }
 
-export function recordActivity(sessionId: string, byteCount: number): void {
+/**
+ * Called when a hook-based status event is received from the main process.
+ * This is the authoritative source for working/waiting transitions.
+ */
+export function setHookStatus(sessionId: string, status: 'working' | 'waiting'): void {
   const state = sessions.get(sessionId);
   if (!state) return;
 
-  // Reset idle timeout
+  state.hookActive = true;
+
+  // Reset idle timer on any hook event
+  if (state.idleTimer !== null) clearTimeout(state.idleTimer);
+  state.idleTimer = null;
+
+  setStatus(sessionId, status);
+}
+
+export function recordActivity(sessionId: string, _byteCount: number): void {
+  const state = sessions.get(sessionId);
+  if (!state) return;
+
+  // PTY data is flowing — mark as working (fallback for missed hook events)
+  if (state.status !== 'working') {
+    setStatus(sessionId, 'working');
+  }
+
+  // Reset idle timeout — if no PTY data for a while, session may be dead
   if (state.idleTimer !== null) clearTimeout(state.idleTimer);
   state.idleTimer = setTimeout(() => {
     state.idleTimer = null;
-    state.dataBytes = 0;
-    setStatus(sessionId, 'waiting');
+    if (!state.hookActive) {
+      setStatus(sessionId, 'waiting');
+    }
   }, IDLE_TIMEOUT_MS);
-
-  // Already working — just keep resetting idle timer
-  if (state.status === 'working') return;
-
-  // Waiting/idle → need to confirm it's real activity, not a resize echo.
-  // Accumulate bytes and require a threshold before flipping to working.
-  state.dataBytes += byteCount;
-
-  if (state.confirmTimer === null) {
-    state.confirmTimer = setTimeout(() => {
-      state.confirmTimer = null;
-      if (state.dataBytes > 80) {
-        setStatus(sessionId, 'working');
-      }
-      state.dataBytes = 0;
-    }, WORKING_CONFIRM_MS);
-  }
 }
 
 export function initSession(sessionId: string): void {
-  sessions.set(sessionId, { status: 'working', idleTimer: null, confirmTimer: null, dataBytes: 0 });
+  sessions.set(sessionId, { status: 'working', idleTimer: null, hookActive: false });
   for (const cb of listeners) cb(sessionId, 'working');
 }
 
@@ -61,10 +65,7 @@ export function setIdle(sessionId: string): void {
   const state = sessions.get(sessionId);
   if (!state) return;
   if (state.idleTimer !== null) clearTimeout(state.idleTimer);
-  if (state.confirmTimer !== null) clearTimeout(state.confirmTimer);
   state.idleTimer = null;
-  state.confirmTimer = null;
-  state.dataBytes = 0;
   setStatus(sessionId, 'idle');
 }
 
@@ -72,7 +73,6 @@ export function removeSession(sessionId: string): void {
   const state = sessions.get(sessionId);
   if (!state) return;
   if (state.idleTimer !== null) clearTimeout(state.idleTimer);
-  if (state.confirmTimer !== null) clearTimeout(state.confirmTimer);
   sessions.delete(sessionId);
 }
 
