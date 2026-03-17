@@ -215,13 +215,15 @@ export function installHooks(): void {
 
   // Hook to capture Claude's session ID from the hook input JSON (stdin)
   const captureSessionIdCmd =
-    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\"session_id\",\"\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p /tmp/claude-ide && echo "$sid" > /tmp/claude-ide/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
+    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\\"session_id\\",\\"\\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p /tmp/claude-ide && echo "$sid" > /tmp/claude-ide/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
 
   // Add our hooks for each event type
   const ideEvents: Record<string, string> = {
+    SessionStart: 'waiting',
     UserPromptSubmit: 'working',
     Stop: 'waiting',
     Notification: 'waiting',
+    TaskCompleted: 'completed',
   };
 
   for (const [event, status] of Object.entries(ideEvents)) {

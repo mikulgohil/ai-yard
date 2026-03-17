@@ -8,7 +8,7 @@ import { startWatching, cleanupSessionStatus } from './hook-status';
 let hookWatcherStarted = false;
 
 export function registerIpcHandlers(): void {
-  ipcMain.handle('pty:create', (_event, sessionId: string, cwd: string, claudeSessionId: string | null, isResume: boolean) => {
+  ipcMain.handle('pty:create', (_event, sessionId: string, cwd: string, claudeSessionId: string | null, isResume: boolean, extraArgs: string) => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return;
 
@@ -23,6 +23,7 @@ export function registerIpcHandlers(): void {
       cwd,
       claudeSessionId,
       isResume,
+      extraArgs,
       (data) => {
         const w = BrowserWindow.getAllWindows()[0];
         if (w && !w.isDestroyed()) {

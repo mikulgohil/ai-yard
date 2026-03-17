@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 export interface ClaudeIdeApi {
   pty: {
-    create(sessionId: string, cwd: string, claudeSessionId: string | null, isResume: boolean): Promise<void>;
+    create(sessionId: string, cwd: string, claudeSessionId: string | null, isResume: boolean, extraArgs?: string): Promise<void>;
     write(sessionId: string, data: string): void;
     resize(sessionId: string, cols: number, rows: number): void;
     kill(sessionId: string): Promise<void>;
@@ -10,7 +10,7 @@ export interface ClaudeIdeApi {
     onExit(callback: (sessionId: string, exitCode: number, signal?: number) => void): () => void;
   };
   session: {
-    onHookStatus(callback: (sessionId: string, status: 'working' | 'waiting') => void): () => void;
+    onHookStatus(callback: (sessionId: string, status: 'working' | 'waiting' | 'completed') => void): () => void;
     onClaudeSessionId(callback: (sessionId: string, claudeSessionId: string) => void): () => void;
   };
   fs: {
@@ -44,8 +44,8 @@ function onChannel(channel: string, callback: (...args: unknown[]) => void): () 
 
 const api: ClaudeIdeApi = {
   pty: {
-    create: (sessionId, cwd, claudeSessionId, isResume) =>
-      ipcRenderer.invoke('pty:create', sessionId, cwd, claudeSessionId, isResume),
+    create: (sessionId, cwd, claudeSessionId, isResume, extraArgs) =>
+      ipcRenderer.invoke('pty:create', sessionId, cwd, claudeSessionId, isResume, extraArgs || ''),
     write: (sessionId, data) =>
       ipcRenderer.send('pty:write', sessionId, data),
     resize: (sessionId, cols, rows) =>
@@ -61,7 +61,7 @@ const api: ClaudeIdeApi = {
   session: {
     onHookStatus: (callback) =>
       onChannel('session:hookStatus', (sessionId, status) =>
-        callback(sessionId as string, status as 'working' | 'waiting')),
+        callback(sessionId as string, status as 'working' | 'waiting' | 'completed')),
     onClaudeSessionId: (callback) =>
       onChannel('session:claudeSessionId', (sessionId, claudeSessionId) =>
         callback(sessionId as string, claudeSessionId as string)),

@@ -241,6 +241,10 @@ html, body {
   background: #f4b400;
 }
 
+.tab-status.completed {
+  background: #34a853;
+}
+
 .tab-status.idle {
   background: var(--text-muted);
 }

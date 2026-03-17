@@ -9,6 +9,7 @@ declare global {
 export interface SessionRecord {
   id: string;
   name: string;
+  args?: string;
   claudeSessionId: string | null;
   createdAt: string;
 }
@@ -153,13 +154,14 @@ class AppState {
     this.emit('project-changed');
   }
 
-  addSession(projectId: string, name: string): SessionRecord | undefined {
+  addSession(projectId: string, name: string, args?: string): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
 
     const session: SessionRecord = {
       id: crypto.randomUUID(),
       name,
+      ...(args ? { args } : {}),
       claudeSessionId: null,
       createdAt: new Date().toISOString(),
     };

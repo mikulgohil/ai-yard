@@ -12,6 +12,7 @@ export function spawnPty(
   cwd: string,
   claudeSessionId: string | null,
   isResume: boolean,
+  extraArgs: string,
   onData: (data: string) => void,
   onExit: (exitCode: number, signal?: number) => void
 ): void {
@@ -30,6 +31,10 @@ export function spawnPty(
     } else {
       args.push('--session-id', claudeSessionId);
     }
+  }
+
+  if (extraArgs) {
+    args.push(...extraArgs.split(/\s+/).filter(Boolean));
   }
 
   const shell = 'claude';

@@ -11,6 +11,7 @@ interface TerminalInstance {
   sessionId: string;
   projectPath: string;
   claudeSessionId: string | null;
+  args: string;
   isResume: boolean;
   spawned: boolean;
   exited: boolean;
@@ -23,7 +24,8 @@ export function createTerminalPane(
   sessionId: string,
   projectPath: string,
   claudeSessionId: string | null,
-  isResume: boolean = false
+  isResume: boolean = false,
+  args: string = ''
 ): TerminalInstance {
   if (instances.has(sessionId)) {
     return instances.get(sessionId)!;
@@ -72,6 +74,7 @@ export function createTerminalPane(
     sessionId,
     projectPath,
     claudeSessionId,
+    args,
     isResume,
     spawned: false,
     exited: false,
@@ -117,7 +120,7 @@ export async function spawnTerminal(sessionId: string): Promise<void> {
   if (overlay) overlay.remove();
 
   initSession(sessionId);
-  await window.claudeIde.pty.create(sessionId, instance.projectPath, instance.claudeSessionId, instance.isResume);
+  await window.claudeIde.pty.create(sessionId, instance.projectPath, instance.claudeSessionId, instance.isResume, instance.args);
   instance.isResume = true; // subsequent spawns (e.g. Restart Session) should resume
 }
 

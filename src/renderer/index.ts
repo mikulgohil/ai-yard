@@ -4,7 +4,7 @@ import { initTabBar } from './components/tab-bar.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { initKeybindings } from './keybindings.js';
 import { handlePtyData, handlePtyExit, updateCostDisplay } from './components/terminal-pane.js';
-import { recordActivity, setIdle, setHookStatus } from './session-activity.js';
+import { setIdle, setHookStatus } from './session-activity.js';
 import { parseCost, onChange as onCostChange } from './session-cost.js';
 import { initConfigSections } from './components/config-sections.js';
 import { initNotificationSound } from './notification-sound.js';
@@ -13,7 +13,6 @@ async function main(): Promise<void> {
   // Wire PTY data/exit events from main process
   window.claudeIde.pty.onData((sessionId, data) => {
     handlePtyData(sessionId, data);
-    recordActivity(sessionId, data.length);
     parseCost(sessionId, data);
   });
 

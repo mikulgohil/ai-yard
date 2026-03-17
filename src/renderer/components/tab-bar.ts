@@ -22,7 +22,14 @@ export function initTabBar(): void {
   appState.on('state-loaded', render);
   appState.on('project-changed', render);
   appState.on('session-added', render);
-  appState.on('session-removed', render);
+  appState.on('session-removed', (data?: unknown) => {
+    const d = data as { sessionId?: string } | undefined;
+    if (d?.sessionId) {
+      prevStatus.delete(d.sessionId);
+      unreadSessions.delete(d.sessionId);
+    }
+    render();
+  });
   appState.on('session-changed', render);
   appState.on('layout-changed', render);
 
@@ -40,8 +47,8 @@ export function initTabBar(): void {
       tab.title = buildTooltip(status, session?.claudeSessionId);
     }
 
-    // Mark as unread if working → waiting and not the active session
-    if (prev === 'working' && status === 'waiting') {
+    // Mark as unread if working → waiting/completed and not the active session
+    if (prev === 'working' && (status === 'waiting' || status === 'completed')) {
       const project = appState.activeProject;
       if (project && sessionId !== project.activeSessionId) {
         unreadSessions.add(sessionId);
@@ -326,11 +333,13 @@ export function promptNewSession(): void {
   const sessionNum = project.sessions.length + 1;
   showModal('New Session', [
     { label: 'Name', id: 'session-name', placeholder: `Session ${sessionNum}`, defaultValue: `Session ${sessionNum}` },
+    { label: 'Arguments', id: 'session-args', placeholder: 'e.g. --model sonnet' },
   ], (values) => {
     const name = values['session-name']?.trim();
     if (name) {
       closeModal();
-      appState.addSession(project.id, name);
+      const args = values['session-args']?.trim() || undefined;
+      appState.addSession(project.id, name, args);
     }
   });
 }

@@ -1,13 +1,12 @@
-export type SessionStatus = 'working' | 'waiting' | 'idle';
+export type SessionStatus = 'working' | 'waiting' | 'idle' | 'completed';
 
-const IDLE_TIMEOUT_MS = 5000;
+const STALENESS_TIMEOUT_MS = 120_000;
 
 type StatusChangeCallback = (sessionId: string, status: SessionStatus) => void;
 
 interface SessionState {
   status: SessionStatus;
-  idleTimer: ReturnType<typeof setTimeout> | null;
-  hookActive: boolean; // true once the first hook event has been received
+  stalenessTimer: ReturnType<typeof setTimeout> | null;
 }
 
 const sessions = new Map<string, SessionState>();
@@ -22,57 +21,41 @@ function setStatus(sessionId: string, status: SessionStatus): void {
 
 /**
  * Called when a hook-based status event is received from the main process.
- * This is the authoritative source for working/waiting transitions.
  */
-export function setHookStatus(sessionId: string, status: 'working' | 'waiting'): void {
-  const state = sessions.get(sessionId);
-  if (!state) return;
+export function setHookStatus(sessionId: string, status: 'working' | 'waiting' | 'completed'): void {
+  let state = sessions.get(sessionId);
+  if (!state) { initSession(sessionId); state = sessions.get(sessionId)!; }
 
-  state.hookActive = true;
-
-  // Reset idle timer on any hook event
-  if (state.idleTimer !== null) clearTimeout(state.idleTimer);
-  state.idleTimer = null;
+  if (state.stalenessTimer !== null) clearTimeout(state.stalenessTimer);
+  state.stalenessTimer = null;
 
   setStatus(sessionId, status);
-}
 
-export function recordActivity(sessionId: string, _byteCount: number): void {
-  const state = sessions.get(sessionId);
-  if (!state) return;
-
-  // PTY data is flowing — mark as working (fallback for missed hook events)
-  if (state.status !== 'working') {
-    setStatus(sessionId, 'working');
-  }
-
-  // Reset idle timeout — if no PTY data for a while, session may be dead
-  if (state.idleTimer !== null) clearTimeout(state.idleTimer);
-  state.idleTimer = setTimeout(() => {
-    state.idleTimer = null;
-    if (!state.hookActive) {
+  if (status === 'working') {
+    state.stalenessTimer = setTimeout(() => {
+      state.stalenessTimer = null;
       setStatus(sessionId, 'waiting');
-    }
-  }, IDLE_TIMEOUT_MS);
+    }, STALENESS_TIMEOUT_MS);
+  }
 }
 
 export function initSession(sessionId: string): void {
-  sessions.set(sessionId, { status: 'working', idleTimer: null, hookActive: false });
+  sessions.set(sessionId, { status: 'working', stalenessTimer: null });
   for (const cb of listeners) cb(sessionId, 'working');
 }
 
 export function setIdle(sessionId: string): void {
   const state = sessions.get(sessionId);
   if (!state) return;
-  if (state.idleTimer !== null) clearTimeout(state.idleTimer);
-  state.idleTimer = null;
+  if (state.stalenessTimer !== null) clearTimeout(state.stalenessTimer);
+  state.stalenessTimer = null;
   setStatus(sessionId, 'idle');
 }
 
 export function removeSession(sessionId: string): void {
   const state = sessions.get(sessionId);
   if (!state) return;
-  if (state.idleTimer !== null) clearTimeout(state.idleTimer);
+  if (state.stalenessTimer !== null) clearTimeout(state.stalenessTimer);
   sessions.delete(sessionId);
 }
 
