@@ -15,7 +15,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 800,
     minHeight: 500,
-    title: 'Claude IDE',
+    title: 'CCide',
     backgroundColor: '#1a1a2e',
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),

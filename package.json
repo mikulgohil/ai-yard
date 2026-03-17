@@ -1,5 +1,5 @@
 {
-  "name": "claude-ide",
+  "name": "ccide",
   "version": "0.1.0",
   "description": "Terminal-centric IDE built on Claude Code",
   "main": "dist/main/main.js",

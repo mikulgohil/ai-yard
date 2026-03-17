@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { BrowserWindow } from 'electron';
 
-const STATUS_DIR = '/tmp/claude-ide';
+const STATUS_DIR = '/tmp/ccide';
 
 let watcher: fs.FSWatcher | null = null;
 

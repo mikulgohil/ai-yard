@@ -81,7 +81,7 @@ export function showPreferencesModal(): void {
 
       const appName = document.createElement('div');
       appName.className = 'about-app-name';
-      appName.textContent = 'Claude IDE';
+      appName.textContent = 'CCide';
 
       const versionLine = document.createElement('div');
       versionLine.className = 'about-version';

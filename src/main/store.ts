@@ -33,7 +33,7 @@ export interface PersistedState {
   preferences: Preferences;
 }
 
-const STATE_DIR = path.join(os.homedir(), '.claude-ide');
+const STATE_DIR = path.join(os.homedir(), '.ccide');
 const STATE_FILE = path.join(STATE_DIR, 'state.json');
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;

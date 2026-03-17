@@ -163,7 +163,7 @@ function getEnabledPlugins(): Set<string> {
   return new Set(Object.entries(enabled).filter(([, v]) => v).map(([k]) => k));
 }
 
-const HOOK_MARKER = '# claude-ide-hook';
+const HOOK_MARKER = '# ccide-hook';
 
 interface HookHandler {
   type: string;
@@ -196,7 +196,7 @@ export function installHooks(): void {
 
   const existingHooks: HooksConfig = (settings.hooks ?? {}) as HooksConfig;
 
-  // Remove any previously-installed claude-ide hooks from all event types
+  // Remove any previously-installed ccide hooks from all event types
   const cleaned: HooksConfig = {};
   for (const [event, matchers] of Object.entries(existingHooks)) {
     const filteredMatchers = matchers
@@ -211,11 +211,11 @@ export function installHooks(): void {
   }
 
   const statusCmd = (status: string) =>
-    `sh -c 'mkdir -p /tmp/claude-ide && echo ${status} > /tmp/claude-ide/$CLAUDE_IDE_SESSION_ID.status ${HOOK_MARKER}'`;
+    `sh -c 'mkdir -p /tmp/ccide && echo ${status} > /tmp/ccide/$CLAUDE_IDE_SESSION_ID.status ${HOOK_MARKER}'`;
 
   // Hook to capture Claude's session ID from the hook input JSON (stdin)
   const captureSessionIdCmd =
-    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\\"session_id\\",\\"\\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p /tmp/claude-ide && echo "$sid" > /tmp/claude-ide/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
+    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\\"session_id\\",\\"\\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p /tmp/ccide && echo "$sid" > /tmp/ccide/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
 
   // Add our hooks for each event type
   const ideEvents: Record<string, string> = {
