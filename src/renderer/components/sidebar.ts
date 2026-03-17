@@ -67,7 +67,19 @@ function render(): void {
 export function promptNewProject(): void {
   showModal('New Project', [
     { label: 'Name', id: 'project-name', placeholder: 'My Project' },
-    { label: 'Path', id: 'project-path', placeholder: '/path/to/project' },
+    {
+      label: 'Path', id: 'project-path', placeholder: '/path/to/project',
+      buttonLabel: 'Browse',
+      onButtonClick: async (input) => {
+        const dir = await window.claudeIde.fs.browseDirectory();
+        if (!dir) return;
+        input.value = dir;
+        const nameInput = document.getElementById('modal-project-name') as HTMLInputElement | null;
+        if (nameInput && !nameInput.value.trim()) {
+          nameInput.value = dir.split('/').pop() || '';
+        }
+      },
+    },
   ], async (values) => {
     const name = values['project-name']?.trim();
     const path = values['project-path']?.trim();

@@ -3,6 +3,8 @@ interface FieldDef {
   id: string;
   placeholder?: string;
   defaultValue?: string;
+  buttonLabel?: string;
+  onButtonClick?: (input: HTMLInputElement) => void;
 }
 
 const overlay = document.getElementById('modal-overlay')!;
@@ -43,10 +45,33 @@ export function showModal(
   for (const field of fields) {
     const div = document.createElement('div');
     div.className = 'modal-field';
-    div.innerHTML = `
-      <label for="modal-${field.id}">${field.label}</label>
-      <input type="text" id="modal-${field.id}" placeholder="${field.placeholder ?? ''}" value="${field.defaultValue ?? ''}">
-    `;
+
+    const label = document.createElement('label');
+    label.setAttribute('for', `modal-${field.id}`);
+    label.textContent = field.label;
+    div.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = `modal-${field.id}`;
+    input.placeholder = field.placeholder ?? '';
+    input.value = field.defaultValue ?? '';
+
+    if (field.buttonLabel && field.onButtonClick) {
+      const row = document.createElement('div');
+      row.className = 'modal-field-row';
+      row.appendChild(input);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'modal-field-btn';
+      btn.textContent = field.buttonLabel;
+      btn.addEventListener('click', () => field.onButtonClick!(input));
+      row.appendChild(btn);
+      div.appendChild(row);
+    } else {
+      div.appendChild(input);
+    }
+
     bodyEl.appendChild(div);
   }
 

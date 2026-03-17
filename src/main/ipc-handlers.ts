@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, app } from 'electron';
+import { ipcMain, BrowserWindow, app, dialog } from 'electron';
 import * as fs from 'fs';
 import { spawnPty, spawnShellPty, writePty, resizePty, killPty } from './pty-manager';
 import { loadState, saveState, PersistedState } from './store';
@@ -93,6 +93,14 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('claude:getConfig', async (_event, projectPath: string) => {
     return getClaudeConfig(projectPath);
+  });
+
+  ipcMain.handle('fs:browseDirectory', async () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) return null;
+    const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
   });
 
   ipcMain.handle('app:getVersion', () => app.getVersion());

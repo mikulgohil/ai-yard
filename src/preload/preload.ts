@@ -32,6 +32,7 @@ export interface ClaudeIdeApi {
   };
   fs: {
     isDirectory(path: string): Promise<boolean>;
+    browseDirectory(): Promise<string | null>;
   };
   store: {
     load(): Promise<unknown>;
@@ -93,6 +94,7 @@ const api: ClaudeIdeApi = {
   },
   fs: {
     isDirectory: (path) => ipcRenderer.invoke('fs:isDirectory', path),
+    browseDirectory: () => ipcRenderer.invoke('fs:browseDirectory'),
   },
   claude: {
     getConfig: (projectPath) => ipcRenderer.invoke('claude:getConfig', projectPath),

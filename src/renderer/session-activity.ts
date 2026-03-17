@@ -40,8 +40,8 @@ export function setHookStatus(sessionId: string, status: 'working' | 'waiting' |
 }
 
 export function initSession(sessionId: string): void {
-  sessions.set(sessionId, { status: 'working', stalenessTimer: null });
-  for (const cb of listeners) cb(sessionId, 'working');
+  sessions.set(sessionId, { status: 'waiting', stalenessTimer: null });
+  for (const cb of listeners) cb(sessionId, 'waiting');
 }
 
 export function setIdle(sessionId: string): void {
