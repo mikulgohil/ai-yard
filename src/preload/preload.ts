@@ -26,7 +26,7 @@ export interface ClaudeIdeApi {
     onExit(callback: (sessionId: string, exitCode: number, signal?: number) => void): () => void;
   };
   session: {
-    onHookStatus(callback: (sessionId: string, status: 'working' | 'waiting' | 'completed') => void): () => void;
+    onHookStatus(callback: (sessionId: string, status: 'working' | 'waiting' | 'completed' | 'permission') => void): () => void;
     onClaudeSessionId(callback: (sessionId: string, claudeSessionId: string) => void): () => void;
     onCostData(callback: (sessionId: string, costData: CostData) => void): () => void;
   };
@@ -54,6 +54,7 @@ export interface ClaudeIdeApi {
     onNextSession(callback: () => void): () => void;
     onPrevSession(callback: () => void): () => void;
     onGotoSession(callback: (index: number) => void): () => void;
+    onToggleDebug(callback: () => void): () => void;
   };
 }
 
@@ -84,7 +85,7 @@ const api: ClaudeIdeApi = {
   session: {
     onHookStatus: (callback) =>
       onChannel('session:hookStatus', (sessionId, status) =>
-        callback(sessionId as string, status as 'working' | 'waiting' | 'completed')),
+        callback(sessionId as string, status as 'working' | 'waiting' | 'completed' | 'permission')),
     onClaudeSessionId: (callback) =>
       onChannel('session:claudeSessionId', (sessionId, claudeSessionId) =>
         callback(sessionId as string, claudeSessionId as string)),
@@ -116,6 +117,7 @@ const api: ClaudeIdeApi = {
     onNextSession: (cb) => onChannel('menu:next-session', cb),
     onPrevSession: (cb) => onChannel('menu:prev-session', cb),
     onGotoSession: (cb) => onChannel('menu:goto-session', (index) => cb(index as number)),
+    onToggleDebug: (cb) => onChannel('menu:toggle-debug', cb),
   },
 };
 

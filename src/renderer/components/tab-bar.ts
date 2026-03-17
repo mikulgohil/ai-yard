@@ -51,7 +51,7 @@ export function initTabBar(): void {
     }
 
     // Mark as unread if working → waiting/completed and not the active session
-    if (prev === 'working' && (status === 'waiting' || status === 'completed')) {
+    if (prev === 'working' && (status === 'waiting' || status === 'completed' || status === 'permission')) {
       const project = appState.activeProject;
       if (project && sessionId !== project.activeSessionId) {
         unreadSessions.add(sessionId);

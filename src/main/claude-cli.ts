@@ -222,8 +222,8 @@ export function installHooks(): void {
     SessionStart: 'waiting',
     UserPromptSubmit: 'working',
     Stop: 'waiting',
-    Notification: 'waiting',
     TaskCompleted: 'completed',
+    PermissionRequest: 'permission',
   };
 
   for (const [event, status] of Object.entries(ideEvents)) {

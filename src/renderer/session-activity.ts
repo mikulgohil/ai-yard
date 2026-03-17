@@ -1,4 +1,4 @@
-export type SessionStatus = 'working' | 'waiting' | 'idle' | 'completed';
+export type SessionStatus = 'working' | 'waiting' | 'idle' | 'completed' | 'permission';
 
 const STALENESS_TIMEOUT_MS = 120_000;
 
@@ -22,7 +22,7 @@ function setStatus(sessionId: string, status: SessionStatus): void {
 /**
  * Called when a hook-based status event is received from the main process.
  */
-export function setHookStatus(sessionId: string, status: 'working' | 'waiting' | 'completed'): void {
+export function setHookStatus(sessionId: string, status: 'working' | 'waiting' | 'completed' | 'permission'): void {
   let state = sessions.get(sessionId);
   if (!state) { initSession(sessionId); state = sessions.get(sessionId)!; }
 

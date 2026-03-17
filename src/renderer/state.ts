@@ -31,6 +31,7 @@ export interface ProjectRecord {
 
 export interface Preferences {
   soundOnSessionWaiting: boolean;
+  debugMode: boolean;
 }
 
 export interface PersistedState {
@@ -55,7 +56,7 @@ type EventType =
 
 type EventCallback = (data?: unknown) => void;
 
-const defaultPreferences: Preferences = { soundOnSessionWaiting: false };
+const defaultPreferences: Preferences = { soundOnSessionWaiting: false, debugMode: false };
 
 class AppState {
   private state: PersistedState = { version: 1, projects: [], activeProjectId: null, preferences: { ...defaultPreferences } };

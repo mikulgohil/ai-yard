@@ -52,6 +52,12 @@ export function createAppMenu(): void {
           click: () => sendToRenderer('menu:toggle-split'),
         },
         { type: 'separator' },
+        {
+          label: 'Toggle Debug Panel',
+          accelerator: 'CmdOrCtrl+Shift+D',
+          click: () => sendToRenderer('menu:toggle-debug'),
+        },
+        { type: 'separator' },
         { role: 'toggleDevTools' as const },
         { role: 'reload' as const },
       ],

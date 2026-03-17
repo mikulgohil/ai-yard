@@ -41,7 +41,7 @@ export function startWatching(win: BrowserWindow): void {
 
       try {
         const content = fs.readFileSync(filePath, 'utf-8').trim();
-        if (content === 'working' || content === 'waiting' || content === 'completed') {
+        if (content === 'working' || content === 'waiting' || content === 'completed' || content === 'permission') {
           if (!win.isDestroyed()) {
             win.webContents.send('session:hookStatus', sessionId, content);
           }
