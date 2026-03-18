@@ -3,11 +3,13 @@ import { showModal, closeModal } from './modal.js';
 import { onChange as onStatusChange, getStatus, type SessionStatus } from '../session-activity.js';
 import { onChange as onGitStatusChange, getGitStatus, type GitStatus } from '../git-status.js';
 import { onChange as onCostChange, getCost } from '../session-cost.js';
+import { showHelpDialog } from './help-dialog.js';
 
 const tabListEl = document.getElementById('tab-list')!;
 const gitStatusEl = document.getElementById('git-status')!;
 const btnAddSession = document.getElementById('btn-add-session')!;
 const btnToggleSplit = document.getElementById('btn-toggle-split')!;
+const btnHelp = document.getElementById('btn-help')!;
 
 let activeContextMenu: HTMLElement | null = null;
 const unreadSessions = new Set<string>();
@@ -21,6 +23,7 @@ function buildTooltip(status: SessionStatus, claudeSessionId?: string): string {
 export function initTabBar(): void {
   btnAddSession.addEventListener('click', promptNewSession);
   btnToggleSplit.addEventListener('click', () => appState.toggleSplit());
+  btnHelp.addEventListener('click', () => showHelpDialog());
 
   appState.on('state-loaded', render);
   appState.on('project-changed', render);
