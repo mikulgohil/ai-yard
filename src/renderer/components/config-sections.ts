@@ -41,31 +41,42 @@ function renderSection(id: string, title: string, items: HTMLElement[], count: n
   return section;
 }
 
+function openConfigFile(filePath: string): void {
+  const project = appState.activeProject;
+  if (project && filePath) {
+    appState.addFileReaderSession(project.id, filePath);
+  }
+}
+
 function mcpItem(server: McpServer): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'config-item';
+  el.className = 'config-item config-item-clickable';
   el.innerHTML = `<span class="config-item-name">${esc(server.name)}</span><span class="config-item-detail">${esc(server.status)}</span>${scopeBadge(server.scope)}`;
+  el.addEventListener('click', () => openConfigFile(server.filePath));
   return el;
 }
 
 function agentItem(agent: Agent): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'config-item';
+  el.className = 'config-item config-item-clickable';
   el.innerHTML = `<span class="config-item-name">${esc(agent.name)}</span><span class="config-item-detail">${esc(agent.model)}</span>${scopeBadge(agent.scope)}`;
+  el.addEventListener('click', () => openConfigFile(agent.filePath));
   return el;
 }
 
 function skillItem(skill: Skill): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'config-item';
+  el.className = 'config-item config-item-clickable';
   el.innerHTML = `<span class="config-item-name">${esc(skill.name)}</span><span class="config-item-detail">${esc(skill.description)}</span>${scopeBadge(skill.scope)}`;
+  el.addEventListener('click', () => openConfigFile(skill.filePath));
   return el;
 }
 
 function commandItem(cmd: Command): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'config-item';
+  el.className = 'config-item config-item-clickable';
   el.innerHTML = `<span class="config-item-name">/${esc(cmd.name)}</span><span class="config-item-detail">${esc(cmd.description)}</span>${scopeBadge(cmd.scope)}`;
+  el.addEventListener('click', () => openConfigFile(cmd.filePath));
   return el;
 }
 

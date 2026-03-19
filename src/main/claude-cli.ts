@@ -2,10 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { homedir } from 'os';
 
-export interface McpServer { name: string; url: string; status: string; scope: 'user' | 'project' }
-export interface Agent { name: string; model: string; category: 'plugin' | 'built-in'; scope: 'user' | 'project' }
-export interface Skill { name: string; description: string; scope: 'user' | 'project' }
-export interface Command { name: string; description: string; scope: 'user' | 'project' }
+export interface McpServer { name: string; url: string; status: string; scope: 'user' | 'project'; filePath: string }
+export interface Agent { name: string; model: string; category: 'plugin' | 'built-in'; scope: 'user' | 'project'; filePath: string }
+export interface Skill { name: string; description: string; scope: 'user' | 'project'; filePath: string }
+export interface Command { name: string; description: string; scope: 'user' | 'project'; filePath: string }
 export interface ClaudeConfig { mcpServers: McpServer[]; agents: Agent[]; skills: Skill[]; commands: Command[] }
 
 function readJsonSafe(filePath: string): Record<string, unknown> | null {
@@ -56,7 +56,7 @@ function readMcpServers(settingsPath: string, mcpJsonPath: string, scope: 'user'
     for (const [name, config] of Object.entries(mcpServers)) {
       const cfg = config as Record<string, unknown>;
       const url = (cfg.url as string) || (cfg.command as string) || '';
-      servers.push({ name, url, status: 'configured', scope });
+      servers.push({ name, url, status: 'configured', scope, filePath: settingsPath });
     }
   }
 
@@ -69,7 +69,7 @@ function readMcpServers(settingsPath: string, mcpJsonPath: string, scope: 'user'
       if (existingNames.has(name)) continue;
       const cfg = config as Record<string, unknown>;
       const url = (cfg.url as string) || (cfg.command as string) || '';
-      servers.push({ name, url, status: 'configured', scope });
+      servers.push({ name, url, status: 'configured', scope, filePath: mcpJsonPath });
     }
   }
 
@@ -83,7 +83,7 @@ function readAgentsFromDir(dirPath: string, scope: 'user' | 'project', category:
     if (!file.endsWith('.md')) continue;
     const fm = parseFrontmatter(path.join(dirPath, file));
     if (fm.name) {
-      agents.push({ name: fm.name, model: fm.model || '', category, scope });
+      agents.push({ name: fm.name, model: fm.model || '', category, scope, filePath: path.join(dirPath, file) });
     }
   }
   return agents;
@@ -133,6 +133,7 @@ function readPluginSkills(): Skill[] {
             name: fm.name || skillName,
             description: fm.description || '',
             scope,
+            filePath: skillMd,
           });
         }
       }
@@ -148,7 +149,7 @@ function readCommandsFromDir(dirPath: string, scope: 'user' | 'project'): Comman
     if (!file.endsWith('.md')) continue;
     const name = file.slice(0, -3);
     const fm = parseFrontmatter(path.join(dirPath, file));
-    commands.push({ name, description: fm.description || '', scope });
+    commands.push({ name, description: fm.description || '', scope, filePath: path.join(dirPath, file) });
   }
   return commands;
 }
@@ -160,7 +161,7 @@ function readSkillsFromDir(dirPath: string, scope: 'user' | 'project'): Skill[] 
     const skillMd = path.join(dirPath, skillName, 'SKILL.md');
     const fm = parseFrontmatter(skillMd);
     if (fm.name || skillName) {
-      skills.push({ name: fm.name || skillName, description: fm.description || '', scope });
+      skills.push({ name: fm.name || skillName, description: fm.description || '', scope, filePath: skillMd });
     }
   }
   return skills;
@@ -272,7 +273,7 @@ function readMcpFromClaudeJson(filePath: string, projectPath?: string): McpServe
     for (const [name, config] of Object.entries(json.mcpServers as Record<string, unknown>)) {
       const cfg = config as Record<string, unknown>;
       const url = (cfg.url as string) || (cfg.command as string) || '';
-      servers.push({ name, url, status: 'configured', scope: 'user' });
+      servers.push({ name, url, status: 'configured', scope: 'user', filePath });
     }
   }
 
@@ -284,7 +285,7 @@ function readMcpFromClaudeJson(filePath: string, projectPath?: string): McpServe
       for (const [name, config] of Object.entries(projectEntry.mcpServers as Record<string, unknown>)) {
         const cfg = config as Record<string, unknown>;
         const url = (cfg.url as string) || (cfg.command as string) || '';
-        servers.push({ name, url, status: 'configured', scope: 'project' });
+        servers.push({ name, url, status: 'configured', scope: 'project', filePath });
       }
     }
   }
@@ -307,7 +308,7 @@ function readManagedMcpServers(): McpServer[] {
   for (const [name, config] of Object.entries(json.mcpServers as Record<string, unknown>)) {
     const cfg = config as Record<string, unknown>;
     const url = (cfg.url as string) || (cfg.command as string) || '';
-    servers.push({ name, url, status: 'configured', scope: 'user' });
+    servers.push({ name, url, status: 'configured', scope: 'user', filePath: managedPath });
   }
   return servers;
 }
