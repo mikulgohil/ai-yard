@@ -248,24 +248,84 @@ export function installHooks(): void {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
 }
 
+/** Read MCP servers from ~/.claude.json (where `claude mcp add` stores them) */
+function readMcpFromClaudeJson(filePath: string, projectPath?: string): McpServer[] {
+  const json = readJsonSafe(filePath);
+  if (!json) return [];
+  const servers: McpServer[] = [];
+
+  // Top-level mcpServers → user scope
+  if (typeof json.mcpServers === 'object' && json.mcpServers !== null) {
+    for (const [name, config] of Object.entries(json.mcpServers as Record<string, unknown>)) {
+      const cfg = config as Record<string, unknown>;
+      const url = (cfg.url as string) || (cfg.command as string) || '';
+      servers.push({ name, url, status: 'configured', scope: 'user' });
+    }
+  }
+
+  // Project-specific (local scope) servers stored under projects key
+  if (projectPath && typeof json.projects === 'object' && json.projects !== null) {
+    const projects = json.projects as Record<string, Record<string, unknown>>;
+    const projectEntry = projects[projectPath];
+    if (projectEntry && typeof projectEntry.mcpServers === 'object' && projectEntry.mcpServers !== null) {
+      for (const [name, config] of Object.entries(projectEntry.mcpServers as Record<string, unknown>)) {
+        const cfg = config as Record<string, unknown>;
+        const url = (cfg.url as string) || (cfg.command as string) || '';
+        servers.push({ name, url, status: 'configured', scope: 'project' });
+      }
+    }
+  }
+
+  return servers;
+}
+
+/** Read managed MCP servers from system-level config */
+function readManagedMcpServers(): McpServer[] {
+  const managedPath = process.platform === 'darwin'
+    ? '/Library/Application Support/ClaudeCode/managed-mcp.json'
+    : process.platform === 'win32'
+      ? 'C:\\Program Files\\ClaudeCode\\managed-mcp.json'
+      : '/etc/claude-code/managed-mcp.json';
+
+  const json = readJsonSafe(managedPath);
+  if (!json || typeof json.mcpServers !== 'object' || json.mcpServers === null) return [];
+
+  const servers: McpServer[] = [];
+  for (const [name, config] of Object.entries(json.mcpServers as Record<string, unknown>)) {
+    const cfg = config as Record<string, unknown>;
+    const url = (cfg.url as string) || (cfg.command as string) || '';
+    servers.push({ name, url, status: 'configured', scope: 'user' });
+  }
+  return servers;
+}
+
 export async function getClaudeConfig(projectPath: string): Promise<ClaudeConfig> {
   const home = homedir();
   const claudeDir = path.join(home, '.claude');
 
-  // MCP Servers
+  // MCP Servers from multiple sources (matching Claude CLI resolution order)
+  // 1. ~/.claude.json (user + local scope — primary location for `claude mcp add`)
+  const claudeJsonServers = readMcpFromClaudeJson(path.join(home, '.claude.json'), projectPath);
+  // 2. ~/.claude/settings.json and ~/.mcp.json (legacy/additional user scope)
   const userServers = readMcpServers(
     path.join(claudeDir, 'settings.json'),
     path.join(home, '.mcp.json'),
     'user',
   );
+  // 3. Project-level: .claude/settings.json and .mcp.json
   const projectServers = readMcpServers(
     path.join(projectPath, '.claude', 'settings.json'),
     path.join(projectPath, '.mcp.json'),
     'project',
   );
-  // Deduplicate: project servers override user servers by name
+  // 4. System-managed servers
+  const managedServers = readManagedMcpServers();
+
+  // Deduplicate: local/project servers override user servers by name
   const serverMap = new Map<string, McpServer>();
+  for (const s of managedServers) serverMap.set(s.name, s);
   for (const s of userServers) serverMap.set(s.name, s);
+  for (const s of claudeJsonServers) serverMap.set(s.name, s);
   for (const s of projectServers) serverMap.set(s.name, s);
   const mcpServers = Array.from(serverMap.values());
 
