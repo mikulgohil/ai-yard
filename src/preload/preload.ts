@@ -1,19 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { CostData } from '../shared/types';
 
-export interface CostData {
-  cost: { total_cost_usd: number; total_duration_ms: number; total_api_duration_ms: number };
-  context_window: {
-    total_input_tokens: number;
-    total_output_tokens: number;
-    context_window_tokens?: number;
-    current_usage: {
-      input_tokens: number;
-      output_tokens: number;
-      cache_creation_input_tokens: number;
-      cache_read_input_tokens: number;
-    };
-  };
-}
+export type { CostData } from '../shared/types';
 
 export interface ClaudeIdeApi {
   pty: {

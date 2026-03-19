@@ -1,14 +1,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { BrowserWindow } from 'electron';
 
-const STATUS_DIR = '/tmp/ccide';
+export const STATUS_DIR = path.join(os.tmpdir(), 'ccide');
 const STATUSLINE_SCRIPT = path.join(STATUS_DIR, 'statusline.sh');
 
 let watcher: fs.FSWatcher | null = null;
 
+export function getStatusLineScriptPath(): string {
+  return STATUSLINE_SCRIPT;
+}
+
 export function installStatusLineScript(): void {
-  fs.mkdirSync(STATUS_DIR, { recursive: true });
+  fs.mkdirSync(STATUS_DIR, { recursive: true, mode: 0o700 });
 
   const script = `#!/bin/sh
 input=$(cat)
@@ -19,11 +24,11 @@ cost=d.get('cost',{})
 ctx=d.get('context_window',{})
 sid=os.environ.get('CLAUDE_IDE_SESSION_ID','')
 if sid:
-    with open(f'/tmp/ccide/{sid}.cost','w') as f:
+    with open(f'${STATUS_DIR}/{sid}.cost','w') as f:
         json.dump({'cost':cost,'context_window':ctx},f)
     claude_sid=d.get('session_id','')
     if claude_sid:
-        with open(f'/tmp/ccide/{sid}.sessionid','w') as f:
+        with open(f'${STATUS_DIR}/{sid}.sessionid','w') as f:
             f.write(claude_sid)
 " 2>/dev/null
 `;
@@ -80,7 +85,7 @@ function restartWatcher(win: BrowserWindow): void {
     watcher = null;
   }
 
-  fs.mkdirSync(STATUS_DIR, { recursive: true });
+  fs.mkdirSync(STATUS_DIR, { recursive: true, mode: 0o700 });
 
   watcher = fs.watch(STATUS_DIR, (_eventType, filename) => {
     if (!filename) return;

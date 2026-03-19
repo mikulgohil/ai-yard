@@ -10,6 +10,10 @@ vi.mock('fs', () => ({
   watch: vi.fn(),
 }));
 
+vi.mock('os', () => ({
+  tmpdir: () => '/tmp',
+}));
+
 vi.mock('electron', () => ({
   BrowserWindow: {},
 }));
@@ -67,7 +71,7 @@ describe('hook-status', () => {
     it('creates dir and writes script with mode 0o755', () => {
       installStatusLineScript();
 
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/tmp/ccide', { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith('/tmp/ccide', { recursive: true, mode: 0o700 });
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         '/tmp/ccide/statusline.sh',
         expect.stringContaining('#!/bin/sh'),
@@ -81,7 +85,7 @@ describe('hook-status', () => {
       const win = createMockWin();
       startWatching(win);
 
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/tmp/ccide', { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith('/tmp/ccide', { recursive: true, mode: 0o700 });
       expect(fs.watch).toHaveBeenCalledWith('/tmp/ccide', expect.any(Function));
     });
   });

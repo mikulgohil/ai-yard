@@ -1,37 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import type { PersistedState } from '../shared/types';
 
-export interface SessionRecord {
-  id: string;
-  name: string;
-  claudeSessionId: string | null;
-  createdAt: string;
-}
-
-export interface ProjectRecord {
-  id: string;
-  name: string;
-  path: string;
-  sessions: SessionRecord[];
-  activeSessionId: string | null;
-  layout: {
-    mode: 'tabs' | 'split';
-    splitPanes: string[];
-    splitDirection: 'horizontal' | 'vertical';
-  };
-}
-
-export interface Preferences {
-  soundOnSessionWaiting: boolean;
-}
-
-export interface PersistedState {
-  version: 1;
-  projects: ProjectRecord[];
-  activeProjectId: string | null;
-  preferences: Preferences;
-}
+export type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types';
 
 const STATE_DIR = path.join(os.homedir(), '.ccide');
 const STATE_FILE = path.join(STATE_DIR, 'state.json');
@@ -43,7 +15,7 @@ function defaultState(): PersistedState {
     version: 1,
     projects: [],
     activeProjectId: null,
-    preferences: { soundOnSessionWaiting: false },
+    preferences: { soundOnSessionWaiting: false, debugMode: false },
   };
 }
 
@@ -58,7 +30,8 @@ export function loadState(): PersistedState {
       return defaultState();
     }
     return parsed;
-  } catch {
+  } catch (err) {
+    console.warn('Failed to load state, using defaults:', err);
     return defaultState();
   }
 }

@@ -1,52 +1,12 @@
 import type { ClaudeIdeApi } from './types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types.js';
+
+export type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types.js';
 
 declare global {
   interface Window {
     claudeIde: ClaudeIdeApi;
   }
-}
-
-export interface SessionRecord {
-  id: string;
-  name: string;
-  type?: 'claude' | 'mcp-inspector' | 'diff-viewer' | 'file-reader';
-  args?: string;
-  claudeSessionId: string | null;
-  mcpServerUrl?: string;
-  diffFilePath?: string;
-  diffArea?: string;
-  worktreePath?: string;
-  fileReaderPath?: string;
-  createdAt: string;
-}
-
-export interface ProjectRecord {
-  id: string;
-  name: string;
-  path: string;
-  sessions: SessionRecord[];
-  activeSessionId: string | null;
-  layout: {
-    mode: 'tabs' | 'split';
-    splitPanes: string[];
-    splitDirection: 'horizontal' | 'vertical';
-  };
-  terminalPanelOpen?: boolean;
-  terminalPanelHeight?: number;
-}
-
-export interface Preferences {
-  soundOnSessionWaiting: boolean;
-  debugMode: boolean;
-  keybindings?: Record<string, string>;
-}
-
-export interface PersistedState {
-  version: 1;
-  projects: ProjectRecord[];
-  activeProjectId: string | null;
-  preferences: Preferences;
-  sidebarWidth?: number;
 }
 
 type EventType =

@@ -1,42 +1,5 @@
-export interface McpServer { name: string; url: string; status: string; scope: 'user' | 'project'; filePath: string }
-export interface Agent { name: string; model: string; category: 'plugin' | 'built-in'; scope: 'user' | 'project'; filePath: string }
-export interface Skill { name: string; description: string; scope: 'user' | 'project'; filePath: string }
-export interface Command { name: string; description: string; scope: 'user' | 'project'; filePath: string }
-export interface ClaudeConfig { mcpServers: McpServer[]; agents: Agent[]; skills: Skill[]; commands: Command[] }
-
-export interface GitWorktree {
-  path: string;
-  head: string;
-  branch: string | null;
-  isBare: boolean;
-}
-
-export interface GitFileEntry {
-  path: string;
-  status: 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked' | 'conflicted';
-  area: 'staged' | 'working' | 'untracked' | 'conflicted';
-}
-
-export interface CostData {
-  cost: { total_cost_usd: number; total_duration_ms: number; total_api_duration_ms: number };
-  context_window: {
-    total_input_tokens: number;
-    total_output_tokens: number;
-    context_window_tokens?: number;
-    current_usage: {
-      input_tokens: number;
-      output_tokens: number;
-      cache_creation_input_tokens: number;
-      cache_read_input_tokens: number;
-    };
-  };
-}
-
-export interface McpResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
+export type { McpServer, Agent, Skill, Command, ClaudeConfig, GitWorktree, GitFileEntry, CostData, McpResult } from '../shared/types.js';
+import type { CostData, ClaudeConfig, GitWorktree, McpResult } from '../shared/types.js';
 
 export interface ClaudeIdeApi {
   pty: {

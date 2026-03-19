@@ -4,12 +4,12 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist/preload",
-    "rootDir": "src/preload",
+    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
     "composite": true
   },
-  "include": ["src/preload/**/*.ts"]
+  "include": ["src/preload/**/*.ts", "src/shared/**/*.ts"]
 }

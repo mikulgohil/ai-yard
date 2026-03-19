@@ -3,6 +3,7 @@ import { execSync, execFile } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
+import { getStatusLineScriptPath } from './hook-status';
 
 interface PtyInstance {
   process: pty.IPty;
@@ -38,7 +39,7 @@ function getFullPath(): string {
       cachedFullPath = match[1].trim();
       return cachedFullPath;
     }
-  } catch {}
+  } catch (err) { console.warn('Failed to resolve PATH from login shell:', err); }
 
   // Fallback: merge current PATH with common directories
   const home = os.homedir();
@@ -87,7 +88,7 @@ function resolveClaudePath(): string {
       timeout: 3000,
     }).trim();
     if (resolved) return resolved;
-  } catch {}
+  } catch (err) { console.warn('Failed to resolve claude path via which:', err); }
 
   return 'claude';
 }
@@ -119,7 +120,7 @@ export function spawnPty(
   const env = { ...process.env };
   delete env.CLAUDE_CODE; // avoid subprocess detection conflicts
   env.CLAUDE_IDE_SESSION_ID = sessionId;
-  env.CLAUDE_CODE_STATUSLINE = '/tmp/ccide/statusline.sh';
+  env.CLAUDE_CODE_STATUSLINE = getStatusLineScriptPath();
   env.PATH = getFullPath();
 
   const args: string[] = [];

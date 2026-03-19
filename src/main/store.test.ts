@@ -24,7 +24,7 @@ const DEFAULT_STATE: PersistedState = {
   version: 1,
   projects: [],
   activeProjectId: null,
-  preferences: { soundOnSessionWaiting: false },
+  preferences: { soundOnSessionWaiting: false, debugMode: false },
 };
 
 beforeEach(() => {

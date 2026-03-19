@@ -10,6 +10,7 @@ vi.mock('fs', () => ({
 
 vi.mock('os', () => ({
   homedir: () => '/mock/home',
+  tmpdir: () => '/tmp',
 }));
 
 import * as fs from 'fs';

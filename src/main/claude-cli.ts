@@ -1,12 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { homedir } from 'os';
+import { STATUS_DIR } from './hook-status';
+import type { McpServer, Agent, Skill, Command, ClaudeConfig } from '../shared/types';
 
-export interface McpServer { name: string; url: string; status: string; scope: 'user' | 'project'; filePath: string }
-export interface Agent { name: string; model: string; category: 'plugin' | 'built-in'; scope: 'user' | 'project'; filePath: string }
-export interface Skill { name: string; description: string; scope: 'user' | 'project'; filePath: string }
-export interface Command { name: string; description: string; scope: 'user' | 'project'; filePath: string }
-export interface ClaudeConfig { mcpServers: McpServer[]; agents: Agent[]; skills: Skill[]; commands: Command[] }
+export type { McpServer, Agent, Skill, Command, ClaudeConfig } from '../shared/types';
 
 function readJsonSafe(filePath: string): Record<string, unknown> | null {
   try {
@@ -225,11 +223,11 @@ export function installHooks(): void {
   }
 
   const statusCmd = (status: string) =>
-    `sh -c 'mkdir -p /tmp/ccide && echo ${status} > /tmp/ccide/$CLAUDE_IDE_SESSION_ID.status ${HOOK_MARKER}'`;
+    `sh -c 'mkdir -p ${STATUS_DIR} && echo ${status} > ${STATUS_DIR}/$CLAUDE_IDE_SESSION_ID.status ${HOOK_MARKER}'`;
 
   // Hook to capture Claude's session ID from the hook input JSON (stdin)
   const captureSessionIdCmd =
-    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\\"session_id\\",\\"\\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p /tmp/ccide && echo "$sid" > /tmp/ccide/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
+    `sh -c 'input=$(cat); sid=$(echo "$input" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin).get(\\"session_id\\",\\"\\"))" 2>/dev/null); if [ -n "$sid" ]; then mkdir -p ${STATUS_DIR} && echo "$sid" > ${STATUS_DIR}/$CLAUDE_IDE_SESSION_ID.sessionid; fi ${HOOK_MARKER}'`;
 
   // Add our hooks for each event type
   const ideEvents: Record<string, string> = {

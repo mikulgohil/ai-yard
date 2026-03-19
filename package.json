@@ -2,7 +2,29 @@
   "name": "ccide",
   "version": "0.2.4",
   "description": "Terminal-centric IDE built on Claude Code",
-  "main": "dist/main/main.js",
+  "author": "Eliran Tutia",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elirantutia/ccide.git"
+  },
+  "homepage": "https://github.com/elirantutia/ccide",
+  "bugs": {
+    "url": "https://github.com/elirantutia/ccide/issues"
+  },
+  "keywords": [
+    "electron",
+    "ide",
+    "terminal",
+    "claude",
+    "claude-code",
+    "ai",
+    "developer-tools"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "main": "dist/main/main/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && npm run build:renderer && npm run copy-assets",
     "build:renderer": "esbuild src/renderer/index.ts --bundle --outfile=dist/renderer/index.js --platform=browser --format=iife --target=es2022 --sourcemap --loader:.ts=ts",
@@ -31,6 +53,13 @@
       ],
       "category": "public.app-category.developer-tools",
       "identity": null
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
     },
     "publish": {
       "provider": "github",

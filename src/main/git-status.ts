@@ -1,18 +1,8 @@
 import { execFile } from 'child_process';
 import * as fs from 'fs';
+import type { GitWorktree, GitFileEntry } from '../shared/types';
 
-export interface GitWorktree {
-  path: string;
-  head: string;
-  branch: string | null;
-  isBare: boolean;
-}
-
-export interface GitFileEntry {
-  path: string;
-  status: 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked' | 'conflicted';
-  area: 'staged' | 'working' | 'untracked' | 'conflicted';
-}
+export type { GitWorktree, GitFileEntry } from '../shared/types';
 
 export interface GitStatus {
   isGitRepo: boolean;

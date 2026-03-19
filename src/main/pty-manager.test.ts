@@ -20,6 +20,7 @@ vi.mock('child_process', () => ({
 
 vi.mock('os', () => ({
   homedir: () => '/mock/home',
+  tmpdir: () => '/tmp',
 }));
 
 vi.mock('fs', () => ({

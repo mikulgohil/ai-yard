@@ -20,14 +20,14 @@ function createWindow(): void {
     title: 'CCide',
     backgroundColor: '#1a1a2e',
     webPreferences: {
-      preload: path.join(__dirname, '..', 'preload', 'preload.js'),
+      preload: path.join(__dirname, '..', '..', 'preload', 'preload', 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // needed for node-pty IPC
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'));
 
   mainWindow.on('close', () => {
     flushState();
