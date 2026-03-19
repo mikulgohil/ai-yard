@@ -1,6 +1,7 @@
 import { appState } from '../state.js';
 import { onChange as onGitStatusChange, getGitStatus } from '../git-status.js';
 import { onChange as onStatusChange } from '../session-activity.js';
+import { showFileViewer } from './file-viewer.js';
 import type { GitFileEntry } from '../types.js';
 
 const MAX_FILES = 100;
@@ -120,8 +121,9 @@ async function loadFiles(body: HTMLElement, projectPath: string): Promise<void> 
     for (const entry of group) {
       if (rendered >= MAX_FILES) break;
       const item = document.createElement('div');
-      item.className = 'config-item';
+      item.className = 'config-item config-item-clickable';
       item.innerHTML = `${statusBadge(entry)}<span class="config-item-detail" title="${esc(entry.path)}">${esc(entry.path)}</span>`;
+      item.addEventListener('click', () => showFileViewer(entry.path, entry.area));
       body.appendChild(item);
       rendered++;
     }

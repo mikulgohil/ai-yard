@@ -55,6 +55,7 @@ export interface ClaudeIdeApi {
   git: {
     getStatus(path: string): Promise<unknown>;
     getFiles(path: string): Promise<unknown>;
+    getDiff(path: string, file: string, area: string): Promise<string>;
   };
   app: {
     getVersion(): Promise<string>;

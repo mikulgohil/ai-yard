@@ -44,6 +44,7 @@ export interface ClaudeIdeApi {
   git: {
     getStatus(path: string): Promise<unknown>;
     getFiles(path: string): Promise<unknown>;
+    getDiff(path: string, file: string, area: string): Promise<string>;
   };
   app: {
     getVersion(): Promise<string>;
@@ -119,6 +120,7 @@ const api: ClaudeIdeApi = {
   git: {
     getStatus: (path) => ipcRenderer.invoke('git:getStatus', path),
     getFiles: (path) => ipcRenderer.invoke('git:getFiles', path),
+    getDiff: (path: string, file: string, area: string) => ipcRenderer.invoke('git:getDiff', path, file, area),
   },
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),

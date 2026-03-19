@@ -240,13 +240,15 @@ function render(): void {
     if (isActive) unreadSessions.delete(session.id);
     const isUnread = !isActive && unreadSessions.has(session.id);
     const isMcp = session.type === 'mcp-inspector';
+    const isDiff = session.type === 'diff-viewer';
+    const isSpecial = isMcp || isDiff;
     tab.className = 'tab-item' + (isActive ? ' active' : '') + (isUnread ? ' unread' : '');
     tab.dataset.sessionId = session.id;
-    tab.title = isMcp ? `MCP Inspector` : buildTooltip(getStatus(session.id), session.claudeSessionId);
-    const costInfo = isMcp ? null : getCost(session.id);
+    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : buildTooltip(getStatus(session.id), session.claudeSessionId);
+    const costInfo = isSpecial ? null : getCost(session.id);
     const costLabel = costInfo ? `$${costInfo.totalCostUsd.toFixed(2)}` : '';
-    const namePrefix = isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : '';
-    const statusClass = isMcp ? 'mcp' : getStatus(session.id);
+    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : '';
+    const statusClass = isSpecial ? (isDiff ? 'diff' : 'mcp') : getStatus(session.id);
     tab.innerHTML = `
       <span class="tab-status ${statusClass}"></span>
       <span class="tab-name">${namePrefix}${esc(session.name)}</span>

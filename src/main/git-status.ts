@@ -1,4 +1,5 @@
 import { execFile } from 'child_process';
+import * as fs from 'fs';
 
 export interface GitFileEntry {
   path: string;
@@ -83,6 +84,42 @@ export function getGitStatus(cwd: string): Promise<GitStatus> {
           untracked,
           conflicted,
         });
+      }
+    );
+  });
+}
+
+export function getGitDiff(cwd: string, filePath: string, area: string): Promise<string> {
+  return new Promise((resolve) => {
+    if (area === 'untracked') {
+      // Read file content and format as "all added" diff
+      const fullPath = require('path').join(cwd, filePath);
+      try {
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        const lines = content.split('\n');
+        const header = `--- /dev/null\n+++ b/${filePath}\n@@ -0,0 +1,${lines.length} @@\n`;
+        const body = lines.map(l => `+${l}`).join('\n');
+        resolve(header + body);
+      } catch {
+        resolve('(unable to read file)');
+      }
+      return;
+    }
+
+    const args = area === 'staged'
+      ? ['diff', '--cached', '--', filePath]
+      : ['diff', '--', filePath];
+
+    execFile(
+      'git',
+      args,
+      { cwd, timeout: 10000, maxBuffer: 1024 * 1024 },
+      (err, stdout) => {
+        if (err && !stdout) {
+          resolve('(no diff available)');
+          return;
+        }
+        resolve(stdout);
       }
     );
   });
