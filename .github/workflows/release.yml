@@ -79,6 +79,18 @@ jobs:
       - name: Verify changelog
         run: grep -q '## \[${{ steps.version.outputs.version }}\]' CHANGELOG.md
 
+      - name: Extract release notes
+        run: |
+          awk '/^## \[${{ steps.version.outputs.version }}\]/{found=1; next} /^## \[/{if(found) exit} found' CHANGELOG.md > RELEASE_NOTES.md
+          echo "Extracted release notes:"
+          cat RELEASE_NOTES.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md
+
       - name: Commit release
         run: |
           git add package.json package-lock.json CHANGELOG.md
@@ -121,8 +133,18 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
       - name: Build and publish
         run: npm run build && npx electron-builder --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Update release notes
+        run: gh release edit "${{ needs.prepare.outputs.tag }}" --notes-file RELEASE_NOTES.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
