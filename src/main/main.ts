@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor } from 'electron';
+import { app, BrowserWindow, dialog, powerMonitor } from 'electron';
 import * as path from 'path';
 import { registerIpcHandlers, resetHookWatcher } from './ipc-handlers';
 import { killAllPtys } from './pty-manager';
@@ -7,6 +7,7 @@ import { createAppMenu } from './menu';
 import { cleanupAll as cleanupHookStatus, installStatusLineScript, restartAndResync } from './hook-status';
 import { installHooks } from './claude-cli';
 import { initAutoUpdater } from './auto-updater';
+import { validatePrerequisites } from './prerequisites';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -40,6 +41,13 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  const prereq = validatePrerequisites();
+  if (!prereq.ok) {
+    dialog.showErrorBox('CCide — Missing Prerequisite', prereq.message);
+    app.quit();
+    return;
+  }
+
   installHooks();
   installStatusLineScript();
   registerIpcHandlers();
