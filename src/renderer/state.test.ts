@@ -717,6 +717,42 @@ describe('archiveSession via removeSession()', () => {
     appState.removeAllSessions(project.id);
     expect(appState.getSessionHistory(project.id)).toHaveLength(3);
   });
+
+  it('does NOT archive when sessionHistoryEnabled is false', () => {
+    appState.setPreference('sessionHistoryEnabled', false);
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    appState.removeSession(project.id, session.id);
+    expect(appState.getSessionHistory(project.id)).toHaveLength(0);
+  });
+
+  it('preserves existing history when sessionHistoryEnabled is disabled', () => {
+    const project = addProject();
+    const session1 = appState.addSession(project.id, 'S1')!;
+    appState.removeSession(project.id, session1.id);
+    expect(appState.getSessionHistory(project.id)).toHaveLength(1);
+
+    appState.setPreference('sessionHistoryEnabled', false);
+    const session2 = appState.addSession(project.id, 'S2')!;
+    appState.removeSession(project.id, session2.id);
+    // Still 1 — second session was not archived
+    expect(appState.getSessionHistory(project.id)).toHaveLength(1);
+    expect(appState.getSessionHistory(project.id)[0].name).toBe('S1');
+  });
+
+  it('resumes archiving when sessionHistoryEnabled is re-enabled', () => {
+    appState.setPreference('sessionHistoryEnabled', false);
+    const project = addProject();
+    const session1 = appState.addSession(project.id, 'S1')!;
+    appState.removeSession(project.id, session1.id);
+    expect(appState.getSessionHistory(project.id)).toHaveLength(0);
+
+    appState.setPreference('sessionHistoryEnabled', true);
+    const session2 = appState.addSession(project.id, 'S2')!;
+    appState.removeSession(project.id, session2.id);
+    expect(appState.getSessionHistory(project.id)).toHaveLength(1);
+    expect(appState.getSessionHistory(project.id)[0].name).toBe('S2');
+  });
 });
 
 describe('getSessionHistory()', () => {

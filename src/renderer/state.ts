@@ -28,6 +28,7 @@ type EventCallback = (data?: unknown) => void;
 const defaultPreferences: Preferences = {
   soundOnSessionWaiting: false,
   debugMode: false,
+  sessionHistoryEnabled: true,
   sidebarViews: { configSections: true, gitPanel: true, sessionHistory: true, costFooter: true },
 };
 
@@ -258,7 +259,7 @@ class AppState {
 
     // Archive CLI sessions before removing (cost data must be captured before session-removed triggers destroyTerminal)
     const session = project.sessions.find((s) => s.id === sessionId);
-    if (session && (!session.type || session.type === 'claude')) {
+    if (session && (!session.type || session.type === 'claude') && this.state.preferences.sessionHistoryEnabled) {
       this.archiveSession(project, session);
     }
 
@@ -506,7 +507,7 @@ class AppState {
 
 /** @internal Test-only: reset all module state */
 export function _resetForTesting(): void {
-  (appState as any)['state'] = { version: 1, projects: [], activeProjectId: null, preferences: { soundOnSessionWaiting: false, debugMode: false } };
+  (appState as any)['state'] = { version: 1, projects: [], activeProjectId: null, preferences: { ...defaultPreferences } };
   (appState as any)['listeners'] = new Map();
 }
 

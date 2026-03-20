@@ -15,7 +15,7 @@ function defaultState(): PersistedState {
     version: 1,
     projects: [],
     activeProjectId: null,
-    preferences: { soundOnSessionWaiting: false, debugMode: false },
+    preferences: { soundOnSessionWaiting: false, debugMode: false, sessionHistoryEnabled: true },
   };
 }
 

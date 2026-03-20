@@ -53,6 +53,7 @@ export function showPreferencesModal(): void {
   // Build section content
   let currentSection: Section = 'general';
   let soundCheckbox: HTMLInputElement | null = null;
+  let historyCheckbox: HTMLInputElement | null = null;
   let sidebarCheckboxes: { configSections: HTMLInputElement; gitPanel: HTMLInputElement; sessionHistory: HTMLInputElement; costFooter: HTMLInputElement } | null = null;
   let activeRecorder: { cleanup: () => void } | null = null;
 
@@ -89,6 +90,22 @@ export function showPreferencesModal(): void {
       row.appendChild(label);
       row.appendChild(soundCheckbox);
       content.appendChild(row);
+
+      const historyRow = document.createElement('div');
+      historyRow.className = 'modal-toggle-field';
+
+      const historyLabel = document.createElement('label');
+      historyLabel.htmlFor = 'pref-session-history';
+      historyLabel.textContent = 'Record session history when sessions close';
+
+      historyCheckbox = document.createElement('input');
+      historyCheckbox.type = 'checkbox';
+      historyCheckbox.id = 'pref-session-history';
+      historyCheckbox.checked = appState.preferences.sessionHistoryEnabled;
+
+      historyRow.appendChild(historyLabel);
+      historyRow.appendChild(historyCheckbox);
+      content.appendChild(historyRow);
 
     } else if (section === 'sidebar') {
       const views = appState.preferences.sidebarViews ?? { configSections: true, gitPanel: true, sessionHistory: true, costFooter: true };
@@ -295,6 +312,9 @@ export function showPreferencesModal(): void {
   const save = () => {
     if (soundCheckbox) {
       appState.setPreference('soundOnSessionWaiting', soundCheckbox.checked);
+    }
+    if (historyCheckbox) {
+      appState.setPreference('sessionHistoryEnabled', historyCheckbox.checked);
     }
     if (sidebarCheckboxes) {
       appState.setPreference('sidebarViews', {

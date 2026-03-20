@@ -98,6 +98,7 @@ export interface ProjectRecord {
 export interface Preferences {
   soundOnSessionWaiting: boolean;
   debugMode: boolean;
+  sessionHistoryEnabled: boolean;
   keybindings?: Record<string, string>;
   sidebarViews?: {
     configSections: boolean;

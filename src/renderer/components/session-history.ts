@@ -9,8 +9,9 @@ let collapsed = true;
 
 function applyHistoryVisibility(): void {
   if (!container) return;
-  const visible = appState.preferences.sidebarViews?.sessionHistory ?? true;
-  container.classList.toggle('hidden', !visible);
+  const featureEnabled = appState.preferences.sessionHistoryEnabled;
+  const sidebarVisible = appState.preferences.sidebarViews?.sessionHistory ?? true;
+  container.classList.toggle('hidden', !featureEnabled || !sidebarVisible);
 }
 
 export function initSessionHistory(): void {
