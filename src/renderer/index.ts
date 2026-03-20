@@ -18,6 +18,8 @@ import { disconnectInspector } from './components/mcp-inspector.js';
 import { initUpdateBanner } from './components/update-banner.js';
 import { initSessionHistory } from './components/session-history.js';
 import { showUsageModal } from './components/usage-modal.js';
+import { captureInitialContext } from './session-insights.js';
+import { initInsightAlert } from './components/insight-alert.js';
 
 let isQuitting = false;
 window.claudeIde.app.onQuitting(() => { isQuitting = true; });
@@ -39,6 +41,7 @@ async function main(): Promise<void> {
     logDebugEvent('costData', sessionId, costData);
     setCostData(sessionId, costData);
     setContextData(sessionId, costData.context_window);
+    captureInitialContext(sessionId, costData.context_window);
   });
 
   onCostChange((sessionId, cost) => {
@@ -92,6 +95,7 @@ async function main(): Promise<void> {
   initGitPanel();
   initSessionHistory();
   initUpdateBanner();
+  initInsightAlert();
   startGitPolling();
 
   window.claudeIde.menu.onUsageStats(() => showUsageModal());
@@ -109,7 +113,7 @@ async function main(): Promise<void> {
   const stateEvents = [
     'project-added', 'project-removed', 'project-changed',
     'session-added', 'session-removed', 'session-changed',
-    'layout-changed', 'history-changed', 'state-loaded',
+    'layout-changed', 'history-changed', 'insights-changed', 'state-loaded',
   ] as const;
   for (const evt of stateEvents) {
     appState.on(evt as Parameters<typeof appState.on>[0], (data) => {

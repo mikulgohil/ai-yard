@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { SearchAddon } from '@xterm/addon-search';
 import { initSession, removeSession } from '../session-activity.js';
+import { markFreshSession } from '../session-insights.js';
 import { removeSession as removeCostSession, type CostInfo } from '../session-cost.js';
 import { removeSession as removeContextSession, type ContextWindowInfo } from '../session-context.js';
 import type { ProviderId } from '../types.js';
@@ -160,6 +161,9 @@ export async function spawnTerminal(sessionId: string): Promise<void> {
   const overlay = instance.element.querySelector('.terminal-exit-overlay');
   if (overlay) overlay.remove();
 
+  if (!instance.isResume) {
+    markFreshSession(sessionId);
+  }
   initSession(sessionId);
   await window.claudeIde.pty.create(sessionId, instance.projectPath, instance.cliSessionId, instance.isResume, instance.args, instance.providerId);
   instance.isResume = true; // subsequent spawns (e.g. Restart Session) should resume

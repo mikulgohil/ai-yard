@@ -99,6 +99,19 @@ export interface ArchivedSession {
   } | null;
 }
 
+export interface InitialContextSnapshot {
+  sessionId: string;
+  timestamp: string;
+  totalTokens: number;
+  contextWindowSize: number;
+  usedPercentage: number;
+}
+
+export interface ProjectInsightsData {
+  initialContextSnapshots: InitialContextSnapshot[];
+  dismissed: string[];
+}
+
 export interface ProjectRecord {
   id: string;
   name: string;
@@ -111,6 +124,7 @@ export interface ProjectRecord {
     splitDirection: 'horizontal' | 'vertical';
   };
   sessionHistory?: ArchivedSession[];
+  insights?: ProjectInsightsData;
   terminalPanelOpen?: boolean;
   terminalPanelHeight?: number;
 }

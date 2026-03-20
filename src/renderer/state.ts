@@ -1,5 +1,5 @@
 import type { ClaudeIdeApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo } from '../shared/types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot } from '../shared/types.js';
 import { getCost, restoreCost } from './session-cost.js';
 import { restoreContext } from './session-context.js';
 
@@ -22,6 +22,7 @@ type EventType =
   | 'preferences-changed'
   | 'terminal-panel-changed'
   | 'history-changed'
+  | 'insights-changed'
   | 'state-loaded';
 
 type EventCallback = (data?: unknown) => void;
@@ -525,6 +526,35 @@ class AppState {
     if (!project) return;
     const ids = project.sessions.filter((s) => s.id !== sessionId).map((s) => s.id);
     for (const id of ids) this.removeSession(projectId, id);
+  }
+
+  addInsightSnapshot(projectId: string, snapshot: InitialContextSnapshot): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    if (!project.insights) project.insights = { initialContextSnapshots: [], dismissed: [] };
+    project.insights.initialContextSnapshots.push(snapshot);
+    // Cap at 50 snapshots
+    if (project.insights.initialContextSnapshots.length > 50) {
+      project.insights.initialContextSnapshots = project.insights.initialContextSnapshots.slice(-50);
+    }
+    this.persist();
+    this.emit('insights-changed', projectId);
+  }
+
+  dismissInsight(projectId: string, insightId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    if (!project.insights) project.insights = { initialContextSnapshots: [], dismissed: [] };
+    if (!project.insights.dismissed.includes(insightId)) {
+      project.insights.dismissed.push(insightId);
+    }
+    this.persist();
+    this.emit('insights-changed', projectId);
+  }
+
+  isInsightDismissed(projectId: string, insightId: string): boolean {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    return project?.insights?.dismissed.includes(insightId) ?? false;
   }
 
   reorderSession(projectId: string, sessionId: string, toIndex: number): void {

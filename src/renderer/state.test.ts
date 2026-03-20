@@ -1139,3 +1139,156 @@ describe('renameSession() history sync', () => {
     expect(cb).not.toHaveBeenCalled();
   });
 });
+
+describe('addInsightSnapshot()', () => {
+  it('creates insights data if not present and stores snapshot', () => {
+    const project = addProject();
+    const snapshot = {
+      sessionId: 's1',
+      timestamp: new Date().toISOString(),
+      totalTokens: 30000,
+      contextWindowSize: 200000,
+      usedPercentage: 15,
+    };
+    appState.addInsightSnapshot(project.id, snapshot);
+    expect(project.insights).toBeDefined();
+    expect(project.insights!.initialContextSnapshots).toHaveLength(1);
+    expect(project.insights!.initialContextSnapshots[0]).toEqual(snapshot);
+  });
+
+  it('appends to existing snapshots', () => {
+    const project = addProject();
+    const s1 = { sessionId: 's1', timestamp: new Date().toISOString(), totalTokens: 10000, contextWindowSize: 200000, usedPercentage: 5 };
+    const s2 = { sessionId: 's2', timestamp: new Date().toISOString(), totalTokens: 20000, contextWindowSize: 200000, usedPercentage: 10 };
+    appState.addInsightSnapshot(project.id, s1);
+    appState.addInsightSnapshot(project.id, s2);
+    expect(project.insights!.initialContextSnapshots).toHaveLength(2);
+  });
+
+  it('caps at 50 snapshots, keeping most recent', () => {
+    const project = addProject();
+    for (let i = 0; i < 55; i++) {
+      appState.addInsightSnapshot(project.id, {
+        sessionId: `s${i}`,
+        timestamp: new Date().toISOString(),
+        totalTokens: i * 1000,
+        contextWindowSize: 200000,
+        usedPercentage: i,
+      });
+    }
+    expect(project.insights!.initialContextSnapshots).toHaveLength(50);
+    // Should keep the last 50 (indices 5–54)
+    expect(project.insights!.initialContextSnapshots[0].sessionId).toBe('s5');
+    expect(project.insights!.initialContextSnapshots[49].sessionId).toBe('s54');
+  });
+
+  it('persists after adding snapshot', () => {
+    const project = addProject();
+    mockSave.mockClear();
+    appState.addInsightSnapshot(project.id, {
+      sessionId: 's1', timestamp: '', totalTokens: 0, contextWindowSize: 200000, usedPercentage: 0,
+    });
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('emits insights-changed event', () => {
+    const project = addProject();
+    const cb = vi.fn();
+    appState.on('insights-changed', cb);
+    appState.addInsightSnapshot(project.id, {
+      sessionId: 's1', timestamp: '', totalTokens: 0, contextWindowSize: 200000, usedPercentage: 0,
+    });
+    expect(cb).toHaveBeenCalledWith(project.id);
+  });
+
+  it('no-op for nonexistent project', () => {
+    mockSave.mockClear();
+    appState.addInsightSnapshot('nonexistent', {
+      sessionId: 's1', timestamp: '', totalTokens: 0, contextWindowSize: 200000, usedPercentage: 0,
+    });
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it('preserves dismissed list when adding snapshots', () => {
+    const project = addProject();
+    appState.dismissInsight(project.id, 'some-insight');
+    appState.addInsightSnapshot(project.id, {
+      sessionId: 's1', timestamp: '', totalTokens: 0, contextWindowSize: 200000, usedPercentage: 0,
+    });
+    expect(project.insights!.dismissed).toContain('some-insight');
+  });
+});
+
+describe('dismissInsight()', () => {
+  it('adds insightId to dismissed list', () => {
+    const project = addProject();
+    appState.dismissInsight(project.id, 'big-initial-context');
+    expect(project.insights!.dismissed).toContain('big-initial-context');
+  });
+
+  it('creates insights data if not present', () => {
+    const project = addProject();
+    expect(project.insights).toBeUndefined();
+    appState.dismissInsight(project.id, 'test-insight');
+    expect(project.insights).toBeDefined();
+    expect(project.insights!.initialContextSnapshots).toEqual([]);
+  });
+
+  it('does not add duplicate dismissals', () => {
+    const project = addProject();
+    appState.dismissInsight(project.id, 'big-initial-context');
+    appState.dismissInsight(project.id, 'big-initial-context');
+    expect(project.insights!.dismissed.filter(d => d === 'big-initial-context')).toHaveLength(1);
+  });
+
+  it('persists after dismissal', () => {
+    const project = addProject();
+    mockSave.mockClear();
+    appState.dismissInsight(project.id, 'test');
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('emits insights-changed event', () => {
+    const project = addProject();
+    const cb = vi.fn();
+    appState.on('insights-changed', cb);
+    appState.dismissInsight(project.id, 'test');
+    expect(cb).toHaveBeenCalledWith(project.id);
+  });
+
+  it('no-op for nonexistent project', () => {
+    mockSave.mockClear();
+    appState.dismissInsight('nonexistent', 'test');
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it('can dismiss multiple different insights', () => {
+    const project = addProject();
+    appState.dismissInsight(project.id, 'insight-a');
+    appState.dismissInsight(project.id, 'insight-b');
+    expect(project.insights!.dismissed).toEqual(['insight-a', 'insight-b']);
+  });
+});
+
+describe('isInsightDismissed()', () => {
+  it('returns true for dismissed insight', () => {
+    const project = addProject();
+    appState.dismissInsight(project.id, 'big-initial-context');
+    expect(appState.isInsightDismissed(project.id, 'big-initial-context')).toBe(true);
+  });
+
+  it('returns false for non-dismissed insight', () => {
+    const project = addProject();
+    expect(appState.isInsightDismissed(project.id, 'big-initial-context')).toBe(false);
+  });
+
+  it('returns false for nonexistent project', () => {
+    expect(appState.isInsightDismissed('nonexistent', 'big-initial-context')).toBe(false);
+  });
+
+  it('returns false for project with no insights data', () => {
+    const project = addProject();
+    expect(project.insights).toBeUndefined();
+    expect(appState.isInsightDismissed(project.id, 'anything')).toBe(false);
+  });
+});
