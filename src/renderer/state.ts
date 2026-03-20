@@ -1,6 +1,7 @@
 import type { ClaudeIdeApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId } from '../shared/types.js';
-import { getCost } from './session-cost.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo } from '../shared/types.js';
+import { getCost, restoreCost } from './session-cost.js';
+import { restoreContext } from './session-context.js';
 
 export type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession } from '../shared/types.js';
 
@@ -54,6 +55,17 @@ class AppState {
       this.state = loaded;
       // Merge defaults for forward compatibility with old state files
       this.state.preferences = { ...defaultPreferences, ...this.state.preferences };
+      // Restore persisted cost data into the in-memory cost tracker
+      for (const project of this.state.projects) {
+        for (const session of project.sessions) {
+          if (session.cost) {
+            restoreCost(session.id, session.cost);
+          }
+          if (session.contextWindow) {
+            restoreContext(session.id, session.contextWindow);
+          }
+        }
+      }
     }
     this.emit('state-loaded');
   }
@@ -398,6 +410,28 @@ class AppState {
   /** @deprecated Use updateSessionCliId */
   updateSessionClaudeId(projectId: string, sessionId: string, claudeSessionId: string): void {
     this.updateSessionCliId(projectId, sessionId, claudeSessionId);
+  }
+
+  private findSessionById(sessionId: string): SessionRecord | undefined {
+    for (const project of this.state.projects) {
+      const session = project.sessions.find((s) => s.id === sessionId);
+      if (session) return session;
+    }
+    return undefined;
+  }
+
+  updateSessionCost(sessionId: string, cost: CostInfo): void {
+    const session = this.findSessionById(sessionId);
+    if (!session) return;
+    session.cost = { ...cost };
+    this.persist();
+  }
+
+  updateSessionContext(sessionId: string, context: ContextWindowInfo): void {
+    const session = this.findSessionById(sessionId);
+    if (!session) return;
+    session.contextWindow = { ...context };
+    this.persist();
   }
 
   renameSession(projectId: string, sessionId: string, name: string): void {

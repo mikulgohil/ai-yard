@@ -1,8 +1,6 @@
-export interface ContextWindowInfo {
-  totalTokens: number;
-  contextWindowSize: number;
-  usedPercentage: number;
-}
+import type { ContextWindowInfo } from '../shared/types';
+
+export type { ContextWindowInfo } from '../shared/types';
 
 type ContextChangeCallback = (sessionId: string, info: ContextWindowInfo) => void;
 
@@ -37,6 +35,11 @@ export function setContextData(
   const contextWindowSize = contextWindow.context_window_size ?? contextWindow.context_window_tokens ?? DEFAULT_CONTEXT_WINDOW;
   const usedPercentage = contextWindow.used_percentage ?? (contextWindowSize > 0 ? (totalTokens / contextWindowSize) * 100 : 0);
 
+  const existing = contexts.get(sessionId);
+  if (existing && existing.totalTokens === totalTokens
+    && existing.contextWindowSize === contextWindowSize
+    && existing.usedPercentage === usedPercentage) return;
+
   const info: ContextWindowInfo = { totalTokens, contextWindowSize, usedPercentage };
   contexts.set(sessionId, info);
   for (const cb of listeners) cb(sessionId, info);
@@ -48,6 +51,11 @@ export function getContext(sessionId: string): ContextWindowInfo | null {
 
 export function onChange(callback: ContextChangeCallback): void {
   listeners.push(callback);
+}
+
+/** Restore context from persisted session data (used on startup, silent — no listeners notified) */
+export function restoreContext(sessionId: string, info: ContextWindowInfo): void {
+  contexts.set(sessionId, info);
 }
 
 export function removeSession(sessionId: string): void {

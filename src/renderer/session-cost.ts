@@ -1,14 +1,7 @@
 import { stripAnsi } from './ansi';
+import type { CostInfo } from '../shared/types';
 
-export interface CostInfo {
-  totalCostUsd: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  cacheReadTokens: number;
-  cacheCreationTokens: number;
-  totalDurationMs: number;
-  totalApiDurationMs: number;
-}
+export type { CostInfo } from '../shared/types';
 
 type CostChangeCallback = (sessionId: string, cost: CostInfo) => void;
 
@@ -38,6 +31,12 @@ export function setCostData(sessionId: string, rawData: { cost: Record<string, u
     totalDurationMs: cost.total_duration_ms ?? 0,
     totalApiDurationMs: cost.total_api_duration_ms ?? 0,
   };
+
+  const existing = costs.get(sessionId);
+  if (existing && existing.totalCostUsd === info.totalCostUsd
+    && existing.totalInputTokens === info.totalInputTokens
+    && existing.totalOutputTokens === info.totalOutputTokens
+    && existing.totalDurationMs === info.totalDurationMs) return;
 
   costs.set(sessionId, info);
   for (const cb of listeners) cb(sessionId, info);
@@ -103,6 +102,11 @@ export function getAggregateCost(): CostInfo {
 
 export function onChange(callback: CostChangeCallback): void {
   listeners.push(callback);
+}
+
+/** Restore cost from persisted session data (used on startup, silent — no listeners notified) */
+export function restoreCost(sessionId: string, cost: CostInfo): void {
+  costs.set(sessionId, cost);
 }
 
 export function removeSession(sessionId: string): void {

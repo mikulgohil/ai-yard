@@ -2,6 +2,7 @@ import {
   setContextData,
   getContext,
   onChange,
+  restoreContext,
   removeSession,
   _resetForTesting,
 } from './session-context';
@@ -99,6 +100,21 @@ describe('current_usage fields', () => {
   it('handles undefined contextWindow gracefully', () => {
     setContextData('s1', undefined);
     expect(getContext('s1')).toBeNull();
+  });
+});
+
+describe('restoreContext', () => {
+  it('populates context map from persisted data', () => {
+    const info = { totalTokens: 5000, contextWindowSize: 200000, usedPercentage: 2.5 };
+    restoreContext('s1', info);
+    expect(getContext('s1')).toEqual(info);
+  });
+
+  it('is silent (does not notify listeners)', () => {
+    const cb = vi.fn();
+    onChange(cb);
+    restoreContext('s1', { totalTokens: 1000, contextWindowSize: 200000, usedPercentage: 0.5 });
+    expect(cb).not.toHaveBeenCalled();
   });
 });
 

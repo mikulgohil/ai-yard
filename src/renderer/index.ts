@@ -43,10 +43,12 @@ async function main(): Promise<void> {
 
   onCostChange((sessionId, cost) => {
     updateCostDisplay(sessionId, cost);
+    appState.updateSessionCost(sessionId, cost);
   });
 
   onContextChange((sessionId, info) => {
     updateContextDisplay(sessionId, info);
+    appState.updateSessionContext(sessionId, info);
   });
 
   window.claudeIde.session.onHookStatus((sessionId, status) => {

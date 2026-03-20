@@ -44,6 +44,24 @@ export interface Skill { name: string; description: string; scope: 'user' | 'pro
 export interface Command { name: string; description: string; scope: 'user' | 'project'; filePath: string }
 export interface ClaudeConfig { mcpServers: McpServer[]; agents: Agent[]; skills: Skill[]; commands: Command[] }
 
+// --- Cost / Context (shared with renderer modules) ---
+
+export interface CostInfo {
+  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  totalDurationMs: number;
+  totalApiDurationMs: number;
+}
+
+export interface ContextWindowInfo {
+  totalTokens: number;
+  contextWindowSize: number;
+  usedPercentage: number;
+}
+
 // --- Session / State ---
 
 export interface SessionRecord {
@@ -62,6 +80,8 @@ export interface SessionRecord {
   fileReaderPath?: string;
   fileReaderLine?: number;
   createdAt: string;
+  cost?: CostInfo;
+  contextWindow?: ContextWindowInfo;
 }
 
 export interface ArchivedSession {

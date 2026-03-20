@@ -4,6 +4,7 @@ import {
   getCost,
   getAggregateCost,
   onChange,
+  restoreCost,
   removeSession,
   _resetForTesting,
 } from './session-cost';
@@ -129,6 +130,46 @@ describe('getAggregateCost', () => {
 describe('getCost', () => {
   it('returns null for unknown session', () => {
     expect(getCost('unknown')).toBeNull();
+  });
+});
+
+describe('restoreCost', () => {
+  it('populates cost map from persisted data', () => {
+    const cost = {
+      totalCostUsd: 3.0,
+      totalInputTokens: 800,
+      totalOutputTokens: 300,
+      cacheReadTokens: 50,
+      cacheCreationTokens: 20,
+      totalDurationMs: 2000,
+      totalApiDurationMs: 1500,
+    };
+    restoreCost('s1', cost);
+    expect(getCost('s1')).toEqual(cost);
+  });
+
+  it('is silent (does not notify listeners)', () => {
+    const cb = vi.fn();
+    onChange(cb);
+    restoreCost('s1', {
+      totalCostUsd: 1.0, totalInputTokens: 0, totalOutputTokens: 0,
+      cacheReadTokens: 0, cacheCreationTokens: 0, totalDurationMs: 0, totalApiDurationMs: 0,
+    });
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('contributes to aggregate cost', () => {
+    restoreCost('s1', {
+      totalCostUsd: 1.0, totalInputTokens: 100, totalOutputTokens: 50,
+      cacheReadTokens: 0, cacheCreationTokens: 0, totalDurationMs: 0, totalApiDurationMs: 0,
+    });
+    restoreCost('s2', {
+      totalCostUsd: 2.0, totalInputTokens: 200, totalOutputTokens: 100,
+      cacheReadTokens: 0, cacheCreationTokens: 0, totalDurationMs: 0, totalApiDurationMs: 0,
+    });
+    const agg = getAggregateCost();
+    expect(agg.totalCostUsd).toBe(3.0);
+    expect(agg.totalInputTokens).toBe(300);
   });
 });
 

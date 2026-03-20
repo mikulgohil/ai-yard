@@ -16,12 +16,20 @@ vi.stubGlobal('crypto', {
 
 vi.mock('./session-cost.js', () => ({
   getCost: vi.fn().mockReturnValue(null),
+  restoreCost: vi.fn(),
+}));
+
+vi.mock('./session-context.js', () => ({
+  restoreContext: vi.fn(),
 }));
 
 import { appState, _resetForTesting } from './state';
-import { getCost } from './session-cost.js';
+import { getCost, restoreCost } from './session-cost.js';
+import { restoreContext } from './session-context.js';
 
 const mockGetCost = vi.mocked(getCost);
+const mockRestoreCost = vi.mocked(restoreCost);
+const mockRestoreContext = vi.mocked(restoreContext);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -96,6 +104,80 @@ describe('load()', () => {
     appState.on('state-loaded', cb);
     await appState.load();
     expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores persisted cost data into session-cost module', async () => {
+    const costData = {
+      totalCostUsd: 1.5,
+      totalInputTokens: 500,
+      totalOutputTokens: 200,
+      cacheReadTokens: 100,
+      cacheCreationTokens: 50,
+      totalDurationMs: 1000,
+      totalApiDurationMs: 800,
+    };
+    const persisted = {
+      version: 1,
+      projects: [{
+        id: 'p1',
+        name: 'Proj',
+        path: '/proj',
+        sessions: [
+          { id: 's1', name: 'S1', cliSessionId: 'cli-1', createdAt: '2026-01-01', cost: costData },
+          { id: 's2', name: 'S2', cliSessionId: null, createdAt: '2026-01-02' },
+        ],
+        activeSessionId: 's1',
+        layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
+      }],
+      activeProjectId: 'p1',
+      preferences: { soundOnSessionWaiting: false, debugMode: false },
+    };
+    mockLoad.mockResolvedValue(persisted);
+    await appState.load();
+    expect(mockRestoreCost).toHaveBeenCalledOnce();
+    expect(mockRestoreCost).toHaveBeenCalledWith('s1', costData);
+  });
+
+  it('restores persisted context window data into session-context module', async () => {
+    const contextData = { totalTokens: 5000, contextWindowSize: 200000, usedPercentage: 2.5 };
+    const persisted = {
+      version: 1,
+      projects: [{
+        id: 'p1',
+        name: 'Proj',
+        path: '/proj',
+        sessions: [
+          { id: 's1', name: 'S1', cliSessionId: null, createdAt: '2026-01-01', contextWindow: contextData },
+        ],
+        activeSessionId: 's1',
+        layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
+      }],
+      activeProjectId: 'p1',
+      preferences: { soundOnSessionWaiting: false, debugMode: false },
+    };
+    mockLoad.mockResolvedValue(persisted);
+    await appState.load();
+    expect(mockRestoreContext).toHaveBeenCalledOnce();
+    expect(mockRestoreContext).toHaveBeenCalledWith('s1', contextData);
+  });
+
+  it('does not call restoreCost for sessions without cost', async () => {
+    const persisted = {
+      version: 1,
+      projects: [{
+        id: 'p1',
+        name: 'Proj',
+        path: '/proj',
+        sessions: [{ id: 's1', name: 'S1', cliSessionId: null, createdAt: '2026-01-01' }],
+        activeSessionId: 's1',
+        layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
+      }],
+      activeProjectId: 'p1',
+      preferences: { soundOnSessionWaiting: false, debugMode: false },
+    };
+    mockLoad.mockResolvedValue(persisted);
+    await appState.load();
+    expect(mockRestoreCost).not.toHaveBeenCalled();
   });
 });
 
@@ -364,6 +446,66 @@ describe('updateSessionCliId()', () => {
     appState.updateSessionCliId(project.id, session.id, 'claude-abc');
     expect(appState.activeSession!.cliSessionId).toBe('claude-abc');
     expect(mockSave).toHaveBeenCalled();
+  });
+});
+
+describe('updateSessionCost()', () => {
+  const sampleCost = {
+    totalCostUsd: 2.5,
+    totalInputTokens: 1000,
+    totalOutputTokens: 400,
+    cacheReadTokens: 50,
+    cacheCreationTokens: 25,
+    totalDurationMs: 3000,
+    totalApiDurationMs: 2000,
+  };
+
+  it('persists cost data on the session record', () => {
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    mockSave.mockClear();
+    appState.updateSessionCost(session.id, sampleCost);
+    const updated = appState.activeProject!.sessions.find(s => s.id === session.id)!;
+    expect(updated.cost).toEqual(sampleCost);
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('no-op for nonexistent session', () => {
+    addProject();
+    mockSave.mockClear();
+    appState.updateSessionCost('nonexistent', sampleCost);
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it('updates cost across projects', () => {
+    const p1 = addProject('P1', '/p1');
+    const p2 = addProject('P2', '/p2');
+    const s1 = appState.addSession(p1.id, 'S1')!;
+    appState.addSession(p2.id, 'S2');
+    appState.updateSessionCost(s1.id, sampleCost);
+    const found = appState.projects.find(p => p.id === p1.id)!.sessions.find(s => s.id === s1.id)!;
+    expect(found.cost).toEqual(sampleCost);
+  });
+});
+
+describe('updateSessionContext()', () => {
+  const sampleContext = { totalTokens: 5000, contextWindowSize: 200000, usedPercentage: 2.5 };
+
+  it('persists context data on the session record', () => {
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    mockSave.mockClear();
+    appState.updateSessionContext(session.id, sampleContext);
+    const updated = appState.activeProject!.sessions.find(s => s.id === session.id)!;
+    expect(updated.contextWindow).toEqual(sampleContext);
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('no-op for nonexistent session', () => {
+    addProject();
+    mockSave.mockClear();
+    appState.updateSessionContext('nonexistent', sampleContext);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 });
 
