@@ -34,6 +34,7 @@ import {
   hideAllFileReaderPanes,
   attachFileReaderToContainer,
   getFileReaderInstance,
+  setFileReaderLine,
 } from './file-reader.js';
 
 const container = document.getElementById('terminal-container')!;
@@ -53,12 +54,12 @@ export function initSplitLayout(): void {
 }
 
 function onSessionAdded(data: unknown): void {
-  const { session } = data as { projectId: string; session: { id: string; type?: string; cliSessionId: string | null; providerId?: string; args?: string; diffFilePath?: string; diffArea?: string; worktreePath?: string; fileReaderPath?: string } };
+  const { session } = data as { projectId: string; session: { id: string; type?: string; cliSessionId: string | null; providerId?: string; args?: string; diffFilePath?: string; diffArea?: string; worktreePath?: string; fileReaderPath?: string; fileReaderLine?: number } };
   const project = appState.activeProject;
   if (!project) return;
 
   if (session.type === 'file-reader') {
-    createFileReaderPane(session.id, session.fileReaderPath || '');
+    createFileReaderPane(session.id, session.fileReaderPath || '', session.fileReaderLine);
     renderLayout();
   } else if (session.type === 'diff-viewer') {
     createFileViewerPane(session.id, session.diffFilePath || '', session.diffArea || '', session.worktreePath);
@@ -68,7 +69,7 @@ function onSessionAdded(data: unknown): void {
     renderLayout();
   } else {
     // Create and spawn immediately
-    createTerminalPane(session.id, project.path, session.cliSessionId, false, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude');
+    createTerminalPane(session.id, project.path, session.cliSessionId, false, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude', project.id);
     renderLayout();
 
     // Spawn after layout is rendered so terminal has dimensions
@@ -110,7 +111,7 @@ export function renderLayout(): void {
   for (const session of project.sessions) {
     if (session.type === 'file-reader') {
       if (!getFileReaderInstance(session.id)) {
-        createFileReaderPane(session.id, session.fileReaderPath || '');
+        createFileReaderPane(session.id, session.fileReaderPath || '', session.fileReaderLine);
       }
     } else if (session.type === 'diff-viewer') {
       if (!getFileViewerInstance(session.id)) {
@@ -122,7 +123,7 @@ export function renderLayout(): void {
       }
     } else {
       if (!getTerminalInstance(session.id)) {
-        createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude');
+        createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude', project.id);
       }
     }
   }
@@ -151,6 +152,9 @@ function renderTabMode(project: ProjectRecord): void {
   if (activeSession?.type === 'file-reader') {
     attachFileReaderToContainer(activeId, container);
     showFileReaderPane(activeId, false);
+    if (activeSession.fileReaderLine) {
+      setFileReaderLine(activeId, activeSession.fileReaderLine);
+    }
     return;
   }
   if (activeSession?.type === 'diff-viewer') {
@@ -186,6 +190,9 @@ function renderSplitMode(project: ProjectRecord): void {
     if (session?.type === 'file-reader') {
       attachFileReaderToContainer(paneId, container);
       showFileReaderPane(paneId, true);
+      if (session.fileReaderLine) {
+        setFileReaderLine(paneId, session.fileReaderLine);
+      }
       continue;
     }
     if (session?.type === 'diff-viewer') {

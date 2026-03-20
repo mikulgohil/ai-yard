@@ -193,7 +193,7 @@ class AppState {
     return session;
   }
 
-  addFileReaderSession(projectId: string, filePath: string): SessionRecord | undefined {
+  addFileReaderSession(projectId: string, filePath: string, lineNumber?: number): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
 
@@ -202,6 +202,7 @@ class AppState {
       (s) => s.type === 'file-reader' && s.fileReaderPath === filePath
     );
     if (existing) {
+      existing.fileReaderLine = lineNumber;
       project.activeSessionId = existing.id;
       this.persist();
       this.emit('session-changed');
@@ -214,6 +215,7 @@ class AppState {
       name,
       type: 'file-reader',
       fileReaderPath: filePath,
+      ...(lineNumber !== undefined ? { fileReaderLine: lineNumber } : {}),
       cliSessionId: null,
       createdAt: new Date().toISOString(),
     };

@@ -60,6 +60,7 @@ export interface SessionRecord {
   diffArea?: string;
   worktreePath?: string;
   fileReaderPath?: string;
+  fileReaderLine?: number;
   createdAt: string;
 }
 

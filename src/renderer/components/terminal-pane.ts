@@ -6,6 +6,7 @@ import { initSession, removeSession } from '../session-activity.js';
 import { removeSession as removeCostSession, type CostInfo } from '../session-cost.js';
 import { removeSession as removeContextSession, type ContextWindowInfo } from '../session-context.js';
 import type { ProviderId } from '../types.js';
+import { FilePathLinkProvider } from './terminal-link-provider.js';
 
 interface TerminalInstance {
   terminal: Terminal;
@@ -31,7 +32,8 @@ export function createTerminalPane(
   cliSessionId: string | null,
   isResume: boolean = false,
   args: string = '',
-  providerId: ProviderId = 'claude'
+  providerId: ProviderId = 'claude',
+  projectId?: string
 ): TerminalInstance {
   if (instances.has(sessionId)) {
     return instances.get(sessionId)!;
@@ -114,6 +116,11 @@ export function createTerminalPane(
   };
 
   instances.set(sessionId, instance);
+
+  // Register file path link provider for Cmd+Click
+  if (projectId) {
+    terminal.registerLinkProvider(new FilePathLinkProvider(projectId, projectPath, terminal));
+  }
 
   // Handle user input → PTY
   terminal.onData((data) => {

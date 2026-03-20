@@ -4,6 +4,7 @@ interface FileReaderInstance {
   element: HTMLElement;
   filePath: string;
   loaded: boolean;
+  targetLine?: number;
 }
 
 const instances = new Map<string, FileReaderInstance>();
@@ -60,12 +61,15 @@ async function loadFile(instance: FileReaderInstance): Promise<void> {
     body.innerHTML = '';
     body.appendChild(renderFileContent(content));
     instance.loaded = true;
+    if (instance.targetLine) {
+      scrollToLine(instance);
+    }
   } catch {
     body.innerHTML = '<div class="file-reader-content"><div class="file-reader-line"><span class="file-reader-line-text">Failed to load file</span></div></div>';
   }
 }
 
-export function createFileReaderPane(sessionId: string, filePath: string): void {
+export function createFileReaderPane(sessionId: string, filePath: string, targetLine?: number): void {
   if (instances.has(sessionId)) return;
 
   const el = document.createElement('div');
@@ -93,7 +97,7 @@ export function createFileReaderPane(sessionId: string, filePath: string): void 
   body.className = 'file-reader-body';
   el.appendChild(body);
 
-  const instance: FileReaderInstance = { element: el, filePath, loaded: false };
+  const instance: FileReaderInstance = { element: el, filePath, loaded: false, targetLine };
   instances.set(sessionId, instance);
 }
 
@@ -111,6 +115,40 @@ export function showFileReaderPane(sessionId: string, isSplit: boolean): void {
   if (isSplit) instance.element.classList.add('split');
   else instance.element.classList.remove('split');
   loadFile(instance);
+  if (instance.loaded && instance.targetLine) {
+    scrollToLine(instance);
+  }
+}
+
+export function setFileReaderLine(sessionId: string, line: number): void {
+  const instance = instances.get(sessionId);
+  if (!instance) return;
+  instance.targetLine = line;
+  if (instance.loaded) {
+    scrollToLine(instance);
+  }
+}
+
+function scrollToLine(instance: FileReaderInstance): void {
+  const line = instance.targetLine;
+  if (!line) return;
+
+  const body = instance.element.querySelector('.file-reader-body');
+  if (!body) return;
+
+  // Clear previous highlights
+  body.querySelectorAll('.file-reader-line-highlight').forEach((el) => {
+    el.classList.remove('file-reader-line-highlight');
+  });
+
+  const lines = body.querySelectorAll('.file-reader-line');
+  const targetEl = lines[line - 1] as HTMLElement | undefined;
+  if (!targetEl) return;
+
+  targetEl.classList.add('file-reader-line-highlight');
+  requestAnimationFrame(() => {
+    targetEl.scrollIntoView({ block: 'center' });
+  });
 }
 
 export function hideAllFileReaderPanes(): void {

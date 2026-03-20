@@ -2165,6 +2165,14 @@ select.mcp-form-input {
   padding-right: 12px;
 }
 
+.file-reader-line-highlight {
+  background: rgba(233, 69, 96, 0.15);
+}
+
+.file-reader-line-highlight .file-reader-line-num {
+  color: var(--accent);
+}
+
 /* File reader tab badge */
 .tab-file-badge {
   font-size: 9px;
