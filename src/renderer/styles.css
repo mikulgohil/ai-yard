@@ -890,7 +890,7 @@ body.debug-panel-open #app {
 .preferences-layout {
   display: flex;
   gap: 0;
-  min-height: 180px;
+  height: 340px;
 }
 
 .preferences-menu {
@@ -921,6 +921,7 @@ body.debug-panel-open #app {
   flex: 1;
   padding: 4px 16px;
   min-width: 0;
+  overflow-y: auto;
 }
 
 .about-section {
