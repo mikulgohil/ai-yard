@@ -14,6 +14,7 @@ A terminal-centric IDE for AI-powered CLI tools. Manage multiple sessions, track
 - **Project terminal** — built-in shell terminal per project for quick commands
 - **MCP Inspector** — integrated MCP server inspection tool
 - **Session insights** — smart alerts that monitor session health, starting with pre-context usage. When a new session's pre-context exceeds 15% of the context window, CCIDE shows an alert with exact token counts and a one-click "Fix in New Session" action that launches Claude to analyze and reduce context bloat. Dismissible per-project and toggleable in preferences.
+- **AI Readiness Score** — per-project readiness analysis that evaluates how well-prepared a project is for AI coding assistance. Displays an overall percentage score with color-coded category breakdowns in the sidebar. Click into any category for detailed checks with one-click "Fix" buttons that open a new session to resolve issues automatically.
 - **Context window tracking** — real-time context usage displayed in the status bar, persisted across restarts
 - **Session history** — archived sessions with resume support, automatic archiving on `/clear`
 - **Usage stats** — aggregated CLI usage statistics from Claude Code's stats cache
