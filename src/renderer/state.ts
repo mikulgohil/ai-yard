@@ -250,9 +250,11 @@ class AppState {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return;
 
+    const closingIndex = project.sessions.findIndex((s) => s.id === sessionId);
     project.sessions = project.sessions.filter((s) => s.id !== sessionId);
     if (project.activeSessionId === sessionId) {
-      project.activeSessionId = project.sessions[0]?.id ?? null;
+      const newIndex = closingIndex > 0 ? closingIndex - 1 : 0;
+      project.activeSessionId = project.sessions[newIndex]?.id ?? null;
     }
     // Also remove from split panes
     project.layout.splitPanes = project.layout.splitPanes.filter((id) => id !== sessionId);

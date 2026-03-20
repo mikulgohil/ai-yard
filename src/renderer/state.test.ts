@@ -286,12 +286,28 @@ describe('addMcpInspectorSession()', () => {
 });
 
 describe('removeSession()', () => {
-  it('removes the session and falls back activeSessionId', () => {
-    const { project, sessions } = addProjectWithSessions(2);
-    // active is the last added session (sessions[1])
+  it('closing last tab activates previous tab', () => {
+    const { project, sessions } = addProjectWithSessions(3);
+    // active is the last added session (sessions[2])
+    appState.removeSession(project.id, sessions[2].id);
+    expect(appState.activeProject!.sessions).toHaveLength(2);
+    expect(appState.activeProject!.activeSessionId).toBe(sessions[1].id);
+  });
+
+  it('closing middle tab activates previous tab', () => {
+    const { project, sessions } = addProjectWithSessions(3);
+    appState.setActiveSession(project.id, sessions[1].id);
     appState.removeSession(project.id, sessions[1].id);
-    expect(appState.activeProject!.sessions).toHaveLength(1);
+    expect(appState.activeProject!.sessions).toHaveLength(2);
     expect(appState.activeProject!.activeSessionId).toBe(sessions[0].id);
+  });
+
+  it('closing first tab activates next tab', () => {
+    const { project, sessions } = addProjectWithSessions(3);
+    appState.setActiveSession(project.id, sessions[0].id);
+    appState.removeSession(project.id, sessions[0].id);
+    expect(appState.activeProject!.sessions).toHaveLength(2);
+    expect(appState.activeProject!.activeSessionId).toBe(sessions[1].id);
   });
 
   it('sets activeSessionId to null when last session removed', () => {
