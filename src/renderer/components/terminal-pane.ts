@@ -48,11 +48,12 @@ export function createTerminalPane(
   element.appendChild(xtermWrap);
 
   const statusBar = document.createElement('div');
-  statusBar.className = 'session-status-bar hidden';
+  statusBar.className = 'session-status-bar';
   const contextIndicator = document.createElement('div');
   contextIndicator.className = 'context-indicator';
   const costDisplay = document.createElement('div');
   costDisplay.className = 'cost-display';
+  costDisplay.textContent = '$0.0000';
   statusBar.appendChild(contextIndicator);
   statusBar.appendChild(costDisplay);
   element.appendChild(statusBar);

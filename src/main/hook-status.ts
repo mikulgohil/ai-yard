@@ -7,6 +7,8 @@ export const STATUS_DIR = path.join(os.tmpdir(), 'ccide');
 const STATUSLINE_SCRIPT = path.join(STATUS_DIR, 'statusline.sh');
 
 let watcher: fs.FSWatcher | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+const lastMtimes = new Map<string, number>();
 
 export function getStatusLineScriptPath(): string {
   return STATUSLINE_SCRIPT;
@@ -30,7 +32,7 @@ if sid:
     if claude_sid:
         with open(f'${STATUS_DIR}/{sid}.sessionid','w') as f:
             f.write(claude_sid)
-" 2>/dev/null
+" 2>>${STATUS_DIR}/statusline.log
 `;
 
   fs.writeFileSync(STATUSLINE_SCRIPT, script, { mode: 0o755 });
@@ -81,6 +83,46 @@ function handleFileChange(win: BrowserWindow, filename: string): void {
   }
 }
 
+function pollForChanges(win: BrowserWindow): void {
+  if (win.isDestroyed()) return;
+
+  try {
+    const files = fs.readdirSync(STATUS_DIR);
+    for (const filename of files) {
+      if (!filename.endsWith('.status') && !filename.endsWith('.sessionid') && !filename.endsWith('.cost')) continue;
+      const filePath = path.join(STATUS_DIR, filename);
+      try {
+        const stat = fs.statSync(filePath);
+        const mtime = stat.mtimeMs;
+        const prev = lastMtimes.get(filename);
+        if (prev === undefined || mtime > prev) {
+          lastMtimes.set(filename, mtime);
+          if (prev !== undefined) {
+            handleFileChange(win, filename);
+          }
+        }
+      } catch {
+        // File may have been deleted
+      }
+    }
+  } catch {
+    // Directory may not exist yet
+  }
+}
+
+function startPolling(win: BrowserWindow): void {
+  stopPolling();
+  pollInterval = setInterval(() => pollForChanges(win), 2000);
+}
+
+function stopPolling(): void {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+  lastMtimes.clear();
+}
+
 function restartWatcher(win: BrowserWindow): void {
   if (watcher) {
     watcher.close();
@@ -90,9 +132,14 @@ function restartWatcher(win: BrowserWindow): void {
   fs.mkdirSync(STATUS_DIR, { recursive: true, mode: 0o700 });
 
   watcher = fs.watch(STATUS_DIR, (_eventType, filename) => {
-    if (!filename) return;
+    if (!filename) {
+      resyncAllSessions(win);
+      return;
+    }
     handleFileChange(win, filename);
   });
+
+  startPolling(win);
 }
 
 export function resyncAllSessions(win: BrowserWindow): void {
@@ -130,6 +177,7 @@ export function cleanupSessionStatus(sessionId: string): void {
 }
 
 export function cleanupAll(): void {
+  stopPolling();
   if (watcher) {
     watcher.close();
     watcher = null;

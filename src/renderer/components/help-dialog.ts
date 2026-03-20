@@ -128,7 +128,6 @@ export function showHelpDialog(): void {
   ]));
 
   container.appendChild(buildSection('Tab Badges', [
-    { visual: () => badge('$1.23', '#606070'), label: 'Cost', description: 'Total API cost for this session' },
     { visual: () => badge('Session 1', '#e94560'), label: 'Unread', description: 'Background session needs attention' },
   ]));
 

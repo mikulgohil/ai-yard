@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('fs', () => ({
   mkdirSync: vi.fn(),
   writeFileSync: vi.fn(),
   readFileSync: vi.fn(),
   readdirSync: vi.fn(),
+  statSync: vi.fn(),
   unlinkSync: vi.fn(),
   rmdirSync: vi.fn(),
   watch: vi.fn(),
@@ -37,11 +38,13 @@ function createMockWin(destroyed = false) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   vi.restoreAllMocks();
   vi.mocked(fs.mkdirSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.writeFileSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.readFileSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.readdirSync).mockReturnValue([] as any);
+  vi.mocked(fs.statSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.unlinkSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.rmdirSync).mockImplementation(vi.fn() as any);
   vi.mocked(fs.watch).mockImplementation((_path: any, cb: any) => {
@@ -64,6 +67,12 @@ beforeEach(() => {
     watchCallback = cb;
     return { close: mockClose } as any;
   });
+});
+
+afterEach(() => {
+  // Stop any polling intervals before restoring timers
+  cleanupAll();
+  vi.useRealTimers();
 });
 
 describe('hook-status', () => {
@@ -162,14 +171,18 @@ describe('hook-status', () => {
       expect(mockSend).not.toHaveBeenCalled();
     });
 
-    it('ignores null filename', () => {
+    it('resyncs all sessions on null filename', () => {
       const win = createMockWin();
       startWatching(win);
 
+      vi.mocked(fs.readdirSync).mockReturnValue(['abc123.cost'] as any);
+      const costData = { cost: { total: 1.0 }, context_window: {} };
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(costData));
+
       watchCallback!('change', null);
 
-      expect(fs.readFileSync).not.toHaveBeenCalled();
-      expect(mockSend).not.toHaveBeenCalled();
+      expect(fs.readdirSync).toHaveBeenCalledWith('/tmp/ccide');
+      expect(mockSend).toHaveBeenCalledWith('session:costData', 'abc123', costData);
     });
   });
 
@@ -243,6 +256,58 @@ describe('hook-status', () => {
       });
 
       expect(() => cleanupSessionStatus('sess-1')).not.toThrow();
+    });
+  });
+
+  describe('polling fallback', () => {
+    it('detects changed files on poll interval', () => {
+      const win = createMockWin();
+
+      // First poll seeds mtimes
+      vi.mocked(fs.readdirSync).mockReturnValue(['s1.cost'] as any);
+      vi.mocked(fs.statSync).mockReturnValue({ mtimeMs: 1000 } as any);
+
+      startWatching(win);
+
+      // Advance to trigger first poll — seeds mtimes, no handleFileChange
+      vi.advanceTimersByTime(2000);
+      expect(mockSend).not.toHaveBeenCalled();
+
+      // Now file has changed mtime
+      vi.mocked(fs.statSync).mockReturnValue({ mtimeMs: 2000 } as any);
+      const costData = { cost: { total: 0.5 }, context_window: {} };
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(costData));
+
+      vi.advanceTimersByTime(2000);
+      expect(mockSend).toHaveBeenCalledWith('session:costData', 's1', costData);
+    });
+
+    it('skips files with unchanged mtime', () => {
+      const win = createMockWin();
+
+      vi.mocked(fs.readdirSync).mockReturnValue(['s1.cost'] as any);
+      vi.mocked(fs.statSync).mockReturnValue({ mtimeMs: 1000 } as any);
+
+      startWatching(win);
+
+      // Seed mtimes
+      vi.advanceTimersByTime(2000);
+
+      // Same mtime — no change
+      vi.advanceTimersByTime(2000);
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it('stops polling on cleanupAll', () => {
+      const win = createMockWin();
+      startWatching(win);
+      cleanupAll();
+
+      vi.mocked(fs.readdirSync).mockReturnValue(['s1.cost'] as any);
+      vi.mocked(fs.statSync).mockReturnValue({ mtimeMs: 1000 } as any);
+
+      vi.advanceTimersByTime(4000);
+      expect(fs.statSync).not.toHaveBeenCalled();
     });
   });
 

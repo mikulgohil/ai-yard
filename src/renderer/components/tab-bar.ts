@@ -2,7 +2,7 @@ import { appState, type ProjectRecord, type SessionRecord } from '../state.js';
 import { showModal, closeModal } from './modal.js';
 import { onChange as onStatusChange, getStatus, type SessionStatus } from '../session-activity.js';
 import { onChange as onGitStatusChange, getGitStatus, type GitStatus } from '../git-status.js';
-import { onChange as onCostChange, getCost } from '../session-cost.js';
+
 import { isUnread, onChange as onUnreadChange } from '../session-unread.js';
 import { showHelpDialog } from './help-dialog.js';
 import { scrollToGitPanel } from './git-panel.js';
@@ -63,13 +63,6 @@ export function initTabBar(): void {
   });
 
   onUnreadChange(render);
-
-  onCostChange((sessionId, cost) => {
-    const span = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"] .tab-cost`) as HTMLElement | null;
-    if (span) {
-      span.textContent = `$${cost.totalCostUsd.toFixed(2)}`;
-    }
-  });
 
   onGitStatusChange((projectId) => {
     if (projectId === appState.activeProjectId) renderGitStatus();
@@ -259,14 +252,11 @@ function render(): void {
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
     tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : buildTooltip(getStatus(session.id), session.cliSessionId);
-    const costInfo = isSpecial ? null : getCost(session.id);
-    const costLabel = costInfo ? `$${costInfo.totalCostUsd.toFixed(2)}` : '';
     const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
       ${statusDot}
       <span class="tab-name">${namePrefix}${esc(session.name)}</span>
-      <span class="tab-cost">${costLabel}</span>
       <span class="tab-close" title="Close session">&times;</span>
     `;
 

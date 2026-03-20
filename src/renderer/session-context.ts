@@ -17,11 +17,13 @@ export function setContextData(
     total_input_tokens?: number;
     total_output_tokens?: number;
     context_window_tokens?: number;
+    context_window_size?: number;
+    used_percentage?: number;
   }
 ): void {
   const totalTokens = (contextWindow.total_input_tokens ?? 0) + (contextWindow.total_output_tokens ?? 0);
-  const contextWindowSize = contextWindow.context_window_tokens ?? DEFAULT_CONTEXT_WINDOW;
-  const usedPercentage = contextWindowSize > 0 ? (totalTokens / contextWindowSize) * 100 : 0;
+  const contextWindowSize = contextWindow.context_window_size ?? contextWindow.context_window_tokens ?? DEFAULT_CONTEXT_WINDOW;
+  const usedPercentage = contextWindow.used_percentage ?? (contextWindowSize > 0 ? (totalTokens / contextWindowSize) * 100 : 0);
 
   const info: ContextWindowInfo = { totalTokens, contextWindowSize, usedPercentage };
   contexts.set(sessionId, info);
