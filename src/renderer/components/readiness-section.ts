@@ -6,7 +6,6 @@ import type { ReadinessResult } from '../../shared/types.js';
 const container = document.getElementById('readiness-section')!;
 let collapsed = true;
 let scanning = false;
-const STALE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export function initReadinessSection(): void {
   appState.on('state-loaded', () => {
@@ -39,7 +38,6 @@ function autoScanIfNeeded(): void {
   }
 
   // Show stale indicator but don't auto-rescan
-  // (the render function handles the stale badge)
 }
 
 async function runScan(): Promise<void> {
@@ -60,9 +58,6 @@ async function runScan(): Promise<void> {
   }
 }
 
-function isStale(result: ReadinessResult): boolean {
-  return Date.now() - new Date(result.scannedAt).getTime() > STALE_MS;
-}
 
 function render(): void {
   applyVisibility();
@@ -86,9 +81,7 @@ function render(): void {
   const scoreBadge = result
     ? `<span class="readiness-badge" style="background:${scoreColor(result.overallScore)}">${result.overallScore}%</span>`
     : '';
-  const staleIndicator = result && isStale(result) ? '<span class="readiness-stale" title="Scan is over 24h old">!</span>' : '';
-
-  header.innerHTML = `${toggleSpan} AI Readiness ${scoreBadge}${staleIndicator}`;
+  header.innerHTML = `${toggleSpan} AI Readiness ${scoreBadge}`;
 
   // Scan/Rescan button
   const scanBtn = document.createElement('button');
