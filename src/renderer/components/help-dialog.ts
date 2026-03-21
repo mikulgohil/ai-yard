@@ -121,7 +121,7 @@ export function showHelpDialog(): void {
 
   container.appendChild(buildSection('Tab Status Dot', [
     { visual: () => dot('#e94560', true), label: 'Working', description: 'Claude is actively generating a response' },
-    { visual: () => dot('#f4b400'), label: 'Waiting', description: 'Claude is waiting for your input' },
+    { visual: () => dot('#f4b400'), label: 'Waiting', description: 'Claude is not actively working' },
     { visual: () => dot('#34a853'), label: 'Completed', description: 'Claude has finished the task' },
     { visual: () => dot('#e67e22', true), label: 'Permission', description: 'Claude needs permission to proceed' },
     { visual: () => dot('#606070'), label: 'Idle', description: 'Session is inactive (CLI exited)' },
