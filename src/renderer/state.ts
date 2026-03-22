@@ -600,6 +600,12 @@ class AppState {
     if (fromIndex === -1 || fromIndex === toIndex) return;
     const [session] = project.sessions.splice(fromIndex, 1);
     project.sessions.splice(toIndex, 0, session);
+    // Keep splitPanes in sync with sessions order
+    if (project.layout.splitPanes.length > 0) {
+      project.layout.splitPanes = project.sessions
+        .filter(s => project.layout.splitPanes.includes(s.id))
+        .map(s => s.id);
+    }
     this.persist();
     this.emit('session-changed');
   }

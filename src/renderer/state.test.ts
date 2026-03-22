@@ -712,6 +712,22 @@ describe('reorderSession()', () => {
     appState.reorderSession(project.id, sessions[1].id, 1);
     expect(mockSave).not.toHaveBeenCalled();
   });
+
+  it('syncs splitPanes order when reordering sessions', () => {
+    const { project, sessions } = addProjectWithSessions(3);
+    appState.toggleSwarm();
+    const panesBefore = [...appState.activeProject!.layout.splitPanes];
+    expect(panesBefore).toContain(sessions[0].id);
+    expect(panesBefore).toContain(sessions[1].id);
+    expect(panesBefore).toContain(sessions[2].id);
+
+    // Move first session to last position
+    appState.reorderSession(project.id, sessions[0].id, 2);
+    const panesAfter = appState.activeProject!.layout.splitPanes;
+    const sessionIds = appState.activeProject!.sessions.map(s => s.id);
+    // splitPanes should follow sessions order
+    expect(panesAfter).toEqual(sessionIds);
+  });
 });
 
 describe('preferences', () => {

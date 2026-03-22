@@ -185,7 +185,8 @@ export function attachToContainer(sessionId: string, container: HTMLElement): vo
     } catch {
       // WebGL not available, software renderer works fine
     }
-  } else if (!container.contains(instance.element)) {
+  } else {
+    // Always re-append to ensure correct DOM order (appendChild moves existing children)
     container.appendChild(instance.element);
   }
 }

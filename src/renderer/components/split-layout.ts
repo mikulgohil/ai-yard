@@ -154,7 +154,7 @@ export function renderLayout(): void {
   hideAllFileViewerPanes();
   hideAllFileReaderPanes();
 
-  if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 2) {
+  if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
     renderSwarmMode(project);
   } else if (project.layout.mode === 'split' && project.layout.splitPanes.length > 1) {
     renderSplitMode(project);
