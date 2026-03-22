@@ -6,7 +6,7 @@ describe('tool-catalog', () => {
     const tool = findTool('gh');
     expect(tool).toBeDefined();
     expect(tool!.name).toBe('GitHub CLI');
-    expect(tool!.install.darwin).toBe('brew install gh');
+    expect(tool!.description).toBe('efficient GitHub access instead of web fetching');
   });
 
   it('finds jq tool', () => {

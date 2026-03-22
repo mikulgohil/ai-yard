@@ -23,20 +23,11 @@ function clearPendingAction(): void {
   }
 }
 
-function getInstallCommand(tool: ToolAlert['tool']): string {
-  const platform = navigator.platform.toLowerCase();
-  if (platform.includes('mac') || platform.includes('darwin')) {
-    return tool.install.darwin;
-  }
-  return tool.install.linux;
-}
-
 function handleFixAction(alert: ToolAlert): void {
   const project = appState.activeProject;
   if (!project) return;
 
-  const installCmd = getInstallCommand(alert.tool);
-  const prompt = `The CLI tool "${alert.tool.name}" (${alert.tool.command}) is not installed on this system. It would provide ${alert.tool.description}. Please install it using: ${installCmd}. Verify the installation works after installing.`;
+  const prompt = `The CLI tool "${alert.tool.name}" (${alert.tool.command}) is not installed on this system. It would provide ${alert.tool.description}. Please install it and verify the installation works.`;
 
   const session = appState.addSession(project.id, `Install ${alert.tool.name}`);
   if (!session) return;
