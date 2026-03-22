@@ -303,11 +303,6 @@ class AppState {
     }
     // Also remove from split/swarm panes
     project.layout.splitPanes = project.layout.splitPanes.filter((id) => id !== sessionId);
-    // Auto-exit swarm if fewer than 2 panes remain
-    if (project.layout.mode === 'swarm' && project.layout.splitPanes.length < 2) {
-      project.layout.mode = 'tabs';
-      project.layout.splitPanes = [];
-    }
     this.persist();
     this.emit('session-removed', { projectId, sessionId });
     this.emit('session-changed');
@@ -494,8 +489,6 @@ class AppState {
       const cliSessions = project.sessions.filter(
         (s) => !s.type || s.type === 'claude'
       );
-      if (cliSessions.length < 2) return; // Need at least 2 sessions
-
       project.layout.mode = 'swarm';
       project.layout.splitPanes = [];
 

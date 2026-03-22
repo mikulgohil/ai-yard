@@ -606,10 +606,21 @@ describe('toggleSplit() / toggleSwarm()', () => {
     expect(layout.splitPanes.length).toBe(8);
   });
 
-  it('does not enter swarm with fewer than 2 CLI sessions', () => {
+  it('enters swarm with a single CLI session', () => {
     addProjectWithSessions(1);
     appState.toggleSwarm();
-    expect(appState.activeProject!.layout.mode).toBe('tabs');
+    const layout = appState.activeProject!.layout;
+    expect(layout.mode).toBe('swarm');
+    expect(layout.splitPanes.length).toBe(1);
+  });
+
+  it('stays in swarm when removing sessions down to 1 pane', () => {
+    const { project, sessions } = addProjectWithSessions(2);
+    appState.toggleSwarm();
+    appState.removeSession(project.id, sessions[0].id);
+    const layout = appState.activeProject!.layout;
+    expect(layout.mode).toBe('swarm');
+    expect(layout.splitPanes.length).toBe(1);
   });
 
   it('places activeSessionId first in splitPanes', () => {
