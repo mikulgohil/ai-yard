@@ -19,10 +19,36 @@ export function initSessionHistory(): void {
   container = document.getElementById('session-history')!;
   render();
 
-  appState.on('history-changed', render);
+  appState.on('history-changed', onHistoryChanged);
   appState.on('project-changed', render);
   appState.on('state-loaded', render);
   appState.on('preferences-changed', () => applyHistoryVisibility());
+}
+
+function onHistoryChanged(): void {
+  applyHistoryVisibility();
+
+  const project = appState.activeProject;
+  if (!collapsed && listEl && project) {
+    const history = appState.getSessionHistory(project.id);
+    // Update the count badge in the header
+    const countEl = container.querySelector('.config-section-count');
+    if (countEl) {
+      countEl.textContent = String(history.length);
+    } else if (history.length > 0) {
+      const header = container.querySelector('.config-section-header');
+      if (header) {
+        const span = document.createElement('span');
+        span.className = 'config-section-count';
+        span.textContent = String(history.length);
+        header.appendChild(span);
+      }
+    }
+    renderList(history);
+    return;
+  }
+
+  render();
 }
 
 function render(): void {
@@ -140,7 +166,9 @@ function renderList(history: ArchivedSession[]): void {
     const name = document.createElement('div');
     name.className = 'history-item-name';
     name.textContent = archived.name;
-    name.title = archived.name;
+    name.title = archived.cliSessionId
+      ? `${archived.name}\nSession ID: ${archived.cliSessionId}`
+      : archived.name;
     info.appendChild(name);
 
     const details = document.createElement('div');
