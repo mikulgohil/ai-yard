@@ -1,4 +1,5 @@
-import type { CliProviderMeta, ClaudeConfig } from '../../shared/types';
+import type { BrowserWindow } from 'electron';
+import type { CliProviderMeta, ClaudeConfig, SettingsValidationResult } from '../../shared/types';
 
 export interface CliProvider {
   readonly meta: CliProviderMeta;
@@ -6,10 +7,12 @@ export interface CliProvider {
   validatePrerequisites(): { ok: boolean; message: string };
   buildEnv(sessionId: string, baseEnv: Record<string, string>): Record<string, string>;
   buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string }): string[];
-  installHooks(): void;
+  installHooks(win?: BrowserWindow | null): Promise<void>;
   installStatusScripts(): void;
   cleanup(): void;
   getConfig(projectPath: string): Promise<ClaudeConfig | null>;
   getShiftEnterSequence(): string | null;
+  validateSettings(): SettingsValidationResult;
+  reinstallSettings(): void;
   parseCostFromOutput?(rawText: string): { totalCostUsd: number } | null;
 }

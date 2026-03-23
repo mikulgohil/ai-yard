@@ -348,14 +348,21 @@ describe('installHooks', () => {
     installHooks();
 
     expect(mockMkdirSync).toHaveBeenCalledWith('/mock/home/.claude', { recursive: true });
-    expect(mockWriteFileSync).toHaveBeenCalledOnce();
+    // installHooks calls installHooksOnly (write 1) + installStatusLine (write 2)
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(2);
 
+    // First write contains hooks
     const written = JSON.parse(String(mockWriteFileSync.mock.calls[0][1]));
     expect(written.hooks).toBeDefined();
     expect(written.hooks.UserPromptSubmit).toBeDefined();
     expect(written.hooks.Stop).toBeDefined();
     expect(written.hooks.PermissionRequest).toBeDefined();
     expect(written.hooks.SessionStart).toBeDefined();
+
+    // Second write adds statusLine
+    const withStatusLine = JSON.parse(String(mockWriteFileSync.mock.calls[1][1]));
+    expect(withStatusLine.statusLine).toBeDefined();
+    expect(withStatusLine.statusLine.type).toBe('command');
   });
 
   it('preserves existing non-vibeyard hooks', () => {

@@ -138,6 +138,7 @@ export interface Preferences {
   sessionHistoryEnabled: boolean;
   insightsEnabled: boolean;
   autoTitleEnabled: boolean;
+  statusLineConsent?: 'granted' | 'declined' | null;
   keybindings?: Record<string, string>;
   sidebarViews?: {
     configSections: boolean;
@@ -146,6 +147,20 @@ export interface Preferences {
     costFooter: boolean;
     readinessSection: boolean;
   };
+}
+
+// --- Settings Validation ---
+
+export interface SettingsValidationResult {
+  statusLine: 'missing' | 'vibeyard' | 'foreign';
+  hooks: 'missing' | 'complete' | 'partial';
+  foreignStatusLineCommand?: string;
+}
+
+export interface SettingsWarningData {
+  sessionId: string;
+  statusLine: SettingsValidationResult['statusLine'];
+  hooks: SettingsValidationResult['hooks'];
 }
 
 export interface PersistedState {

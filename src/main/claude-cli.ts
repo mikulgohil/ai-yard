@@ -159,7 +159,7 @@ function getEnabledPlugins(): Set<string> {
   return new Set(Object.entries(enabled).filter(([, v]) => v).map(([k]) => k));
 }
 
-const HOOK_MARKER = '# vibeyard-hook';
+export const HOOK_MARKER = '# vibeyard-hook';
 
 interface HookHandler {
   type: string;
@@ -178,10 +178,9 @@ function isIdeHook(h: HookHandler): boolean {
 }
 
 /**
- * Install Claude Code hooks in ~/.claude/settings.json so that
- * UserPromptSubmit → working, Stop → completed, StopFailure → waiting, Notification → waiting.
+ * Read and clean Claude settings, returning the settings object and cleaned hooks.
  */
-export function installHooks(): void {
+function prepareSettings(): { settings: Record<string, unknown>; cleaned: HooksConfig } {
   const settingsPath = path.join(homedir(), '.claude', 'settings.json');
   let settings: Record<string, unknown> = {};
   try {
@@ -205,6 +204,21 @@ export function installHooks(): void {
       cleaned[event] = filteredMatchers;
     }
   }
+
+  return { settings, cleaned };
+}
+
+function writeSettings(settings: Record<string, unknown>): void {
+  const settingsPath = path.join(homedir(), '.claude', 'settings.json');
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+}
+
+/**
+ * Install only the hooks portion of Claude Code settings (additive, non-destructive).
+ */
+export function installHooksOnly(): void {
+  const { settings, cleaned } = prepareSettings();
 
   const statusCmd = (status: string) =>
     `sh -c 'mkdir -p ${STATUS_DIR} && echo ${status} > ${STATUS_DIR}/$CLAUDE_IDE_SESSION_ID.status ${HOOK_MARKER}'`;
@@ -248,17 +262,35 @@ export function installHooks(): void {
   }
 
   settings.hooks = cleaned;
+  writeSettings(settings);
+}
 
-  // Configure the statusLine setting to extract cost/context data.
-  // Claude Code pipes session JSON (with cost, context_window fields) to the
-  // statusLine command's stdin. We use the statusline script to write .cost files.
+/**
+ * Install only the statusLine setting (exclusive — overwrites any existing value).
+ */
+export function installStatusLine(): void {
+  const settingsPath = path.join(homedir(), '.claude', 'settings.json');
+  let settings: Record<string, unknown> = {};
+  try {
+    settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+  } catch {
+    // File may not exist yet
+  }
+
   settings.statusLine = {
     type: 'command',
     command: getStatusLineScriptPath(),
   };
 
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+  writeSettings(settings);
+}
+
+/**
+ * Install both hooks and statusLine unconditionally (legacy convenience function).
+ */
+export function installHooks(): void {
+  installHooksOnly();
+  installStatusLine();
 }
 
 /** Read MCP servers from ~/.claude.json (where `claude mcp add` stores them) */

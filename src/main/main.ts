@@ -40,7 +40,7 @@ function createWindow(): void {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   initProviders();
 
   // Validate all registered providers; block on Claude (default), warn on others
@@ -57,15 +57,16 @@ app.whenReady().then(() => {
     }
   }
 
-  // Install hooks and status scripts for all providers
-  for (const provider of getAllProviders()) {
-    provider.installHooks();
-    provider.installStatusScripts();
-  }
-
   registerIpcHandlers();
   createAppMenu();
   createWindow();
+
+  // Install hooks and status scripts for all providers (after window creation so dialogs can attach)
+  for (const provider of getAllProviders()) {
+    await provider.installHooks(mainWindow);
+    provider.installStatusScripts();
+  }
+
   initAutoUpdater();
 
   app.on('activate', () => {

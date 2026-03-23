@@ -2,11 +2,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { execSync } from 'child_process';
+import type { BrowserWindow } from 'electron';
 import type { CliProvider } from './provider';
-import type { CliProviderMeta, ClaudeConfig } from '../../shared/types';
+import type { CliProviderMeta, ClaudeConfig, SettingsValidationResult } from '../../shared/types';
 import { getFullPath } from '../pty-manager';
 import { installStatusLineScript, cleanupAll as cleanupHookStatus } from '../hook-status';
-import { installHooks, getClaudeConfig } from '../claude-cli';
+import { installHooksOnly, installStatusLine, getClaudeConfig } from '../claude-cli';
+import { guardedInstall, validateSettings, reinstallSettings } from '../settings-guard';
 
 let cachedBinaryPath: string | null = null;
 
@@ -140,8 +142,8 @@ export class ClaudeProvider implements CliProvider {
     return args;
   }
 
-  installHooks(): void {
-    installHooks();
+  async installHooks(win?: BrowserWindow | null): Promise<void> {
+    await guardedInstall(win ?? null);
   }
 
   installStatusScripts(): void {
@@ -154,6 +156,15 @@ export class ClaudeProvider implements CliProvider {
 
   async getConfig(projectPath: string): Promise<ClaudeConfig | null> {
     return getClaudeConfig(projectPath);
+  }
+
+  validateSettings(): SettingsValidationResult {
+    return validateSettings();
+  }
+
+  reinstallSettings(): void {
+    reinstallSettings();
+    installStatusLineScript();
   }
 
   getShiftEnterSequence(): string | null {

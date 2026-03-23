@@ -10,7 +10,7 @@ import { getGitStatus, getGitFiles, getGitDiff, getGitWorktrees, gitStageFile, g
 import { registerMcpHandlers } from './mcp-ipc-handlers';
 import { checkForUpdates, quitAndInstall } from './auto-updater';
 import { getProvider, getProviderMeta, getAllProviderMetas } from './providers/registry';
-import type { ProviderId, GitFileEntry } from '../shared/types';
+import type { ProviderId, GitFileEntry, SettingsValidationResult } from '../shared/types';
 import { analyzeReadiness } from './readiness/analyzer';
 
 /**
@@ -65,6 +65,17 @@ export function registerIpcHandlers(): void {
     if (!hookWatcherStarted) {
       startWatching(win);
       hookWatcherStarted = true;
+    }
+
+    // Validate provider settings and warn renderer if missing/tampered
+    const provider = getProvider(providerId);
+    const validation = provider.validateSettings();
+    if (validation.statusLine !== 'vibeyard' || validation.hooks !== 'complete') {
+      win.webContents.send('settings:warning', {
+        sessionId,
+        statusLine: validation.statusLine,
+        hooks: validation.hooks,
+      });
     }
 
     spawnPty(
@@ -265,6 +276,22 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('update:checkNow', () => checkForUpdates());
   ipcMain.handle('update:install', () => quitAndInstall());
+
+  ipcMain.handle('settings:reinstall', (_event, providerId: ProviderId = 'claude') => {
+    try {
+      const provider = getProvider(providerId);
+      provider.reinstallSettings();
+      return { success: true };
+    } catch (err) {
+      console.error('settings:reinstall failed:', err);
+      return { success: false };
+    }
+  });
+
+  ipcMain.handle('settings:validate', (_event, providerId: ProviderId = 'claude'): SettingsValidationResult => {
+    const provider = getProvider(providerId);
+    return provider.validateSettings();
+  });
 
   registerMcpHandlers();
 }

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CostData, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, ToolFailureData } from '../shared/types';
+import type { CostData, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, ToolFailureData, SettingsWarningData, SettingsValidationResult } from '../shared/types';
 
 export type { CostData } from '../shared/types';
 
@@ -78,6 +78,11 @@ export interface VibeyardApi {
   };
   stats: {
     getCache(): Promise<StatsCache | null>;
+  };
+  settings: {
+    onWarning(callback: (data: SettingsWarningData) => void): () => void;
+    reinstall(providerId?: ProviderId): Promise<{ success: boolean }>;
+    validate(providerId?: ProviderId): Promise<SettingsValidationResult>;
   };
   menu: {
     onNewProject(callback: () => void): () => void;
@@ -189,6 +194,11 @@ const api: VibeyardApi = {
   },
   stats: {
     getCache: () => ipcRenderer.invoke('stats:getCache'),
+  },
+  settings: {
+    onWarning: (cb) => onChannel('settings:warning', (data) => cb(data as SettingsWarningData)),
+    reinstall: (providerId) => ipcRenderer.invoke('settings:reinstall', providerId || 'claude'),
+    validate: (providerId) => ipcRenderer.invoke('settings:validate', providerId || 'claude'),
   },
   menu: {
     onNewProject: (cb) => onChannel('menu:new-project', cb),
