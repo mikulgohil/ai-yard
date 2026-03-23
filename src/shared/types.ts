@@ -92,6 +92,7 @@ export interface ArchivedSession {
   cliSessionId: string | null;
   createdAt: string;
   closedAt: string;
+  bookmarked?: boolean;
   cost: {
     totalCostUsd: number;
     totalInputTokens: number;

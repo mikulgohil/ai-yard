@@ -1148,6 +1148,70 @@ describe('clearSessionHistory()', () => {
     // Should not throw
     appState.clearSessionHistory('nonexistent');
   });
+
+  it('preserves bookmarked sessions when clearing', () => {
+    const { project, sessions } = addProjectWithSessions(3);
+    sessions.forEach((s, i) => appState.updateSessionCliId(project.id, s.id, `cli-bm-clear-${i}`));
+    appState.removeAllSessions(project.id);
+    expect(appState.getSessionHistory(project.id)).toHaveLength(3);
+
+    appState.toggleBookmark(project.id, sessions[1].id);
+    appState.clearSessionHistory(project.id);
+    const remaining = appState.getSessionHistory(project.id);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).toBe(sessions[1].id);
+    expect(remaining[0].bookmarked).toBe(true);
+  });
+});
+
+describe('toggleBookmark()', () => {
+  it('toggles bookmark on a history entry', () => {
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    appState.updateSessionCliId(project.id, session.id, 'cli-bm-toggle');
+    appState.removeSession(project.id, session.id);
+
+    const entry = appState.getSessionHistory(project.id)[0];
+    expect(entry.bookmarked).toBeFalsy();
+
+    appState.toggleBookmark(project.id, entry.id);
+    expect(appState.getSessionHistory(project.id)[0].bookmarked).toBe(true);
+
+    appState.toggleBookmark(project.id, entry.id);
+    expect(appState.getSessionHistory(project.id)[0].bookmarked).toBe(false);
+  });
+
+  it('emits history-changed', () => {
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    appState.updateSessionCliId(project.id, session.id, 'cli-bm-emit');
+    appState.removeSession(project.id, session.id);
+    const entry = appState.getSessionHistory(project.id)[0];
+    const cb = vi.fn();
+    appState.on('history-changed', cb);
+    appState.toggleBookmark(project.id, entry.id);
+    expect(cb).toHaveBeenCalledWith(project.id);
+  });
+
+  it('persists after toggling', () => {
+    const project = addProject();
+    const session = appState.addSession(project.id, 'S1')!;
+    appState.updateSessionCliId(project.id, session.id, 'cli-bm-persist');
+    appState.removeSession(project.id, session.id);
+    const entry = appState.getSessionHistory(project.id)[0];
+    mockSave.mockClear();
+    appState.toggleBookmark(project.id, entry.id);
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('no-op for nonexistent project', () => {
+    appState.toggleBookmark('bad-project', 'bad-id');
+  });
+
+  it('no-op for nonexistent entry', () => {
+    const project = addProject();
+    appState.toggleBookmark(project.id, 'nonexistent');
+  });
 });
 
 describe('resumeFromHistory()', () => {

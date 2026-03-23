@@ -346,9 +346,14 @@ class AppState {
       project.sessionHistory.push(archived);
     }
 
-    // Cap at 500 entries per project
+    // Cap at 500 entries per project, preserving bookmarked sessions
     if (project.sessionHistory.length > 500) {
-      project.sessionHistory = project.sessionHistory.slice(-500);
+      let nonBookmarkedToRemove = project.sessionHistory.length - 500;
+      project.sessionHistory = project.sessionHistory.filter((a) => {
+        if (a.bookmarked) return true;
+        if (nonBookmarkedToRemove > 0) { nonBookmarkedToRemove--; return false; }
+        return true;
+      });
     }
 
     this.emit('history-changed', project.id);
@@ -367,10 +372,20 @@ class AppState {
     this.emit('history-changed', projectId);
   }
 
+  toggleBookmark(projectId: string, archivedSessionId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project?.sessionHistory) return;
+    const entry = project.sessionHistory.find((a) => a.id === archivedSessionId);
+    if (!entry) return;
+    entry.bookmarked = !entry.bookmarked;
+    this.persist();
+    this.emit('history-changed', projectId);
+  }
+
   clearSessionHistory(projectId: string): void {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return;
-    project.sessionHistory = [];
+    project.sessionHistory = project.sessionHistory?.filter((a) => a.bookmarked) ?? [];
     this.persist();
     this.emit('history-changed', projectId);
   }

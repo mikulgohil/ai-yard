@@ -6,6 +6,7 @@ let container: HTMLElement;
 let searchInput: HTMLInputElement;
 let listEl: HTMLElement;
 let collapsed = true;
+let bookmarkFilterActive = false;
 
 function applyHistoryVisibility(): void {
   if (!container) return;
@@ -73,6 +74,18 @@ function render(): void {
   searchInput.addEventListener('input', () => renderList(history));
   body.appendChild(searchInput);
 
+  // Bookmark filter
+  const bookmarkFilter = document.createElement('button');
+  const applyFilterState = () => {
+    bookmarkFilter.className = `history-bookmark-filter${bookmarkFilterActive ? ' active' : ''}`;
+    bookmarkFilter.textContent = bookmarkFilterActive ? '★ Bookmarked' : '☆ Bookmarked';
+  };
+  applyFilterState();
+  bookmarkFilter.addEventListener('click', () => {
+    bookmarkFilterActive = !bookmarkFilterActive;
+    applyFilterState();
+    renderList(history);
+  });
   // Clear button
   const clearBtn = document.createElement('button');
   clearBtn.className = 'history-clear-btn';
@@ -81,7 +94,12 @@ function render(): void {
     if (!project) return;
     appState.clearSessionHistory(project.id);
   });
-  body.appendChild(clearBtn);
+
+  const actions = document.createElement('div');
+  actions.className = 'history-actions';
+  actions.appendChild(bookmarkFilter);
+  actions.appendChild(clearBtn);
+  body.appendChild(actions);
 
   // List
   listEl = document.createElement('div');
@@ -96,6 +114,7 @@ function renderList(history: ArchivedSession[]): void {
   const filter = searchInput?.value.toLowerCase() || '';
   const filtered = history
     .filter((a) => a.name.toLowerCase().includes(filter))
+    .filter((a) => !bookmarkFilterActive || a.bookmarked)
     .reverse(); // newest first
 
   listEl.innerHTML = '';
@@ -138,6 +157,19 @@ function renderList(history: ArchivedSession[]): void {
 
     const actions = document.createElement('div');
     actions.className = 'history-item-actions';
+
+    const bookmarkBtn = document.createElement('button');
+    bookmarkBtn.className = `history-bookmark-btn${archived.bookmarked ? ' bookmarked' : ''}`;
+    bookmarkBtn.innerHTML = archived.bookmarked ? '&#9733;' : '&#9734;';
+    bookmarkBtn.title = archived.bookmarked ? 'Remove bookmark' : 'Bookmark session';
+    bookmarkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const project = appState.activeProject;
+      if (project) {
+        appState.toggleBookmark(project.id, archived.id);
+      }
+    });
+    actions.appendChild(bookmarkBtn);
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'history-remove-btn';
