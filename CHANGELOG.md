@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.11] - 2026-03-24
+
+### Features
+- Demo GIF to README
+- Smarter tool failure classification (not-found, permission-denied, auth-required)
+- Confirmation warning when removing a project with session history
+- Real-time config panel updates via file watching
+- Hover action icons for git panel file items
+- Desktop notifications when background sessions need attention
+- Planning guidance to check for preferences configurability
+
+### Fixes
+- Sidebar flickering from config watcher and readiness rescan
+- AI Readiness modal resizing when expanding category items
+
+### Changes
+- Rescan AI Readiness on startup and project switch
+- .cursorrules, AGENTS.md, and copilot-instructions checks from AI Readiness
+- Native statusLine conflict dialog with in-app modal
+
 ## [0.2.10] - 2026-03-23
 
 ### Features
