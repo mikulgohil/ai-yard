@@ -80,6 +80,11 @@ function render(): void {
     });
 
     el.querySelector('.project-delete')!.addEventListener('click', () => {
+      const historyCount = project.sessionHistory?.length ?? 0;
+      const message = historyCount > 0
+        ? `This project has ${historyCount} session(s) in history. Removing it will delete all history. Continue?`
+        : `Remove project "${project.name}"?`;
+      if (!confirm(message)) return;
       appState.removeProject(project.id);
     });
 
