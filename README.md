@@ -9,6 +9,7 @@
   <a href="https://github.com/elirantutia/vibeyard/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elirantutia/vibeyard" alt="License" /></a>
   <a href="https://github.com/elirantutia/vibeyard/issues"><img src="https://img.shields.io/github/issues/elirantutia/vibeyard" alt="Issues" /></a>
   <a href="https://github.com/elirantutia/vibeyard/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
+  <a href="https://star-history.com/#elirantutia/vibeyard&Date"><img src="https://img.shields.io/github/stars/elirantutia/vibeyard?style=social" alt="GitHub Stars" /></a>
 </p>
 
 <p align="center">
@@ -65,6 +66,14 @@ PRs welcome! See the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct]
 [MIT](LICENSE)
 
 ---
+
+<p align="center">
+  <a href="https://github.com/elirantutia/vibeyard"><img src="https://img.shields.io/badge/Star%20Vibeyard%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
+</p>
+
+<p align="center">
+  If Vibeyard helps your workflow, a star helps us grow. Thanks for the support!
+</p>
 
 <p align="center">
   <sub>Vibeyard is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
