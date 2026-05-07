@@ -1,8 +1,8 @@
-import * as path from 'path';
 import { homedir } from 'os';
+import * as path from 'path';
+import type { McpServer, ProviderConfig } from '../shared/types';
 import { readFileSafe } from './fs-utils';
 import { dedupeByName, readAgentsFromDir, readSkillsFromDir } from './provider-config-utils';
-import type { McpServer, ProviderConfig } from '../shared/types';
 
 function splitTomlSectionPath(sectionPath: string): string[] {
   const parts: string[] = [];

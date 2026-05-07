@@ -1,17 +1,17 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import type { BrowserWindow } from 'electron';
-import type { CliProvider, TranscriptDescriptor } from './provider';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '../../shared/types';
-import { getFullPath } from '../pty-manager';
-import { installStatusLineScript, cleanupAll as cleanupHookStatus } from '../hook-status';
+import { getClaudeConfig, } from '../claude-cli';
 import { startConfigWatcher as startConfigWatch, stopConfigWatcher as stopConfigWatch } from '../config-watcher';
-import { installHooksOnly, installStatusLine, getClaudeConfig } from '../claude-cli';
-import { guardedInstall, validateSettings, reinstallSettings } from '../settings-guard';
+import { cleanupAll as cleanupHookStatus, installStatusLineScript } from '../hook-status';
+import { getFullPath } from '../pty-manager';
+import { guardedInstall, reinstallSettings, validateSettings } from '../settings-guard';
+import { deleteAgentFile, writeAgentFile } from './agent-files';
+import type { CliProvider, TranscriptDescriptor } from './provider';
 import { resolveBinary, validateBinaryExists } from './resolve-binary';
 import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR, UUID_RE } from './transcript-utils';
-import { writeAgentFile, deleteAgentFile } from './agent-files';
 
 const binaryCache = { path: null as string | null };
 
@@ -162,7 +162,7 @@ export class ClaudeProvider implements CliProvider {
           text = c;
         } else if (Array.isArray(c)) {
           for (const block of c) {
-            if (block.type === 'text') text += block.text + '\n';
+            if (block.type === 'text') text += `${block.text}\n`;
           }
         }
         if (text) {
@@ -190,10 +190,11 @@ export class ClaudeProvider implements CliProvider {
 
   parseCostFromOutput(rawText: string): { totalCostUsd: number } | null {
     const COST_RE = /\$(\d+\.\d{2,})/g;
-    let match: RegExpExecArray | null;
     let lastCost: string | null = null;
-    while ((match = COST_RE.exec(rawText)) !== null) {
+    let match = COST_RE.exec(rawText);
+    while (match !== null) {
       lastCost = match[0];
+      match = COST_RE.exec(rawText);
     }
     if (lastCost) {
       return { totalCostUsd: parseFloat(lastCost.replace('$', '')) };

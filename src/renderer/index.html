@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' http: https:; frame-src *;">
+  <!--
+    CSP — see docs/IMPROVEMENTS.md A3 for the audit.
+    style-src 'unsafe-inline': required by xterm and gridstack which set inline styles on DOM nodes.
+    img-src https:: required for markdown rendering of remote images in PR/issue bodies and changelogs.
+    connect-src: api.github.com (team personas), raw.githubusercontent.com (persona file download),
+                 github.com (discussions atom feed). WebRTC STUN traffic is not gated by connect-src.
+    frame-src 'none': renderer has no iframes; the browser-tab uses <webview> which is its own
+                      isolated WebContents and not subject to page CSP.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://github.com; frame-src 'none'; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vibeyard</title>
+  <title>AI-yard</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="xterm.css">

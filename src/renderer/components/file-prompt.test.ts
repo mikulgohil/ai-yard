@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('./tab-bar.js', () => ({ promptNewSession: vi.fn() }));
 vi.mock('./terminal-pane.js', () => ({ setPendingPrompt: vi.fn() }));

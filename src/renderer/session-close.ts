@@ -1,6 +1,6 @@
-import { appState, type SessionRecord } from './state.js';
-import { getStatus } from './session-activity.js';
 import { showConfirmDialog } from './components/modal.js';
+import { getStatus } from './session-activity.js';
+import { appState, type SessionRecord } from './state.js';
 
 function projectSessions(projectId: string): SessionRecord[] {
   return appState.projects.find((p) => p.id === projectId)?.sessions ?? [];
@@ -55,7 +55,7 @@ export function closeSessionById(sessionId: string): void {
 }
 
 export async function closeSessionIfFileMissing(sessionId: string, fullPath: string): Promise<boolean> {
-  if (await window.vibeyard.fs.exists(fullPath)) return false;
+  if (await window.aiyard.fs.exists(fullPath)) return false;
   closeSessionById(sessionId);
   return true;
 }
@@ -122,7 +122,7 @@ export function confirmAppClose(onConfirm: () => void): void {
   }
   const isSingle = count === 1;
   showConfirmDialog(
-    'Quit Vibeyard',
+    'Quit AI-yard',
     isSingle
       ? 'A session is still active. Quitting will interrupt it.'
       : `${count} sessions are still active. Quitting will interrupt them.`,

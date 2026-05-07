@@ -1,6 +1,6 @@
-import { createModalShell, createModalButton } from '../../modal-shell.js';
-import { listWidgetTypes } from './widget-registry.js';
 import type { OverviewWidget, OverviewWidgetType } from '../../../../shared/types.js';
+import { createModalButton, createModalShell } from '../../modal-shell.js';
+import { listWidgetTypes } from './widget-registry.js';
 
 export function showWidgetPicker(existing: OverviewWidget[], onPick: (type: OverviewWidgetType) => void): void {
   const shell = createModalShell({ id: 'widget-picker-modal', title: 'Add Widget', wide: true });

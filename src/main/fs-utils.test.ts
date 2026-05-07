@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import * as path from 'path';
+import { vi } from 'vitest';
 
 vi.mock('os', () => ({
   homedir: () => '/mock/home',

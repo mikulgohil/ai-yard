@@ -1,8 +1,8 @@
 import type { ArchivedSession, SessionRecord, TeamMember } from '../../../shared/types.js';
+import { getProviderDisplayName } from '../../provider-availability.js';
+import { isCliSession } from '../../session-utils.js';
 import { appState } from '../../state.js';
 import { closeModal, registerModalCleanup } from '../modal.js';
-import { isCliSession } from '../../session-utils.js';
-import { getProviderDisplayName } from '../../provider-availability.js';
 
 const overlay = document.getElementById('modal-overlay')!;
 const titleEl = document.getElementById('modal-title')!;

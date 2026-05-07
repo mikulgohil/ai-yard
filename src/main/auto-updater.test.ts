@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('electron-updater', () => ({
   autoUpdater: {
@@ -20,7 +20,7 @@ vi.mock('electron', () => ({
 }));
 
 import { autoUpdater } from 'electron-updater';
-import { initAutoUpdater, checkForUpdates, quitAndInstall } from './auto-updater';
+import { checkForUpdates, initAutoUpdater, quitAndInstall } from './auto-updater';
 
 describe('auto-updater', () => {
   beforeEach(() => {
@@ -28,59 +28,27 @@ describe('auto-updater', () => {
     vi.useFakeTimers();
   });
 
-  it('registers event listeners and configures autoUpdater', () => {
+  // The auto-updater is currently dormant — see docs/IMPROVEMENTS.md A4 and the comment in
+  // auto-updater.ts. While dormant, initAutoUpdater() is a no-op even in packaged builds.
+  // When the publish target is restored, replace these tests with the original "registers listeners
+  // and schedules check" suite — preserved in git history at commit prior to A4 landing.
+  it('initAutoUpdater is a no-op while the updater is dormant', () => {
     initAutoUpdater();
-    expect(autoUpdater.autoDownload).toBe(true);
-    expect(autoUpdater.autoInstallOnAppQuit).toBe(true);
-    expect(autoUpdater.on).toHaveBeenCalledWith('update-available', expect.any(Function));
-    expect(autoUpdater.on).toHaveBeenCalledWith('download-progress', expect.any(Function));
-    expect(autoUpdater.on).toHaveBeenCalledWith('update-downloaded', expect.any(Function));
-    expect(autoUpdater.on).toHaveBeenCalledWith('error', expect.any(Function));
-  });
-
-  it('schedules check after 10s delay', () => {
-    initAutoUpdater();
-    expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled();
+    expect(autoUpdater.on).not.toHaveBeenCalled();
     vi.advanceTimersByTime(10_000);
-    expect(autoUpdater.checkForUpdates).toHaveBeenCalledTimes(1);
+    expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled();
+    expect(autoUpdater.autoDownload).toBe(false);
+    expect(autoUpdater.autoInstallOnAppQuit).toBe(false);
   });
 
-  it('checkForUpdates delegates to autoUpdater', () => {
+  it('checkForUpdates delegates to autoUpdater (still callable via IPC)', () => {
     checkForUpdates();
     expect(autoUpdater.checkForUpdates).toHaveBeenCalled();
   });
 
-  it('quitAndInstall delegates to autoUpdater', () => {
+  it('quitAndInstall delegates to autoUpdater (still callable via IPC)', () => {
     quitAndInstall();
     expect(autoUpdater.quitAndInstall).toHaveBeenCalled();
-  });
-
-  it('forwards update-available event to renderer', () => {
-    initAutoUpdater();
-    const handler = vi.mocked(autoUpdater.on).mock.calls.find((c) => c[0] === 'update-available')![1] as (info: { version: string }) => void;
-    handler({ version: '1.2.3' });
-    expect(mockSend).toHaveBeenCalledWith('update:available', { version: '1.2.3' });
-  });
-
-  it('forwards download-progress event to renderer', () => {
-    initAutoUpdater();
-    const handler = vi.mocked(autoUpdater.on).mock.calls.find((c) => c[0] === 'download-progress')![1] as (progress: { percent: number }) => void;
-    handler({ percent: 55.7 });
-    expect(mockSend).toHaveBeenCalledWith('update:download-progress', { percent: 56 });
-  });
-
-  it('forwards update-downloaded event to renderer', () => {
-    initAutoUpdater();
-    const handler = vi.mocked(autoUpdater.on).mock.calls.find((c) => c[0] === 'update-downloaded')![1] as (info: { version: string }) => void;
-    handler({ version: '2.0.0' });
-    expect(mockSend).toHaveBeenCalledWith('update:downloaded', { version: '2.0.0' });
-  });
-
-  it('forwards error event to renderer', () => {
-    initAutoUpdater();
-    const handler = vi.mocked(autoUpdater.on).mock.calls.find((c) => c[0] === 'error')![1] as (err: Error) => void;
-    handler(new Error('update failed'));
-    expect(mockSend).toHaveBeenCalledWith('update:error', { message: 'update failed' });
   });
 
   it('skips initialization in dev mode', async () => {

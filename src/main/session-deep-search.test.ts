@@ -1,6 +1,6 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import type { CliProvider, TranscriptDescriptor } from './providers/provider';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProviderId } from '../shared/types';
+import type { CliProvider, TranscriptDescriptor } from './providers/provider';
 
 vi.mock('fs', () => ({
   promises: {
@@ -14,7 +14,7 @@ vi.mock('./providers/registry', () => ({
 }));
 
 import * as fs from 'fs';
-import { searchSessions, _resetForTesting } from './session-deep-search';
+import { _resetForTesting, searchSessions } from './session-deep-search';
 
 const mockStat = vi.mocked(fs.promises.stat);
 
@@ -202,7 +202,7 @@ describe('searchSessions()', () => {
     providersForTest.push(fakeProvider({
       id: 'claude',
       descriptors: [{ cliSessionId: 'd2', transcriptPath: '/d2' }],
-      index: { '/d2': { text: longLine + '\nfind me\n---\nmore', cwd: '' } },
+      index: { '/d2': { text: `${longLine}\nfind me\n---\nmore`, cwd: '' } },
     }));
     mockStat.mockResolvedValue(makeStat(1));
     const results = await searchSessions('find me');
@@ -252,7 +252,7 @@ describe('searchSessions()', () => {
   });
 
   it('snippet includes context around the match', async () => {
-    const content = 'A'.repeat(70) + 'needle' + 'B'.repeat(70);
+    const content = `${'A'.repeat(70)}needle${'B'.repeat(70)}`;
     providersForTest.push(fakeProvider({
       id: 'claude',
       descriptors: [{ cliSessionId: 'a', transcriptPath: '/a' }],

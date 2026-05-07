@@ -1,4 +1,4 @@
-import type { InspectorEvent, ToolUsageStats, ContextDataPoint } from '../shared/types';
+import type { ContextDataPoint, InspectorEvent, ToolUsageStats } from '../shared/types';
 
 type ChangeCallback = (sessionId: string) => void;
 

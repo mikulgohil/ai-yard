@@ -1,5 +1,5 @@
-import type { ProjectRecord, ProviderId, SessionRecord, TeamData, TeamMember } from '../../shared/types.js';
 import { ensureUniqueSlug, nameToSlug } from '../../shared/slug.js';
+import type { ProjectRecord, ProviderId, SessionRecord, TeamData, TeamMember } from '../../shared/types.js';
 import { buildAgentMarkdown } from '../components/team/agent-markdown.js';
 import { getTeamChatProviderMetas } from '../provider-availability.js';
 import { isCliSession } from '../session-utils.js';

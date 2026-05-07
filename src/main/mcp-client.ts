@@ -20,7 +20,7 @@ export async function connect(id: string, url: string): Promise<McpResult> {
     // Disconnect existing connection if any
     await disconnect(id);
 
-    const client = new Client({ name: 'vibeyard-mcp-inspector', version: '1.0.0' });
+    const client = new Client({ name: 'ai-yard-mcp-inspector', version: '1.0.0' });
 
     let transport: SSEClientTransport | StreamableHTTPClientTransport;
     if (url.endsWith('/sse')) {

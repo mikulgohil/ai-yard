@@ -1,12 +1,13 @@
+import { execFile, execSync } from 'child_process';
 import * as pty from 'node-pty';
-import { execSync, execFile } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 import type { ProviderId } from '../shared/types';
-import { getProvider } from './providers/registry';
 import { registerSession } from './hook-status';
 import { isWin, pathSep } from './platform';
 import { nvmDefaultNodeBinDir } from './providers/nvm';
+import { getProvider } from './providers/registry';
+import { track } from './telemetry';
 
 interface PtyInstance {
   process: pty.IPty;
@@ -95,6 +96,7 @@ export function getFullPath(): string {
   // -i is required: nvm exports PATH from ~/.zshrc, only sourced for interactive shells.
   try {
     const shellPath = execSync(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: ${PATH} is intentionally passed literally to the shell
       `${shell} -ilc 'echo "${PATH_MARKER_BEGIN}${'${PATH}'}${PATH_MARKER_END}"'`,
       {
         encoding: 'utf-8',
@@ -106,7 +108,7 @@ export function getFullPath(): string {
     const match = shellPath.match(
       new RegExp(`${PATH_MARKER_BEGIN}([\\s\\S]*?)${PATH_MARKER_END}`),
     );
-    if (match && match[1]) {
+    if (match?.[1]) {
       cachedFullPath = match[1].trim();
       return cachedFullPath;
     }
@@ -201,6 +203,8 @@ export async function spawnPty(
     cwd,
     env,
   });
+
+  track('session.start', { providerId, resume: isResume });
 
   ptyProcess.onData((data) => onData(data));
   ptyProcess.onExit(({ exitCode, signal }) => {
@@ -385,7 +389,7 @@ function findDeepestChild(pid: number, callback: (deepestPid: number) => void): 
         callback(pid);
         return;
       }
-      const children = stdout.trim().split('\n').map(s => parseInt(s, 10)).filter(n => !isNaN(n));
+      const children = stdout.trim().split('\n').map(s => parseInt(s, 10)).filter(n => !Number.isNaN(n));
       if (children.length === 0) {
         callback(pid);
         return;

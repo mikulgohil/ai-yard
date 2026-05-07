@@ -1,7 +1,7 @@
-import { createModalShell, createModalButton } from '../modal-shell.js';
-import { buildSection, badge, mono } from '../help-shared.js';
-import { createDefaultBoard } from '../../state.js';
 import type { ColumnBehavior } from '../../../shared/types.js';
+import { createDefaultBoard } from '../../state.js';
+import { badge, buildSection, mono } from '../help-shared.js';
+import { createModalButton, createModalShell } from '../modal-shell.js';
 
 let cleanupFn: (() => void) | null = null;
 

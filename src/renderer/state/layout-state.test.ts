@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -29,8 +29,9 @@ vi.mock('../provider-availability.js', () => ({
   getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
-import { appState, _resetForTesting } from '../state';
 import { getCost } from '../session-cost.js';
+import { _resetForTesting, appState } from '../state';
+
 const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {
@@ -54,7 +55,7 @@ function addProjectWithSessions(count: number) {
   return { project, sessions };
 }
 
-function mockCostData() {
+function _mockCostData() {
   mockGetCost.mockReturnValue({
     totalCostUsd: 0.42,
     totalInputTokens: 1000,
@@ -80,7 +81,7 @@ describe('toggleSplit() / toggleSwarm()', () => {
   });
 
   it('switches from tabs back to swarm and populates splitPanes', () => {
-    const { project, sessions } = addProjectWithSessions(2);
+    addProjectWithSessions(2);
     appState.toggleSwarm(); // swarm -> tabs
     appState.toggleSwarm(); // tabs -> swarm
     const layout = appState.activeProject!.layout;
@@ -165,7 +166,7 @@ describe('gotoSession()', () => {
   });
 
   it('no-op for out-of-bounds index', () => {
-    const { sessions } = addProjectWithSessions(2);
+    addProjectWithSessions(2);
     const before = appState.activeProject!.activeSessionId;
     appState.gotoSession(5);
     expect(appState.activeProject!.activeSessionId).toBe(before);
@@ -235,7 +236,7 @@ describe('reorderSession()', () => {
 
 describe('toggleSwarm() sync new CLI sessions', () => {
   it('adds sessions created while in tabs mode to splitPanes when toggling back to swarm', () => {
-    const { project, sessions } = addProjectWithSessions(2);
+    const { project } = addProjectWithSessions(2);
     appState.toggleSwarm();
     expect(appState.activeProject!.layout.mode).toBe('tabs');
     const newSession = appState.addSession(project.id, 'extra')!;

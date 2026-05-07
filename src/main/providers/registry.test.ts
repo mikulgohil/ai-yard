@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import type { CliProvider } from './provider';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { CliProviderMeta } from '../../shared/types';
-import { initProviders, registerProvider, getProvider, getAllProviders, getProviderMeta, getAllProviderMetas } from './registry';
+import type { CliProvider } from './provider';
+import { getAllProviderMetas, getAllProviders, getProvider, getProviderMeta, initProviders, registerProvider } from './registry';
 
 const fakeMeta: CliProviderMeta = {
   id: 'copilot',
@@ -31,7 +31,7 @@ function makeFakeProvider(meta: CliProviderMeta): CliProvider {
     cleanup: () => {},
     getConfig: async () => ({ mcpServers: [], agents: [], skills: [], commands: [] }),
     getShiftEnterSequence: () => null,
-    validateSettings: () => ({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} }),
+    validateSettings: () => ({ statusLine: 'aiyard', hooks: 'complete', hookDetails: {} }),
     reinstallSettings: () => {},
   };
 }

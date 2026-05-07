@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockAppState = vi.hoisted(() => {
   const state = {
@@ -30,8 +30,8 @@ vi.mock('./state.js', () => ({
   appState: mockAppState,
 }));
 
-import { _resetForTesting as resetActivity, setHookStatus, initSession } from './session-activity.js';
-import { _resetForTesting as resetDesktopNotif, initNotificationDesktop } from './notification-desktop.js';
+import { initNotificationDesktop, _resetForTesting as resetDesktopNotif } from './notification-desktop.js';
+import { initSession, _resetForTesting as resetActivity, setHookStatus } from './session-activity.js';
 
 
 // Track Notification constructor calls
@@ -80,7 +80,7 @@ describe('notification-desktop', () => {
     setHookStatus('bg-session', 'waiting');
 
     expect(notificationInstances).toHaveLength(1);
-    expect(notificationInstances[0].title).toBe('Vibeyard');
+    expect(notificationInstances[0].title).toBe('AI-yard');
     expect(notificationInstances[0].options.body).toBe('Background Session is waiting for input');
     expect(notificationInstances[0].options.silent).toBe(true);
   });
@@ -154,7 +154,7 @@ describe('notification-desktop', () => {
     const focusSpy = vi.fn();
     (globalThis as any).window = {
       focus: focusSpy,
-      vibeyard: { app: { focus: focusSpy } },
+      aiyard: { app: { focus: focusSpy } },
     };
 
     initSession('bg-session');

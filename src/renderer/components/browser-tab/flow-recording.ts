@@ -1,5 +1,5 @@
-import type { BrowserTabInstance, FlowStep } from './types.js';
 import { buildSelectorOptions } from './selector-ui.js';
+import type { BrowserTabInstance, FlowStep } from './types.js';
 
 export function renderFlowSteps(instance: BrowserTabInstance): void {
   const list = instance.flowStepsList;

@@ -1,7 +1,7 @@
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { execSync } from 'child_process';
 import { isWin, pathSep, whichCmd } from './platform';
 
 /**
@@ -16,7 +16,7 @@ export function checkPythonAvailable(): string | null {
   } catch {
     return (
       'Python not found.\n\n' +
-      'Vibeyard uses Python on Windows for session tracking (cost, status, events).\n' +
+      'AI-yard uses Python on Windows for session tracking (cost, status, events).\n' +
       'These features will not work until Python is installed and available on PATH.\n\n' +
       'Install Python from https://www.python.org/downloads/ or via:\n' +
       '  winget install Python.Python.3\n'
@@ -84,9 +84,9 @@ export function validatePrerequisites(): { ok: boolean; message: string } {
     ok: false,
     message:
       'Claude CLI not found.\n\n' +
-      'Vibeyard requires the Claude Code CLI to be installed.\n\n' +
+      'AI-yard requires the Claude Code CLI to be installed.\n\n' +
       'Install it with:\n' +
       '  npm install -g @anthropic-ai/claude-code\n\n' +
-      'After installing, restart Vibeyard.',
+      'After installing, restart AI-yard.',
   };
 }

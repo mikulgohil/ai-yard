@@ -1,10 +1,10 @@
-import { appState } from '../state.js';
 import { createPlanModeRow } from '../dom-utils.js';
-import { setPendingPrompt } from './terminal-pane.js';
-import { getFileViewerInstance } from './file-viewer.js';
+import { appState } from '../state.js';
 import { getFileReaderInstance } from './file-reader.js';
-import { promptNewSession } from './tab-bar.js';
+import { getFileViewerInstance } from './file-viewer.js';
 import { wireSubmitDisabled } from './submit-disabled.js';
+import { promptNewSession } from './tab-bar.js';
+import { setPendingPrompt } from './terminal-pane.js';
 
 type PaneKind = 'file-viewer' | 'file-reader';
 

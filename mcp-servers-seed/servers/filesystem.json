@@ -1,0 +1,13 @@
+{
+  "id": "filesystem",
+  "name": "Filesystem",
+  "description": "Read, write, and search files in directories you explicitly allow. Useful for letting an AI assistant operate on local code or notes outside the current session's working directory.",
+  "domain": "dev-tools",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-filesystem",
+    "<path-to-allowed-dir>"
+  ],
+  "setupUrl": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem"
+}

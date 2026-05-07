@@ -1,9 +1,9 @@
+import type { BoardData } from '../../../../shared/types.js';
 import { appState } from '../../../state.js';
 import { createColumnElement } from '../../board/board-column.js';
-import { showTaskModal } from '../../board/board-task-modal.js';
 import { addDragEndCallback, initBoardDnd, isDragActive } from '../../board/board-dnd.js';
+import { showTaskModal } from '../../board/board-task-modal.js';
 import { createWidgetEmpty } from './widget-empty.js';
-import type { BoardData } from '../../../../shared/types.js';
 import type { WidgetFactory } from './widget-host.js';
 
 export const createKanbanWidget: WidgetFactory = (host) => {

@@ -1,9 +1,9 @@
-import { appState } from '../state.js';
-import { onChange as onGitStatusChange, getGitStatus, getActiveGitPath, getWorktrees, setActiveWorktree, onWorktreeChange } from '../git-status.js';
-import { onChange as onStatusChange } from '../session-activity.js';
-import { showFileViewer } from './file-viewer.js';
 import { areaLabel } from '../dom-utils.js';
-import type { GitFileEntry, GitWorktree } from '../types.js';
+import { getActiveGitPath, getGitStatus, getWorktrees, onChange as onGitStatusChange, onWorktreeChange, setActiveWorktree } from '../git-status.js';
+import { onChange as onStatusChange } from '../session-activity.js';
+import { appState } from '../state.js';
+import type { GitFileEntry, } from '../types.js';
+import { showFileViewer } from './file-viewer.js';
 
 const MAX_FILES = 100;
 
@@ -22,7 +22,7 @@ function hideGitContextMenu(): void {
 
 function createMenuItem(label: string, onClick: () => void, disabled = false): HTMLElement {
   const item = document.createElement('div');
-  item.className = 'tab-context-menu-item' + (disabled ? ' disabled' : '');
+  item.className = `tab-context-menu-item${disabled ? ' disabled' : ''}`;
   item.textContent = label;
   if (!disabled) {
     item.addEventListener('click', (e) => {
@@ -55,12 +55,12 @@ function showGitFileContextMenu(x: number, y: number, entry: GitFileEntry, gitPa
 
   if (entry.area === 'staged') {
     menu.appendChild(createMenuItem('Unstage', async () => {
-      await window.vibeyard.git.unstageFile(gitPath, entry.path);
+      await window.aiyard.git.unstageFile(gitPath, entry.path);
       afterAction();
     }));
   } else {
     menu.appendChild(createMenuItem('Stage', async () => {
-      await window.vibeyard.git.stageFile(gitPath, entry.path);
+      await window.aiyard.git.stageFile(gitPath, entry.path);
       afterAction();
     }));
   }
@@ -69,7 +69,7 @@ function showGitFileContextMenu(x: number, y: number, entry: GitFileEntry, gitPa
     menu.appendChild(createMenuItem('Discard Changes', async () => {
       const msg = discardConfirmMessage(entry);
       if (confirm(msg)) {
-        await window.vibeyard.git.discardFile(gitPath, entry.path, entry.area);
+        await window.aiyard.git.discardFile(gitPath, entry.path, entry.area);
         afterAction();
       }
     }));
@@ -78,7 +78,7 @@ function showGitFileContextMenu(x: number, y: number, entry: GitFileEntry, gitPa
   menu.appendChild(createSeparator());
 
   menu.appendChild(createMenuItem('Open in Editor', async () => {
-    await window.vibeyard.git.openInEditor(gitPath, entry.path);
+    await window.aiyard.git.openInEditor(gitPath, entry.path);
   }));
 
   menu.appendChild(createMenuItem('Copy Path', () => {
@@ -132,7 +132,7 @@ function createActionButton(title: string, icon: string, onClick: (e: Event) => 
 
 function shortPath(fullPath: string): string {
   const parts = fullPath.split('/');
-  return parts.length > 2 ? '.../' + parts.slice(-2).join('/') : fullPath;
+  return parts.length > 2 ? `.../${parts.slice(-2).join('/')}` : fullPath;
 }
 
 function renderWorktreeSelector(container: HTMLElement, project: { id: string; path: string }): void {
@@ -170,7 +170,7 @@ function renderWorktreeSelector(container: HTMLElement, project: { id: string; p
 
   // Insert after header
   const header = container.querySelector('.config-section-header');
-  if (header && header.nextSibling) {
+  if (header?.nextSibling) {
     container.querySelector('.config-section')!.insertBefore(wrapper, header.nextSibling);
   }
 }
@@ -204,7 +204,7 @@ async function refresh(): Promise<void> {
   }
 
   const status = getGitStatus(project.id);
-  if (!status || !status.isGitRepo) {
+  if (!status?.isGitRepo) {
     container.innerHTML = '';
     return;
   }
@@ -299,7 +299,7 @@ async function loadFiles(body: HTMLElement, gitPath: string): Promise<void> {
 
   let files: GitFileEntry[];
   try {
-    files = await window.vibeyard.git.getFiles(gitPath) as GitFileEntry[];
+    files = await window.aiyard.git.getFiles(gitPath) as GitFileEntry[];
   } catch {
     body.innerHTML = '';
     lastFilesKey = '';
@@ -344,7 +344,7 @@ async function loadFiles(body: HTMLElement, gitPath: string): Promise<void> {
 
       if (entry.area === 'staged') {
         actions.appendChild(createActionButton('Unstage', '−', async () => {
-          await window.vibeyard.git.unstageFile(gitPath, entry.path);
+          await window.aiyard.git.unstageFile(gitPath, entry.path);
           afterAction();
         }));
       } else {
@@ -352,13 +352,13 @@ async function loadFiles(body: HTMLElement, gitPath: string): Promise<void> {
           actions.appendChild(createActionButton('Discard Changes', '↩', async () => {
             const msg = discardConfirmMessage(entry);
             if (confirm(msg)) {
-              await window.vibeyard.git.discardFile(gitPath, entry.path, entry.area);
+              await window.aiyard.git.discardFile(gitPath, entry.path, entry.area);
               afterAction();
             }
           }));
         }
         actions.appendChild(createActionButton('Stage', '+', async () => {
-          await window.vibeyard.git.stageFile(gitPath, entry.path);
+          await window.aiyard.git.stageFile(gitPath, entry.path);
           afterAction();
         }));
       }
@@ -391,7 +391,7 @@ async function loadFiles(body: HTMLElement, gitPath: string): Promise<void> {
 
 export function scrollToGitPanel(): void {
   const container = document.getElementById('git-panel');
-  if (!container || !container.firstElementChild) return;
+  if (!container?.firstElementChild) return;
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
   // Expand if collapsed
   if (collapsed) {
@@ -409,7 +409,7 @@ export function scrollToGitPanel(): void {
 
 export function toggleGitPanel(): void {
   const container = document.getElementById('git-panel');
-  if (!container || !container.firstElementChild) return;
+  if (!container?.firstElementChild) return;
 
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
   collapsed = !collapsed;

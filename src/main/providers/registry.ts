@@ -1,9 +1,9 @@
-import type { ProviderId, CliProviderMeta } from '../../shared/types';
-import type { CliProvider } from './provider';
+import type { CliProviderMeta, ProviderId } from '../../shared/types';
 import { ClaudeProvider } from './claude-provider';
 import { CodexProvider } from './codex-provider';
 import { CopilotProvider } from './copilot-provider';
 import { GeminiProvider } from './gemini-provider';
+import type { CliProvider } from './provider';
 
 const providers = new Map<ProviderId, CliProvider>();
 

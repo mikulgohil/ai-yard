@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
-import { codexInstructionsProducer } from './codex-instructions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisContext } from '../types';
+import { codexInstructionsProducer } from './codex-instructions';
 
 vi.mock('fs');
 
@@ -59,7 +59,7 @@ describe('codexInstructionsProducer', () => {
   });
 
   it('passes AGENTS.md exists check', () => {
-    const content = Array(100).fill('# Line').join('\n') + '\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview';
+    const content = `${Array(100).fill('# Line').join('\n')}\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview`;
     mockFileExists({ 'AGENTS.md': content });
 
     const tagged = codexInstructionsProducer.produce('/test/project', ctx);

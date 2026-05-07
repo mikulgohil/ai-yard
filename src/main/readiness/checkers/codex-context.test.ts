@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
-import { codexContextProducer } from './codex-context';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockInstructionFiles } from '../test-utils';
 import type { AnalysisContext } from '../types';
+import { codexContextProducer } from './codex-context';
 
 vi.mock('fs');
 

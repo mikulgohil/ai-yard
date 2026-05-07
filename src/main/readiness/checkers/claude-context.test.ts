@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as fs from 'fs';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
-import { claudeContextProducer } from './claude-context';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockInstructionFiles } from '../test-utils';
 import type { AnalysisContext } from '../types';
+import { claudeContextProducer } from './claude-context';
 
 vi.mock('fs');
 vi.mock('child_process');
 
 const mockFs = vi.mocked(fs);
-const mockCp = vi.mocked(child_process);
+const _mockCp = vi.mocked(child_process);
 
 beforeEach(() => {
   vi.resetAllMocks();

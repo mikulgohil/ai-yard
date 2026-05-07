@@ -1,18 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { deriveProjectName } from './project-name';
 
 describe('deriveProjectName', () => {
   it('extracts the basename from POSIX paths', () => {
-    expect(deriveProjectName('/Users/me/dev/vibeyard')).toBe('vibeyard');
+    expect(deriveProjectName('/Users/me/dev/aiyard')).toBe('aiyard');
   });
 
   it('extracts the basename from Windows paths', () => {
-    expect(deriveProjectName('C:\\Users\\lauferism\\git\\vibeyard')).toBe('vibeyard');
+    expect(deriveProjectName('C:\\Users\\lauferism\\git\\aiyard')).toBe('aiyard');
   });
 
   it('strips trailing separators', () => {
-    expect(deriveProjectName('/Users/me/dev/vibeyard/')).toBe('vibeyard');
-    expect(deriveProjectName('C:\\Users\\me\\vibeyard\\')).toBe('vibeyard');
+    expect(deriveProjectName('/Users/me/dev/aiyard/')).toBe('aiyard');
+    expect(deriveProjectName('C:\\Users\\me\\aiyard\\')).toBe('aiyard');
   });
 
   it('returns the fallback when cwd is empty', () => {

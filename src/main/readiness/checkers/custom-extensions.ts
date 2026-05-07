@@ -1,6 +1,6 @@
 import * as path from 'path';
 import type { ReadinessCheck } from '../../../shared/types';
-import type { ReadinessCheckProducer, TaggedCheck, AnalysisContext } from '../types';
+import type { AnalysisContext, ReadinessCheckProducer, TaggedCheck } from '../types';
 import { dirExists, readDirSafe } from '../utils';
 
 function checkCustomCommands(projectPath: string): ReadinessCheck {

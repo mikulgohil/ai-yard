@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureInitialContext, markFreshSession, onAlert, dismissInsight, _resetForTesting } from './session-insights.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { _resetForTesting, captureInitialContext, dismissInsight, markFreshSession, onAlert } from './session-insights.js';
 import { appState, _resetForTesting as resetState } from './state.js';
 
-// Mock the window.vibeyard API
+// Mock the window.aiyard API
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: vi.fn().mockResolvedValue(null), save: vi.fn() },
   },
 });

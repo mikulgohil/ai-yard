@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShareMessage } from '../../shared/sharing-types.js';
 import {
+  decodeConnectionCode,
+  encodeConnectionCode,
   ICE_CONFIG,
   sendMessage,
-  encodeConnectionCode,
-  decodeConnectionCode,
   waitForIceGathering,
 } from './webrtc-utils.js';
 

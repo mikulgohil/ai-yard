@@ -1,10 +1,12 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron';
-import type { CostData, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, DeepSearchResult, GithubFetchResult, GithubRepo } from '../shared/types';
-import { ZOOM_MIN, ZOOM_MAX } from '../shared/types';
+import * as os from 'os';
+import * as path from 'path';
+import type { CliProviderMeta, CostData, DeepSearchResult, GithubFetchResult, GithubRepo, InspectorEvent, ProviderConfig, ProviderId, ReadFileResult, ReadinessResult, SettingsValidationResult, SettingsWarningData, StatsCache, StatusLineConflictData, ToolFailureData } from '../shared/types';
+import { ZOOM_MAX, ZOOM_MIN } from '../shared/types';
 
 export type { CostData } from '../shared/types';
 
-export interface VibeyardApi {
+export interface AIYardApi {
   pty: {
     create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, systemPrompt?: string): Promise<void>;
     createShell(sessionId: string, cwd: string): Promise<void>;
@@ -89,6 +91,8 @@ export interface VibeyardApi {
     getVersion(): Promise<string>;
     openExternal(url: string): Promise<void>;
     getBrowserPreloadPath(): Promise<string>;
+    /** Static paths used by the renderer for PII scrubbing (Sentry). */
+    envPaths: { home: string; state: string };
     onQuitting(callback: () => void): () => void;
     onConfirmClose(callback: () => void): () => void;
     closeConfirmed(): void;
@@ -146,6 +150,10 @@ export interface VibeyardApi {
     onCloseSession(callback: () => void): () => void;
     rebuild(debugMode: boolean): Promise<void>;
   };
+  telemetry: {
+    /** Fire-and-forget; ignored in dev or when the user has telemetry disabled. */
+    track(event: 'app.launch' | 'session.start' | 'feature.used', data?: Record<string, string | number | boolean>): void;
+  };
 }
 
 function onChannel(channel: string, callback: (...args: unknown[]) => void): () => void {
@@ -154,7 +162,7 @@ function onChannel(channel: string, callback: (...args: unknown[]) => void): () 
   return () => ipcRenderer.removeListener(channel, listener);
 }
 
-const api: VibeyardApi = {
+const api: AIYardApi = {
   pty: {
     create: (sessionId, cwd, cliSessionId, isResume, extraArgs, providerId, initialPrompt, systemPrompt) =>
       ipcRenderer.invoke('pty:create', sessionId, cwd, cliSessionId, isResume, extraArgs || '', providerId || 'claude', initialPrompt, systemPrompt),
@@ -260,6 +268,7 @@ const api: VibeyardApi = {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
     getBrowserPreloadPath: () => ipcRenderer.invoke('app:getBrowserPreloadPath'),
+    envPaths: { home: os.homedir(), state: path.join(os.homedir(), '.ai-yard') },
     onQuitting: (cb: () => void) => onChannel('app:quitting', cb),
     onConfirmClose: (cb: () => void) => onChannel('app:confirmClose', cb),
     closeConfirmed: () => { ipcRenderer.send('app:closeConfirmed'); },
@@ -320,6 +329,9 @@ const api: VibeyardApi = {
     onCloseSession: (cb) => onChannel('menu:close-session', cb),
     rebuild: (debugMode) => ipcRenderer.invoke('menu:rebuild', debugMode),
   },
+  telemetry: {
+    track: (event, data) => ipcRenderer.send('telemetry:track', event, data ?? {}),
+  },
 };
 
-contextBridge.exposeInMainWorld('vibeyard', api);
+contextBridge.exposeInMainWorld('aiyard', api);

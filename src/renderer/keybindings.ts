@@ -1,22 +1,21 @@
-import { appState } from './state.js';
-import { closeSessionWithConfirm } from './session-close.js';
-import { promptNewProject, toggleSidebar } from './components/sidebar.js';
-import { quickNewSession } from './components/tab-bar.js';
-import { toggleProjectTerminal } from './components/project-terminal.js';
 import { toggleDebugPanel } from './components/debug-panel.js';
-import { showHelpDialog } from './components/help-dialog.js';
-import { getFocusedSessionId } from './components/terminal-pane.js';
-import { showSearchBar, TerminalSearchBackend, ShellTerminalSearchBackend } from './components/search-bar.js';
-import { getActiveShellSessionId } from './components/project-terminal.js';
-import { toggleGitPanel } from './components/git-panel.js';
-import { showQuickOpen } from './components/quick-open.js';
-import { showSessionSearchPalette } from './components/session-search-palette.js';
-import { shortcutManager } from './shortcuts.js';
+import { DomSearchBackend } from './components/dom-search-backend.js';
 import { getFileReaderInstance, getFileReaderTextSelector, showGoToLineBar } from './components/file-reader.js';
 import { getFileViewerInstance } from './components/file-viewer.js';
-import { DomSearchBackend } from './components/dom-search-backend.js';
+import { toggleGitPanel } from './components/git-panel.js';
+import { showHelpDialog } from './components/help-dialog.js';
+import { getActiveShellSessionId, toggleProjectTerminal } from './components/project-terminal.js';
+import { showQuickOpen } from './components/quick-open.js';
+import { ShellTerminalSearchBackend, showSearchBar, TerminalSearchBackend } from './components/search-bar.js';
 import { toggleInspector } from './components/session-inspector.js';
+import { showSessionSearchPalette } from './components/session-search-palette.js';
+import { promptNewProject, toggleSidebar } from './components/sidebar.js';
+import { quickNewSession } from './components/tab-bar.js';
+import { getFocusedSessionId } from './components/terminal-pane.js';
 import { showUsageModal } from './components/usage-modal.js';
+import { closeSessionWithConfirm } from './session-close.js';
+import { shortcutManager } from './shortcuts.js';
+import { appState } from './state.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 
 export function initKeybindings(): void {
@@ -29,16 +28,16 @@ export function initKeybindings(): void {
   // Menu IPC listeners — handle clicks on Electron menu items.
   // Accelerators are display-only (registerAccelerator: false), so these
   // only fire on actual menu clicks, not keyboard shortcuts.
-  window.vibeyard.menu.onNewProject(promptNewProject);
-  window.vibeyard.menu.onNewSession(quickNewSession);
-  window.vibeyard.menu.onToggleSplit(() => appState.toggleSwarm());
-  window.vibeyard.menu.onNextSession(() => appState.cycleSession(1));
-  window.vibeyard.menu.onPrevSession(() => appState.cycleSession(-1));
-  window.vibeyard.menu.onGotoSession((index) => appState.gotoSession(index));
-  window.vibeyard.menu.onToggleDebug(toggleDebugPanel);
-  window.vibeyard.menu.onUsageStats(showUsageModal);
-  window.vibeyard.menu.onToggleInspector(toggleInspector);
-  window.vibeyard.menu.onCloseSession(handleCloseSession);
+  window.aiyard.menu.onNewProject(promptNewProject);
+  window.aiyard.menu.onNewSession(quickNewSession);
+  window.aiyard.menu.onToggleSplit(() => appState.toggleSwarm());
+  window.aiyard.menu.onNextSession(() => appState.cycleSession(1));
+  window.aiyard.menu.onPrevSession(() => appState.cycleSession(-1));
+  window.aiyard.menu.onGotoSession((index) => appState.gotoSession(index));
+  window.aiyard.menu.onToggleDebug(toggleDebugPanel);
+  window.aiyard.menu.onUsageStats(showUsageModal);
+  window.aiyard.menu.onToggleInspector(toggleInspector);
+  window.aiyard.menu.onCloseSession(handleCloseSession);
 
   // Register shortcut handlers — the single authority for keyboard shortcuts.
   shortcutManager.registerHandler('new-session', quickNewSession);

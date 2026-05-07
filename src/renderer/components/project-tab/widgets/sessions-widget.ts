@@ -1,9 +1,9 @@
 import type { ArchivedSession } from '../../../../shared/types.js';
-import { appState } from '../../../state.js';
 import { getProviderDisplayName } from '../../../provider-availability.js';
-import type { WidgetFactory } from './widget-host.js';
-import { DEFAULT_SESSIONS_CONFIG, type SessionsConfig } from './sessions-types.js';
+import { appState } from '../../../state.js';
 import { showSessionHistoryDialog } from './sessions-dialog.js';
+import { DEFAULT_SESSIONS_CONFIG, type SessionsConfig } from './sessions-types.js';
+import type { WidgetFactory } from './widget-host.js';
 
 export const createSessionsWidget: WidgetFactory = (host) => {
   const root = document.createElement('div');

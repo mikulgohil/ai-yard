@@ -1,12 +1,12 @@
+import { hideBoardView, renderBoard } from '../board/board-view.js';
 import { instances, type KanbanInstance } from './instance.js';
-import { renderBoard, hideBoardView } from '../board/board-view.js';
 
 export function createKanbanPane(sessionId: string, projectId: string): void {
   if (instances.has(sessionId)) return;
 
   const el = document.createElement('div');
   el.className = 'kanban-pane hidden';
-  el.dataset['sessionId'] = sessionId;
+  el.dataset.sessionId = sessionId;
 
   const instance: KanbanInstance = {
     sessionId,

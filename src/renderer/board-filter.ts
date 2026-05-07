@@ -3,7 +3,7 @@ import type { BoardTask } from '../shared/types.js';
 type FilterChangeCallback = () => void;
 
 let searchQuery = '';
-let activeTags: Set<string> = new Set();
+const activeTags: Set<string> = new Set();
 const listeners: FilterChangeCallback[] = [];
 
 export function setSearchQuery(query: string): void {

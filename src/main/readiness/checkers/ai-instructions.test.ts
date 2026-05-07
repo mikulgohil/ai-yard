@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import { aiInstructionsProducer } from './ai-instructions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisContext } from '../types';
+import { aiInstructionsProducer } from './ai-instructions';
 
 vi.mock('fs');
 
@@ -45,7 +45,7 @@ describe('aiInstructionsProducer', () => {
   });
 
   it('passes CLAUDE.md exists check', () => {
-    const content = Array(100).fill('# Line').join('\n') + '\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview';
+    const content = `${Array(100).fill('# Line').join('\n')}\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview`;
     mockFileExists({ 'CLAUDE.md': content });
 
     const tagged = aiInstructionsProducer.produce('/test/project', ctx);

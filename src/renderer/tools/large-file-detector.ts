@@ -1,7 +1,7 @@
 import picomatch from 'picomatch';
-import type { ToolFailureData } from '../../shared/types.js';
 import { DEFAULT_SCAN_IGNORE, EXCLUDED_DIRECTORIES, EXTRA_ALERT_IGNORE } from '../../shared/constants.js';
 import { basename as pathBasename } from '../../shared/platform.js';
+import type { ToolFailureData } from '../../shared/types.js';
 import { appState } from '../state.js';
 
 export interface LargeFileAlert {
@@ -18,7 +18,7 @@ const excludedDirSet = new Set(EXCLUDED_DIRECTORIES);
 const hardcodedMatcher = picomatch([...DEFAULT_SCAN_IGNORE, ...EXTRA_ALERT_IGNORE], { basename: true });
 
 function getRelativePath(filePath: string, projectPath: string): string | null {
-  const base = projectPath.endsWith('/') ? projectPath : projectPath + '/';
+  const base = projectPath.endsWith('/') ? projectPath : `${projectPath}/`;
   if (!filePath.startsWith(base)) return null;
   return filePath.slice(base.length);
 }
@@ -37,9 +37,9 @@ function isExcludedPath(relative: string): boolean {
 type IgnoreMatchers = { basename: picomatch.Matcher; fullPath: picomatch.Matcher };
 const ignoreMatcherCache = new Map<string, IgnoreMatchers | null>();
 
-async function loadVibeyardignore(projectPath: string): Promise<IgnoreMatchers | null> {
+async function loadAIYardIgnore(projectPath: string): Promise<IgnoreMatchers | null> {
   try {
-    const result = await window.vibeyard.fs.readFile(projectPath + '/.vibeyardignore');
+    const result = await window.aiyard.fs.readFile(`${projectPath}/.ai-yardignore`);
     if (!result.ok) return null;
     const patterns: string[] = [];
     for (const raw of result.content.split('\n')) {
@@ -56,9 +56,9 @@ async function loadVibeyardignore(projectPath: string): Promise<IgnoreMatchers |
   }
 }
 
-async function matchesVibeyardignore(projectPath: string, relative: string): Promise<boolean> {
+async function matchesAIYardIgnore(projectPath: string, relative: string): Promise<boolean> {
   if (!ignoreMatcherCache.has(projectPath)) {
-    ignoreMatcherCache.set(projectPath, await loadVibeyardignore(projectPath));
+    ignoreMatcherCache.set(projectPath, await loadAIYardIgnore(projectPath));
   }
   const matchers = ignoreMatcherCache.get(projectPath);
   if (!matchers) return false;
@@ -101,7 +101,7 @@ export async function handleToolFailure(sessionId: string, data: ToolFailureData
   const insightId = `large-file-read:${filePath}`;
   if (appState.isInsightDismissed(project.id, insightId)) return;
 
-  if (await matchesVibeyardignore(project.path, relative)) return;
+  if (await matchesAIYardIgnore(project.path, relative)) return;
 
   alerted.add(filePath);
 
@@ -109,7 +109,7 @@ export async function handleToolFailure(sessionId: string, data: ToolFailureData
 }
 
 export function initLargeFileDetector(): void {
-  window.vibeyard.session.onToolFailure((sessionId, data) => {
+  window.aiyard.session.onToolFailure((sessionId, data) => {
     handleToolFailure(sessionId, data).catch(() => {});
   });
 

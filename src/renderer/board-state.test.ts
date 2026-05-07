@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: vi.fn(), save: vi.fn() },
   },
 });
@@ -24,15 +24,15 @@ vi.mock('./provider-availability.js', () => ({
   getProviderCapabilities: vi.fn(),
 }));
 
-import { appState, _resetForTesting } from './state';
 import {
-  getBoard, getColumnByBehavior, getTasksForColumn,
-  getTaskBySessionId, getTaskByCliSessionId,
-  addTask, updateTask, deleteTask, moveTask,
-  addColumn, renameColumn, deleteColumn, reorderColumns,
-  addTag, removeTag, updateTagColor,
-  addTagToTask, removeTagFromTask, getTagColor, getTagCount,
+  addColumn, 
+  addTag, 
+  addTagToTask, 
+  addTask, deleteColumn, deleteTask, 
+  getBoard, getColumnByBehavior, getTagColor, getTagCount,getTaskByCliSessionId,
+  getTaskBySessionId, getTasksForColumn,moveTask,removeTag, removeTagFromTask, renameColumn, reorderColumns,updateTagColor,updateTask, 
 } from './board-state';
+import { _resetForTesting, appState } from './state';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -185,8 +185,8 @@ describe('board-state', () => {
     });
 
     it('moves task within same column (reorder)', () => {
-      const t1 = addTask({ title: 'T1', prompt: 'p' })!;
-      const t2 = addTask({ title: 'T2', prompt: 'p' })!;
+      const _t1 = addTask({ title: 'T1', prompt: 'p' })!;
+      const _t2 = addTask({ title: 'T2', prompt: 'p' })!;
       const t3 = addTask({ title: 'T3', prompt: 'p' })!;
       // Move t3 to position 0
       moveTask(t3.id, 'col-backlog', 0);
@@ -196,9 +196,9 @@ describe('board-state', () => {
     });
 
     it('reindexes source column after move', () => {
-      const t1 = addTask({ title: 'T1', prompt: 'p' })!;
+      const _t1 = addTask({ title: 'T1', prompt: 'p' })!;
       const t2 = addTask({ title: 'T2', prompt: 'p' })!;
-      const t3 = addTask({ title: 'T3', prompt: 'p' })!;
+      const _t3 = addTask({ title: 'T3', prompt: 'p' })!;
       moveTask(t2.id, 'col-running', 0);
       const backlogTasks = getTasksForColumn('col-backlog');
       expect(backlogTasks).toHaveLength(2);

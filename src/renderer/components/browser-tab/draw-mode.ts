@@ -1,10 +1,10 @@
+import { isWin } from '../../platform.js';
 import { appState } from '../../state.js';
 import { promptNewSession } from '../tab-bar.js';
 import { setPendingPrompt } from '../terminal-pane.js';
-import type { BrowserTabInstance } from './types.js';
 import { positionPopover } from './popover.js';
+import type { BrowserTabInstance } from './types.js';
 import { getViewportContext } from './viewport.js';
-import { isWin } from '../../platform.js';
 
 export function toggleDrawMode(instance: BrowserTabInstance): void {
   instance.drawMode = !instance.drawMode;
@@ -57,7 +57,7 @@ export function showDrawError(instance: BrowserTabInstance, message: string): vo
 export async function captureScreenshotPath(instance: BrowserTabInstance): Promise<string | null> {
   try {
     const image = await instance.webview.capturePage();
-    return await window.vibeyard.browser.saveScreenshot(instance.sessionId, image.toDataURL());
+    return await window.aiyard.browser.saveScreenshot(instance.sessionId, image.toDataURL());
   } catch (err) {
     console.error('Failed to capture browser screenshot', err);
     return null;

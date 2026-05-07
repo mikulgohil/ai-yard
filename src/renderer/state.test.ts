@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -29,9 +29,9 @@ vi.mock('./provider-availability.js', () => ({
   getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
-import { appState, _resetForTesting, MAX_PROJECT_NAME_LENGTH } from './state';
-import { getCost, restoreCost } from './session-cost.js';
 import { restoreContext } from './session-context.js';
+import { getCost, restoreCost } from './session-cost.js';
+import { _resetForTesting, appState, MAX_PROJECT_NAME_LENGTH } from './state';
 
 const mockGetCost = vi.mocked(getCost);
 const mockRestoreCost = vi.mocked(restoreCost);
@@ -606,7 +606,7 @@ describe('setActiveProject()', () => {
 
 // --- Session History Tests ---
 
-function mockCostData() {
+function _mockCostData() {
   mockGetCost.mockReturnValue({
     totalCostUsd: 0.42,
     totalInputTokens: 1000,

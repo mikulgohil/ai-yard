@@ -1,16 +1,16 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { homedir } from 'os';
-import { STATUS_DIR, getStatusLineScriptPath } from './hook-status';
-import { statusCmd as mkStatusCmd, captureSessionIdCmd as mkCaptureSessionIdCmd, captureToolFailureCmd as mkCaptureToolFailureCmd, installEventScript, wrapPythonHookCmd, installHookScripts } from './hook-commands';
-import { readJsonSafe, readDirSafe } from './fs-utils';
-import { parseFrontmatter } from './frontmatter';
+import * as path from 'path';
+import type { Agent, ClaudeConfig, Command, InspectorEventType, McpServer, Skill } from '../shared/types';
 import { getSupportedHookEvents as computeSupportedHookEvents } from './claude-hook-versions';
+import { parseFrontmatter } from './frontmatter';
+import { readDirSafe, readJsonSafe } from './fs-utils';
+import { installEventScript, installHookScripts, captureSessionIdCmd as mkCaptureSessionIdCmd, captureToolFailureCmd as mkCaptureToolFailureCmd, statusCmd as mkStatusCmd, wrapPythonHookCmd } from './hook-commands';
+import { getStatusLineScriptPath, STATUS_DIR } from './hook-status';
 import { getClaudeVersion } from './providers/claude-version';
 import { resolveBinary } from './providers/resolve-binary';
-import type { McpServer, Agent, Skill, Command, ClaudeConfig, InspectorEventType } from '../shared/types';
 
-export type { McpServer, Agent, Skill, Command, ClaudeConfig } from '../shared/types';
+export type { Agent, ClaudeConfig, Command, McpServer, Skill } from '../shared/types';
 
 /** Read MCP servers from settings.json mcpServers key and .mcp.json files */
 function readMcpServers(settingsPath: string, mcpJsonPath: string, scope: 'user' | 'project'): McpServer[] {
@@ -144,7 +144,7 @@ function getEnabledPlugins(): Set<string> {
   return new Set(Object.entries(enabled).filter(([, v]) => v).map(([k]) => k));
 }
 
-export const HOOK_MARKER = '# vibeyard-hook';
+export const HOOK_MARKER = '# ai-yard-hook';
 
 /**
  * Return the set of Claude Code hook events supported by the currently
@@ -187,7 +187,7 @@ function prepareSettings(): { settings: Record<string, unknown>; cleaned: HooksC
 
   const existingHooks: HooksConfig = (settings.hooks ?? {}) as HooksConfig;
 
-  // Remove any previously-installed vibeyard hooks from all event types
+  // Remove any previously-installed ai-yard hooks from all event types
   const cleaned: HooksConfig = {};
   for (const [event, matchers] of Object.entries(existingHooks)) {
     const filteredMatchers = matchers
@@ -207,7 +207,7 @@ function prepareSettings(): { settings: Record<string, unknown>; cleaned: HooksC
 function writeSettings(settings: Record<string, unknown>): void {
   const settingsPath = path.join(homedir(), '.claude', 'settings.json');
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+  fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
 }
 
 /**
@@ -472,7 +472,7 @@ export function addMcpServer(
     json.mcpServers = servers;
   }
 
-  fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n');
+  fs.writeFileSync(filePath, `${JSON.stringify(json, null, 2)}\n`);
 }
 
 /**
@@ -502,7 +502,7 @@ export function removeMcpServer(
     }
   }
 
-  fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n');
+  fs.writeFileSync(filePath, `${JSON.stringify(json, null, 2)}\n`);
 }
 
 export async function getClaudeConfig(projectPath: string): Promise<ClaudeConfig> {

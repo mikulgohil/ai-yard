@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseTeamMarkdown, memberFromMarkdown } from './frontmatter';
+import { describe, expect, it } from 'vitest';
+import { memberFromMarkdown, parseTeamMarkdown } from './frontmatter';
 
 describe('parseTeamMarkdown', () => {
   it('parses frontmatter and body', () => {

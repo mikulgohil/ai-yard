@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CliProviderMeta } from '../shared/types.js';
 
 type ProviderModule = typeof import('./provider-availability.js');
@@ -11,7 +11,7 @@ beforeEach(() => {
   listProviders.mockReset();
   checkBinary.mockReset();
   (globalThis as unknown as { window: unknown }).window = {
-    vibeyard: {
+    aiyard: {
       provider: { listProviders, checkBinary },
     },
   };

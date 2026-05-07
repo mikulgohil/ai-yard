@@ -13,7 +13,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import { STATUS_DIR, SCRIPT_DIR } from './hook-status';
+import { SCRIPT_DIR, STATUS_DIR } from './hook-status';
 import { isWin, pythonBin as PY } from './platform';
 
 // Python helper scripts are written to STATUS_DIR via installEventScript()

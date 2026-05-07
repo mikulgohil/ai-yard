@@ -1,9 +1,9 @@
 import { execFile } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { GitWorktree, GitFileEntry } from '../shared/types';
+import type { GitFileEntry, GitWorktree } from '../shared/types';
 
-export type { GitWorktree, GitFileEntry } from '../shared/types';
+export type { GitFileEntry, GitWorktree } from '../shared/types';
 
 export interface GitStatus {
   isGitRepo: boolean;

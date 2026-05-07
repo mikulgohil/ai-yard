@@ -1,13 +1,13 @@
 import {
-  setCostData,
-  parseCost,
-  getCost,
-  getAggregateCost,
-  onChange,
-  restoreCost,
-  removeSession,
-  formatTokens,
   _resetForTesting,
+  formatTokens,
+  getAggregateCost,
+  getCost,
+  onChange,
+  parseCost,
+  removeSession,
+  restoreCost,
+  setCostData,
 } from './session-cost';
 
 beforeEach(() => {

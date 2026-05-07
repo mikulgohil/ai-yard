@@ -1,16 +1,16 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import type { BrowserWindow } from 'electron';
-import type { CliProvider, TranscriptDescriptor } from './provider';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '../../shared/types';
-import { getFullPath } from '../pty-manager';
-import { resolveBinary, validateBinaryExists } from './resolve-binary';
-import { getCopilotConfig, AGENT_EXT } from '../copilot-config';
-import { installCopilotHooks, validateCopilotHooks, cleanupCopilotHooks, SESSION_ID_VAR } from '../copilot-hooks';
 import { startConfigWatcher as startConfigWatch, stopConfigWatcher as stopConfigWatch } from '../config-watcher';
+import { AGENT_EXT, getCopilotConfig } from '../copilot-config';
+import { cleanupCopilotHooks, installCopilotHooks, SESSION_ID_VAR, validateCopilotHooks } from '../copilot-hooks';
+import { getFullPath } from '../pty-manager';
+import { deleteAgentFile, writeAgentFile } from './agent-files';
+import type { CliProvider, TranscriptDescriptor } from './provider';
+import { resolveBinary, validateBinaryExists } from './resolve-binary';
 import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR, UUID_RE } from './transcript-utils';
-import { writeAgentFile, deleteAgentFile } from './agent-files';
 
 const binaryCache = { path: null as string | null };
 

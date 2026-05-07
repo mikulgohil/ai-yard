@@ -1,7 +1,7 @@
-import { onAlert, dismissInsight } from '../session-insights.js';
-import { appState } from '../state.js';
 import type { InsightResult } from '../insights/types.js';
-import { showAlertBanner, removeAlertBanner } from './alert-banner.js';
+import { dismissInsight, onAlert } from '../session-insights.js';
+import { appState } from '../state.js';
+import { removeAlertBanner, showAlertBanner } from './alert-banner.js';
 import { setPendingPrompt } from './terminal-pane.js';
 
 export function initInsightAlert(): void {

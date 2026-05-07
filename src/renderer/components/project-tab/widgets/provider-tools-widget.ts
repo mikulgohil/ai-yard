@@ -1,13 +1,13 @@
-import { appState } from '../../../state.js';
-import { showMcpAddModal } from '../../mcp-add-modal.js';
-import { createCustomSelect, type CustomSelectInstance } from '../../custom-select.js';
 import { esc } from '../../../dom-utils.js';
 import {
   getAvailableProviderMetas,
   getProviderAvailabilitySnapshot,
   loadProviderAvailability,
 } from '../../../provider-availability.js';
-import type { ProviderConfig, ProviderId, McpServer, Agent, Skill, Command } from '../../../types.js';
+import { appState } from '../../../state.js';
+import type { Agent, Command, McpServer, ProviderConfig, ProviderId, Skill } from '../../../types.js';
+import { type CustomSelectInstance, createCustomSelect } from '../../custom-select.js';
+import { showMcpAddModal } from '../../mcp-add-modal.js';
 import type { WidgetFactory, WidgetHost, WidgetInstance } from './widget-host.js';
 
 function scopeBadge(scope: 'user' | 'project'): string {
@@ -59,7 +59,7 @@ export const createProviderToolsWidget: WidgetFactory = (host: WidgetHost): Widg
     removeBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!confirm(`Remove MCP server "${server.name}"?`)) return;
-      await window.vibeyard.mcp.removeServer(server.name, server.filePath, server.scope, projectPath);
+      await window.aiyard.mcp.removeServer(server.name, server.filePath, server.scope, projectPath);
       void refresh();
     });
     el.appendChild(removeBtn);
@@ -126,7 +126,9 @@ export const createProviderToolsWidget: WidgetFactory = (host: WidgetHost): Widg
       empty.textContent = 'None configured';
       sectionBody.appendChild(empty);
     } else {
-      items.forEach(el => sectionBody.appendChild(el));
+      items.forEach(el => {
+        sectionBody.appendChild(el);
+      });
     }
 
     section.appendChild(sectionHeader);
@@ -145,7 +147,7 @@ export const createProviderToolsWidget: WidgetFactory = (host: WidgetHost): Widg
   const watchActiveProvider = () => {
     const projectPath = getProjectPath();
     if (!projectPath) return;
-    window.vibeyard.provider.watchProject(getActiveProviderId(), projectPath);
+    window.aiyard.provider.watchProject(getActiveProviderId(), projectPath);
   };
 
   const buildToolbarSelect = () => {
@@ -191,7 +193,7 @@ export const createProviderToolsWidget: WidgetFactory = (host: WidgetHost): Widg
 
     let config: ProviderConfig;
     try {
-      config = await window.vibeyard.provider.getConfig(providerId, projectPath);
+      config = await window.aiyard.provider.getConfig(providerId, projectPath);
     } catch {
       body.innerHTML = '';
       return;
@@ -231,7 +233,7 @@ export const createProviderToolsWidget: WidgetFactory = (host: WidgetHost): Widg
   watchActiveProvider();
   void refresh();
 
-  unsubConfigChanged = window.vibeyard.provider.onConfigChanged(() => {
+  unsubConfigChanged = window.aiyard.provider.onConfigChanged(() => {
     void refresh();
   });
 

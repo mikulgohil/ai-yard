@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isWin } from './platform';
 
-const STATUS_DIR = path.join('/tmp', 'vibeyard');
-const SCRIPT_DIR = path.join('/home/test', '.vibeyard', 'run');
+const STATUS_DIR = path.join('/tmp', 'ai-yard');
+const SCRIPT_DIR = path.join('/home/test', '.ai-yard', 'run');
 const STATUSLINE_SCRIPT = path.join(SCRIPT_DIR, isWin ? 'statusline.cmd' : 'statusline.sh');
 
 vi.mock('fs', () => ({
@@ -29,13 +29,13 @@ vi.mock('electron', () => ({
 
 import * as fs from 'fs';
 import {
-  installStatusLineScript,
-  startWatching,
-  resyncAllSessions,
-  restartAndResync,
-  cleanupSessionStatus,
   cleanupAll,
+  cleanupSessionStatus,
+  installStatusLineScript,
   registerSession,
+  restartAndResync,
+  resyncAllSessions,
+  startWatching,
 } from './hook-status';
 
 let watchCallback: ((eventType: string, filename: string | null) => void) | null = null;

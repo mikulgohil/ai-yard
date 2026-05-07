@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { isWin } from '../platform';
 
 vi.mock('fs', () => ({
@@ -31,9 +31,9 @@ vi.mock('../config-watcher', () => ({
 
 vi.mock('../copilot-hooks', () => ({
   installCopilotHooks: vi.fn(),
-  validateCopilotHooks: vi.fn(() => ({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} })),
+  validateCopilotHooks: vi.fn(() => ({ statusLine: 'aiyard', hooks: 'complete', hookDetails: {} })),
   cleanupCopilotHooks: vi.fn(),
-  SESSION_ID_VAR: 'VIBEYARD_SESSION_ID',
+  SESSION_ID_VAR: 'AIYARD_SESSION_ID',
 }));
 
 vi.mock('./agent-files', () => ({
@@ -43,13 +43,13 @@ vi.mock('./agent-files', () => ({
   deleteAgentFile: vi.fn(async () => undefined),
 }));
 
-import * as fs from 'fs';
 import { execSync } from 'child_process';
-import { CopilotProvider, _resetCachedPath } from './copilot-provider';
-import { getCopilotConfig } from '../copilot-config';
+import * as fs from 'fs';
 import { startConfigWatcher, stopConfigWatcher } from '../config-watcher';
-import { installCopilotHooks, validateCopilotHooks, cleanupCopilotHooks } from '../copilot-hooks';
-import { writeAgentFile, deleteAgentFile } from './agent-files';
+import { getCopilotConfig } from '../copilot-config';
+import { cleanupCopilotHooks, installCopilotHooks, validateCopilotHooks } from '../copilot-hooks';
+import { deleteAgentFile, writeAgentFile } from './agent-files';
+import { _resetCachedPath, CopilotProvider } from './copilot-provider';
 
 const mockStatSync = vi.mocked(fs.statSync);
 const mockExistsSync = vi.mocked(fs.existsSync);
@@ -161,9 +161,9 @@ describe('buildEnv', () => {
     expect(env.PATH).toBe(isWin ? '/usr/local/bin;/usr/bin' : '/usr/local/bin:/usr/bin');
   });
 
-  it('sets VIBEYARD_SESSION_ID to the session ID', () => {
+  it('sets AIYARD_SESSION_ID to the session ID', () => {
     const env = provider.buildEnv('sess-123', {});
-    expect(env.VIBEYARD_SESSION_ID).toBe('sess-123');
+    expect(env.AIYARD_SESSION_ID).toBe('sess-123');
   });
 
   it('preserves existing env vars', () => {
@@ -235,7 +235,7 @@ describe('hooks integration', () => {
   it('validateSettings delegates to validateCopilotHooks with projectPath', () => {
     const result = provider.validateSettings('/some/project');
     expect(mockValidateCopilotHooks).toHaveBeenCalledWith('/some/project');
-    expect(result).toEqual({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} });
+    expect(result).toEqual({ statusLine: 'aiyard', hooks: 'complete', hookDetails: {} });
   });
 
   it('cleanup calls cleanupCopilotHooks and stopConfigWatcher', () => {

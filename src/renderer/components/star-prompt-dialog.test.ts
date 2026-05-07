@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockAppState = vi.hoisted(() => ({
   starPromptDismissed: false,
@@ -71,7 +71,7 @@ function stubDOM(): void {
     body,
   });
   vi.stubGlobal('window', {
-    vibeyard: { app: { openExternal: vi.fn() } },
+    aiyard: { app: { openExternal: vi.fn() } },
   });
 }
 

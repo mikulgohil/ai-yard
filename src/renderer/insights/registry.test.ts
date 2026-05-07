@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { analyzeInitialContext, registerAnalyzer } from './registry.js';
+import { describe, expect, it } from 'vitest';
 import type { InitialContextSnapshot } from '../../shared/types.js';
+import { analyzeInitialContext, registerAnalyzer } from './registry.js';
 import type { InsightAnalyzer } from './types.js';
 
 function makeSnapshot(usedPercentage: number): InitialContextSnapshot {

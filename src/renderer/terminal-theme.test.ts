@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { darkTerminalTheme, lightTerminalTheme, getTerminalTheme } from './terminal-theme';
+import { describe, expect, it } from 'vitest';
+import { darkTerminalTheme, getTerminalTheme, lightTerminalTheme } from './terminal-theme';
 
 describe('darkTerminalTheme', () => {
   it('has the correct background', () => {

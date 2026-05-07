@@ -1,13 +1,13 @@
 import type { OverviewWidgetType } from '../../../../shared/types.js';
-import type { WidgetFactory } from './widget-host.js';
-import { createReadinessWidget } from './readiness-widget.js';
-import { createProviderToolsWidget } from './provider-tools-widget.js';
-import { createGithubPRsWidget, createGithubIssuesWidget } from './github-widgets.js';
-import { createTeamWidget } from './team-widget.js';
-import { createKanbanWidget } from './kanban-widget.js';
-import { createSessionsWidget } from './sessions-widget.js';
 import { createFavoriteSessionsWidget } from './favorite-sessions-widget.js';
+import { createGithubIssuesWidget, createGithubPRsWidget } from './github-widgets.js';
+import { createKanbanWidget } from './kanban-widget.js';
+import { createProviderToolsWidget } from './provider-tools-widget.js';
+import { createReadinessWidget } from './readiness-widget.js';
 import { DEFAULT_SESSIONS_CONFIG } from './sessions-types.js';
+import { createSessionsWidget } from './sessions-widget.js';
+import { createTeamWidget } from './team-widget.js';
+import type { WidgetFactory } from './widget-host.js';
 
 export interface WidgetMeta {
   type: OverviewWidgetType;

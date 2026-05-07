@@ -1,14 +1,15 @@
 import type { BoardTask, ProviderId } from '../../../shared/types.js';
-import { addTask, updateTask, getBoard, addTag, getTagColor } from '../../board-state.js';
-import { showModal, closeModal, setModalError, registerModalCleanup, type FieldDef } from '../modal.js';
-import { createCustomSelect, type CustomSelectInstance } from '../custom-select.js';
+import { addTag, addTask, getBoard, getTagColor, updateTask } from '../../board-state.js';
 import { createPlanModeRow } from '../../dom-utils.js';
+import { trackInteraction } from '../../feature-telemetry.js';
 import {
   getAvailableProviderMetas,
   getProviderCapabilities,
   loadProviderAvailability,
 } from '../../provider-availability.js';
 import { appState } from '../../state.js';
+import { type CustomSelectInstance, createCustomSelect } from '../custom-select.js';
+import { closeModal, type FieldDef, registerModalCleanup, setModalError, showModal } from '../modal.js';
 import { runTask } from './board-card.js';
 
 export interface TaskModalPrefill {
@@ -108,6 +109,7 @@ export function showTaskModal(
         providerId: currentProviderId,
         planMode,
       });
+      trackInteraction('kanban', 'task-created');
     } else if (task) {
       updateTask(task.id, {
         title: taskTitle,
@@ -296,7 +298,9 @@ export function showTaskModal(
   // Add Run/Resume button in edit mode
   const footer = document.getElementById('modal-actions') as HTMLElement;
   if (footer) {
-    footer.querySelectorAll('.board-modal-run-btn').forEach(el => el.remove());
+    footer.querySelectorAll('.board-modal-run-btn').forEach(el => {
+      el.remove();
+    });
 
     if (mode === 'edit' && task) {
       const runBtn = document.createElement('button');

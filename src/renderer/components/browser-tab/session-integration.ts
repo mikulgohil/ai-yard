@@ -1,17 +1,16 @@
 import { appState, type SessionRecord } from '../../state.js';
 import { promptNewSession } from '../tab-bar.js';
 import { injectPromptIntoRunningSession, setPendingPrompt } from '../terminal-pane.js';
-import type { BrowserTabInstance } from './types.js';
-import { buildPrompt, dismissInspect } from './inspect-mode.js';
-import { buildFlowPrompt, dismissFlow } from './flow-recording.js';
 import {
   buildDrawPrompt,
   captureScreenshotPath,
   dismissDraw,
   hideDrawError,
-  sendDrawToNewSession,
   showDrawError,
 } from './draw-mode.js';
+import { buildFlowPrompt, dismissFlow } from './flow-recording.js';
+import { buildPrompt, dismissInspect } from './inspect-mode.js';
+import type { BrowserTabInstance } from './types.js';
 
 function deliver(session: SessionRecord, prompt: string): void {
   const project = appState.activeProject;
@@ -19,7 +18,7 @@ function deliver(session: SessionRecord, prompt: string): void {
   // Bail out rather than queue a prompt against a session that no longer
   // exists — setActiveSession on a removed id leaves the UI with no pane to
   // render and shows a black screen.
-  if (!project || !project.sessions.some((s) => s.id === session.id)) return;
+  if (!project?.sessions.some((s) => s.id === session.id)) return;
   if (!injectPromptIntoRunningSession(session.id, prompt)) {
     setPendingPrompt(session.id, prompt);
   }

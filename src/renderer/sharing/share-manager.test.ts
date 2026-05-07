@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---- mocks for peer-host, peer-guest, appState, remote-terminal-pane ----
 
@@ -76,18 +76,18 @@ const lastJoinHandle = () => lastJoinHandleRef.current!;
 
 // ---- import SUT ----
 import {
-  shareSession,
+  _resetForTesting,
   acceptShareAnswer,
+  cleanupAllShares,
+  disconnectRemoteSession,
   endShare,
   forwardPtyData,
   forwardResize,
-  joinRemoteSession,
-  disconnectRemoteSession,
-  isRemoteSession,
   initShareManager,
-  cleanupAllShares,
+  isRemoteSession,
+  joinRemoteSession,
   onShareChange,
-  _resetForTesting,
+  shareSession,
 } from './share-manager.js';
 
 // ---- helpers ----

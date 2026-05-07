@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { CliProviderMeta, SettingsValidationResult } from '../../shared/types.js';
 import { hasProviderIssue, type ProviderStatus } from './setup-checks.js';
 
@@ -23,7 +23,7 @@ function makeMeta(overrides: Partial<CliProviderMeta['capabilities']> = {}): Cli
 
 function makeValidation(overrides: Partial<SettingsValidationResult> = {}): SettingsValidationResult {
   return {
-    statusLine: 'vibeyard',
+    statusLine: 'aiyard',
     hooks: 'complete',
     hookDetails: {},
     ...overrides,
@@ -84,7 +84,7 @@ describe('hasProviderIssue', () => {
   it('returns false when binary installed and everything configured', () => {
     const status = makeStatus({
       meta: makeMeta({ costTracking: true, hookStatus: true }),
-      validation: makeValidation({ statusLine: 'vibeyard', hooks: 'complete' }),
+      validation: makeValidation({ statusLine: 'aiyard', hooks: 'complete' }),
     });
     expect(hasProviderIssue(status)).toBe(false);
   });

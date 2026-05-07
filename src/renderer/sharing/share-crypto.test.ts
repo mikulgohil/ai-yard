@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  validatePin,
-  encryptPayload,
-  decryptPayload,
-  DecryptionError,
-  generateChallenge,
-  computeChallengeResponse,
   bytesToHex,
+  computeChallengeResponse,
+  DecryptionError,
+  decryptPayload,
+  encryptPayload,
+  generateChallenge,
   hexToBytes,
+  validatePin,
 } from './share-crypto.js';
 
 describe('validatePin', () => {

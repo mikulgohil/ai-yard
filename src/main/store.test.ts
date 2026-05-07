@@ -12,8 +12,8 @@ vi.mock('os', () => ({
 }));
 
 import * as fs from 'fs';
-import { loadState, saveState, flushState, saveStateSync } from './store';
 import type { PersistedState } from './store';
+import { flushState, loadState, saveState, saveStateSync } from './store';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockReadFileSync = vi.mocked(fs.readFileSync);
@@ -98,7 +98,7 @@ describe('saveState', () => {
     vi.advanceTimersByTime(300);
 
     expect(mockMkdirSync).toHaveBeenCalledWith(
-      expect.stringContaining('.vibeyard'),
+      expect.stringContaining('.ai-yard'),
       { recursive: true },
     );
   });

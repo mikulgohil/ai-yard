@@ -42,7 +42,7 @@ import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback }
 
 const mockClipboardWrite = vi.fn().mockResolvedValue(undefined);
 const mockClipboardRead = vi.fn();
-const mockVibeyardClipboardWrite = vi.fn().mockResolvedValue(undefined);
+const mockAIYardClipboardWrite = vi.fn().mockResolvedValue(undefined);
 
 class FakeTerminal {
   private keyHandler: ((e: KeyboardEvent) => boolean) | null = null;
@@ -77,7 +77,7 @@ beforeEach(() => {
   mockClipboardRead.mockResolvedValue('');
   mockMatchesAnyShortcut.mockReturnValue(false);
   mockPreferences.copyOnSelect = false;
-  vi.stubGlobal('window', { vibeyard: { clipboard: { write: mockVibeyardClipboardWrite } } });
+  vi.stubGlobal('window', { aiyard: { clipboard: { write: mockAIYardClipboardWrite } } });
 });
 
 describe('attachClipboardCopyHandler (macOS)', () => {
@@ -343,7 +343,7 @@ describe('attachCopyOnSelect', () => {
     terminal.setSelection('hello');
     terminal.fireSelectionChange();
 
-    expect(mockVibeyardClipboardWrite).not.toHaveBeenCalled();
+    expect(mockAIYardClipboardWrite).not.toHaveBeenCalled();
   });
 
   it('writes selection to clipboard when copyOnSelect is on and selection is non-empty', () => {
@@ -354,7 +354,7 @@ describe('attachCopyOnSelect', () => {
     terminal.setSelection('selected');
     terminal.fireSelectionChange();
 
-    expect(mockVibeyardClipboardWrite).toHaveBeenCalledWith('selected');
+    expect(mockAIYardClipboardWrite).toHaveBeenCalledWith('selected');
   });
 
   it('does not write to clipboard when copyOnSelect is on but selection is empty', () => {
@@ -365,7 +365,7 @@ describe('attachCopyOnSelect', () => {
     terminal.setSelection('');
     terminal.fireSelectionChange();
 
-    expect(mockVibeyardClipboardWrite).not.toHaveBeenCalled();
+    expect(mockAIYardClipboardWrite).not.toHaveBeenCalled();
   });
 });
 

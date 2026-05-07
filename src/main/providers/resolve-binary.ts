@@ -1,9 +1,9 @@
-import * as path from 'path';
-import * as os from 'os';
 import { execSync } from 'child_process';
-import { getFullPath } from '../pty-manager';
-import { isWin, whichCmd } from '../platform';
+import * as os from 'os';
+import * as path from 'path';
 import { fileExists } from '../fs-utils';
+import { isWin, whichCmd } from '../platform';
+import { getFullPath } from '../pty-manager';
 import { findBinaryInNvm } from './nvm';
 
 const COMMON_BIN_DIRS = isWin

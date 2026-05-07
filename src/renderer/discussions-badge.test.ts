@@ -28,8 +28,8 @@ vi.stubGlobal('DOMParser', class {
   parseFromString(text: string, _type: string) {
     const entries: Array<{ querySelector: (sel: string) => { textContent: string } | null }> = [];
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-    let match;
-    while ((match = entryRegex.exec(text)) !== null) {
+    let match = entryRegex.exec(text);
+    while (match !== null) {
       const content = match[1];
       const publishedMatch = /<published>(.*?)<\/published>/.exec(content);
       entries.push({
@@ -38,6 +38,7 @@ vi.stubGlobal('DOMParser', class {
           return null;
         },
       });
+      match = entryRegex.exec(text);
     }
     return {
       querySelectorAll: (sel: string) => sel === 'entry' ? entries : [],
@@ -46,11 +47,11 @@ vi.stubGlobal('DOMParser', class {
 });
 
 import {
-  init,
+  _resetForTesting,
   getNewCount,
+  init,
   markSeen,
   onChange,
-  _resetForTesting,
 } from './discussions-badge';
 
 function buildAtomFeed(timestamps: string[]): string {

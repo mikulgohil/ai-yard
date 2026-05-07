@@ -1,54 +1,8 @@
-import type { VibeyardApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, ReadinessResult, ReadinessSnapshot, TeamMember, TeamData, OverviewLayout } from '../shared/types.js';
-import { getCost } from './session-cost.js';
-import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename } from '../shared/platform.js';
+import type { ArchivedSession, ContextWindowInfo, CostInfo, InitialContextSnapshot, McpData, McpServerEntrySnapshot, OverviewLayout, PersistedState, Preferences, ProjectRecord, ProviderId, ReadinessResult, SessionRecord, TeamData, TeamMember } from '../shared/types.js';
+import { getProviderAvailabilitySnapshot, getProviderCapabilities } from './provider-availability.js';
+import { getCost } from './session-cost.js';
 import { isCliSession } from './session-utils.js';
-import { archiveSession as archiveSessionPure } from './state/session-archive.js';
-import {
-  buildResumedSession,
-  buildResumedSessionFromCliId,
-  clearSessionHistory as clearSessionHistoryPure,
-  findCliSessionTab,
-  getSessionHistory as getSessionHistoryPure,
-  removeHistoryEntry as removeHistoryEntryPure,
-  resolveResumeSource,
-  toggleBookmark as toggleBookmarkPure,
-} from './state/session-history.js';
-import {
-  attachSessionToProject,
-  buildBrowserTabSession,
-  buildCliSession,
-  buildDiffViewerSession,
-  buildFileReaderSession,
-  buildKanbanSession,
-  buildMcpInspectorSession,
-  buildProjectTabSession,
-  buildRemoteSession,
-  buildTeamSession,
-} from './state/session-factory.js';
-import { NavHistory } from './state/nav-history.js';
-import { createDefaultBoard, ensureProjectDefaults, hydrateLoadedState, serializeForSave } from './state/persistence.js';
-import {
-  applyMemberPatch,
-  buildNewMember,
-  buildTeamChatSession,
-  fireAndForgetRemoveAgent,
-  pickTeamChatProvider,
-  reconcileAgent as reconcileAgentPure,
-  removeMember,
-  syncAgentInstall as syncAgentInstallPure,
-} from './state/team-state.js';
-import {
-  browserTabNameFromUrl,
-  buildPlanSessionArgs,
-  findExistingBrowserTab,
-  findExistingDiffViewer,
-  findExistingFileReader,
-  findExistingTabByType,
-  resolveCliProvider,
-  resolvePlanProvider,
-} from './state/specialized-sessions.js';
 import {
   addInsightSnapshot as addInsightSnapshotPure,
   dismissInsight as dismissInsightPure,
@@ -62,15 +16,62 @@ import {
   sessionIdAtIndex,
   toggleSwarmMode,
 } from './state/layout-state.js';
+import { NavHistory } from './state/nav-history.js';
+import { createDefaultBoard, ensureProjectDefaults, hydrateLoadedState, serializeForSave } from './state/persistence.js';
+import { archiveSession as archiveSessionPure } from './state/session-archive.js';
+import {
+  attachSessionToProject,
+  buildBrowserTabSession,
+  buildCliSession,
+  buildCostDashboardSession,
+  buildDiffViewerSession,
+  buildFileReaderSession,
+  buildKanbanSession,
+  buildMcpInspectorSession,
+  buildProjectTabSession,
+  buildRemoteSession,
+  buildTeamSession,
+} from './state/session-factory.js';
+import {
+  buildResumedSession,
+  buildResumedSessionFromCliId,
+  clearSessionHistory as clearSessionHistoryPure,
+  findCliSessionTab,
+  getSessionHistory as getSessionHistoryPure,
+  removeHistoryEntry as removeHistoryEntryPure,
+  resolveResumeSource,
+  toggleBookmark as toggleBookmarkPure,
+} from './state/session-history.js';
+import {
+  browserTabNameFromUrl,
+  buildPlanSessionArgs,
+  findExistingBrowserTab,
+  findExistingDiffViewer,
+  findExistingFileReader,
+  findExistingTabByType,
+  resolveCliProvider,
+  resolvePlanProvider,
+} from './state/specialized-sessions.js';
+import {
+  applyMemberPatch,
+  buildNewMember,
+  buildTeamChatSession,
+  fireAndForgetRemoveAgent,
+  pickTeamChatProvider,
+  reconcileAgent as reconcileAgentPure,
+  removeMember,
+  syncAgentInstall as syncAgentInstallPure,
+} from './state/team-state.js';
+import type { AIYardApi } from './types.js';
 
-export type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession } from '../shared/types.js';
+export type { ArchivedSession, PersistedState, Preferences, ProjectRecord, SessionRecord } from '../shared/types.js';
 
 export const MAX_SESSION_NAME_LENGTH = 60;
 export const MAX_PROJECT_NAME_LENGTH = 80;
 
 declare global {
   interface Window {
-    vibeyard: VibeyardApi;
+    aiyard: AIYardApi;
   }
 }
 
@@ -160,11 +161,13 @@ class AppState {
   }
 
   private emit(event: EventType, data?: unknown): void {
-    this.listeners.get(event)?.forEach((cb) => cb(data));
+    this.listeners.get(event)?.forEach((cb) => {
+      cb(data);
+    });
   }
 
   async load(): Promise<void> {
-    const loaded = (await window.vibeyard.store.load()) as PersistedState | null;
+    const loaded = (await window.aiyard.store.load()) as PersistedState | null;
     if (loaded && loaded.version === 1) {
       this.state = loaded;
       hydrateLoadedState(this.state, defaultPreferences);
@@ -180,7 +183,7 @@ class AppState {
   }
 
   private persist(): void {
-    window.vibeyard.store.save(serializeForSave(this.state));
+    window.aiyard.store.save(serializeForSave(this.state));
   }
 
   get projects(): ProjectRecord[] {
@@ -457,6 +460,21 @@ class AppState {
     return session;
   }
 
+  openCostDashboardTab(projectId: string): SessionRecord | undefined {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return undefined;
+
+    if (this.state.activeProjectId !== projectId) this.setActiveProject(projectId);
+
+    const existing = findExistingTabByType(project, 'cost-dashboard');
+    if (existing) return this.activateExistingSession(project, existing);
+
+    const session = buildCostDashboardSession({ projectName: project.name });
+    attachSessionToProject(project, session);
+    this.commitNewSession(projectId, session);
+    return session;
+  }
+
   get team(): TeamData {
     if (!this.state.team) this.state.team = { members: [] };
     return this.state.team;
@@ -472,7 +490,7 @@ class AppState {
     this.persist();
     this.emit('team-changed');
     if (member.installAsAgent) {
-      void syncAgentInstallPure(window.vibeyard.provider, this.team, member, () => this.persist());
+      void syncAgentInstallPure(window.aiyard.provider, this.team, member, () => this.persist());
     }
     return member;
   }
@@ -482,7 +500,7 @@ class AppState {
     if (!result) return undefined;
     this.persist();
     this.emit('team-changed');
-    void reconcileAgentPure(window.vibeyard.provider, this.team, result.before, result.after, () => this.persist());
+    void reconcileAgentPure(window.aiyard.provider, this.team, result.before, result.after, () => this.persist());
     return result.after;
   }
 
@@ -492,12 +510,22 @@ class AppState {
     this.persist();
     this.emit('team-changed');
     if (removed.installAsAgent && removed.agentSlug) {
-      fireAndForgetRemoveAgent(window.vibeyard.provider, removed.agentSlug);
+      fireAndForgetRemoveAgent(window.aiyard.provider, removed.agentSlug);
     }
   }
 
   setTeamPredefinedCache(suggestions: TeamMember[]): void {
     this.team.predefinedCache = { fetchedAt: Date.now(), suggestions };
+    this.persist();
+  }
+
+  get mcp(): McpData {
+    if (!this.state.mcp) this.state.mcp = {};
+    return this.state.mcp;
+  }
+
+  setMcpMarketplaceCache(entries: McpServerEntrySnapshot[]): void {
+    this.mcp.marketplaceCache = { fetchedAt: Date.now(), entries };
     this.persist();
   }
 
@@ -637,7 +665,7 @@ class AppState {
     if (!project) return undefined;
 
     const archived = project.sessionHistory?.find((a) => a.id === archivedSessionId);
-    if (!archived || !archived.cliSessionId) return undefined;
+    if (!archived?.cliSessionId) return undefined;
 
     const existing = findCliSessionTab(project, archived.cliSessionId);
     if (existing) return this.activateExistingSession(project, existing);
@@ -648,7 +676,7 @@ class AppState {
     return session;
   }
 
-  /** Open a CLI session by cliSessionId, bypassing Vibeyard history. Used for cross-project deep search results. */
+  /** Open a CLI session by cliSessionId, bypassing AI-yard history. Used for cross-project deep search results. */
   openCliSession(projectId: string, cliSessionId: string, name: string, providerId: ProviderId = 'claude'): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
@@ -680,7 +708,7 @@ class AppState {
     const resolved = resolveResumeSource(project, source);
     if (!resolved) return undefined;
 
-    const initialPrompt = await window.vibeyard.session.buildResumeWithPrompt(
+    const initialPrompt = await window.aiyard.session.buildResumeWithPrompt(
       resolved.providerId,
       resolved.cliSessionId ?? null,
       project.path,
@@ -780,7 +808,7 @@ class AppState {
     if (!project) return;
     const session = project.sessions.find((s) => s.id === sessionId);
     if (!session) return;
-    if (session.type === 'kanban' || session.type === 'project-tab') return;
+    if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'cost-dashboard') return;
     session.name = name.slice(0, MAX_SESSION_NAME_LENGTH);
     if (userRenamed) session.userRenamed = true;
     // Keep history entry in sync if this session was resumed from history
@@ -936,9 +964,12 @@ export { createDefaultBoard };
 
 /** @internal Test-only: reset all module state */
 export function _resetForTesting(): void {
-  (appState as any)['state'] = { version: 1, projects: [], activeProjectId: null, preferences: { ...defaultPreferences } };
-  (appState as any)['listeners'] = new Map();
-  (appState as any)['nav'] = new NavHistory();
+  // biome-ignore lint/suspicious/noExplicitAny: test-only access to private fields
+  (appState as any).state = { version: 1, projects: [], activeProjectId: null, preferences: { ...defaultPreferences } };
+  // biome-ignore lint/suspicious/noExplicitAny: test-only access to private fields
+  (appState as any).listeners = new Map();
+  // biome-ignore lint/suspicious/noExplicitAny: test-only access to private fields
+  (appState as any).nav = new NavHistory();
 }
 
 export const appState = new AppState();

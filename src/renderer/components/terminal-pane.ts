@@ -1,18 +1,18 @@
-import { Terminal } from '@xterm/xterm';
-import { getTerminalTheme } from '../terminal-theme.js';
 import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
 import { WebLinksAddon } from '@xterm/addon-web-links';
-import { initSession, removeSession } from '../session-activity.js';
-import { markFreshSession } from '../session-insights.js';
-import { removeSession as removeCostSession, formatTokens, type CostInfo } from '../session-cost.js';
-import { removeSession as removeContextSession, getContextSeverity, type ContextWindowInfo } from '../session-context.js';
-import type { ProviderId } from '../types.js';
+import { Terminal } from '@xterm/xterm';
+import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
+import { initSession, removeSession } from '../session-activity.js';
+import { type ContextWindowInfo, getContextSeverity, removeSession as removeContextSession } from '../session-context.js';
+import { type CostInfo, formatTokens, removeSession as removeCostSession } from '../session-cost.js';
+import { markFreshSession } from '../session-insights.js';
 import { appState } from '../state.js';
+import { getTerminalTheme } from '../terminal-theme.js';
+import type { ProviderId } from '../types.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
 import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback, wrapBracketedPaste } from './terminal-utils.js';
-import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 
 interface TerminalInstance {
   terminal: Terminal;
@@ -83,7 +83,7 @@ export function createTerminalPane(
     linkHandler: {
       activate: (event, uri) => {
         if (event.metaKey || event.ctrlKey) {
-          window.vibeyard.app.openExternal(uri);
+          window.aiyard.app.openExternal(uri);
         }
       },
     },
@@ -97,16 +97,16 @@ export function createTerminalPane(
 
   terminal.loadAddon(new WebLinksAddon((event, url) => {
     if (event.metaKey || event.ctrlKey) {
-      window.vibeyard.app.openExternal(url);
+      window.aiyard.app.openExternal(url);
     }
   }));
 
-  const writeToPty = (data: string) => window.vibeyard.pty.write(sessionId, data);
+  const writeToPty = (data: string) => window.aiyard.pty.write(sessionId, data);
 
   // Send CSI u encoding for Shift+Enter so Claude CLI treats it as newline
   attachClipboardCopyHandler(terminal, (e) => {
     if (e.shiftKey && e.key === 'Enter') {
-      if (e.type === 'keydown') window.vibeyard.pty.write(sessionId, '\x1b[13;2u');
+      if (e.type === 'keydown') window.aiyard.pty.write(sessionId, '\x1b[13;2u');
       e.preventDefault();
       return false;
     }
@@ -139,7 +139,7 @@ export function createTerminalPane(
   }
 
   // Register GitHub #123 link provider
-  window.vibeyard.git.getRemoteUrl(projectPath).then((repoUrl) => {
+  window.aiyard.git.getRemoteUrl(projectPath).then((repoUrl) => {
     if (repoUrl) {
       terminal.registerLinkProvider(new GithubLinkProvider(repoUrl, terminal));
     }
@@ -147,7 +147,7 @@ export function createTerminalPane(
 
   // Handle user input → PTY
   terminal.onData((data) => {
-    window.vibeyard.pty.write(sessionId, data);
+    window.aiyard.pty.write(sessionId, data);
   });
 
   // Focus tracking
@@ -179,7 +179,7 @@ export function createTerminalPane(
     const paths = collectDroppedPaths(e.dataTransfer);
     if (paths.length === 0) return;
     e.preventDefault();
-    if (injectTextIntoRunningSession(sessionId, paths.join(' ') + ' ')) {
+    if (injectTextIntoRunningSession(sessionId, `${paths.join(' ')} `)) {
       terminal.focus();
     }
   });
@@ -222,7 +222,7 @@ function collectDroppedPaths(dt: DataTransfer | null): string[] {
   if (internal) return [internal];
   const paths: string[] = [];
   for (const file of dt.files) {
-    const path = window.vibeyard.fs.getDroppedFilePath(file);
+    const path = window.aiyard.fs.getDroppedFilePath(file);
     if (path) paths.push(path);
   }
   return paths;
@@ -230,14 +230,14 @@ function collectDroppedPaths(dt: DataTransfer | null): string[] {
 
 export function injectTextIntoRunningSession(sessionId: string, text: string): boolean {
   const instance = instances.get(sessionId);
-  if (!instance || !instance.spawned || instance.exited) return false;
-  window.vibeyard.pty.write(sessionId, wrapBracketedPaste(instance.terminal, text));
+  if (!instance?.spawned || instance.exited) return false;
+  window.aiyard.pty.write(sessionId, wrapBracketedPaste(instance.terminal, text));
   return true;
 }
 
 export function injectPromptIntoRunningSession(sessionId: string, prompt: string): boolean {
   if (!injectTextIntoRunningSession(sessionId, prompt)) return false;
-  window.vibeyard.pty.write(sessionId, '\r');
+  window.aiyard.pty.write(sessionId, '\r');
   return true;
 }
 
@@ -274,7 +274,7 @@ export async function spawnTerminal(sessionId: string): Promise<void> {
     systemPrompt = instance.pendingSystemPrompt;
     instance.pendingSystemPrompt = null;
   }
-  await window.vibeyard.pty.create(sessionId, instance.projectPath, instance.cliSessionId, instance.isResume, instance.args, instance.providerId, initialPrompt, systemPrompt);
+  await window.aiyard.pty.create(sessionId, instance.projectPath, instance.cliSessionId, instance.isResume, instance.args, instance.providerId, initialPrompt, systemPrompt);
   instance.isResume = true; // subsequent spawns (e.g. Restart Session) should resume
 }
 
@@ -326,7 +326,7 @@ export function fitTerminal(sessionId: string): void {
   try {
     instance.fitAddon.fit();
     const { cols, rows } = instance.terminal;
-    window.vibeyard.pty.resize(sessionId, cols, rows);
+    window.aiyard.pty.resize(sessionId, cols, rows);
   } catch {
     // Element not yet visible
   }
@@ -383,7 +383,7 @@ export function destroyTerminal(sessionId: string): void {
   if (!instance) return;
 
   clearPendingPromptTimer(instance);
-  window.vibeyard.pty.kill(sessionId);
+  window.aiyard.pty.kill(sessionId);
   instance.terminal.dispose();
   instance.element.remove();
   instances.delete(sessionId);

@@ -1,5 +1,5 @@
-import { appState } from './state.js';
 import type { GithubItem } from '../shared/types.js';
+import { appState } from './state.js';
 
 type ChangeCallback = () => void;
 

@@ -1,12 +1,12 @@
 import {
-  initSession,
-  setHookStatus,
-  notifyInterrupt,
-  setIdle,
-  removeSession,
-  getStatus,
-  onChange,
   _resetForTesting,
+  getStatus,
+  initSession,
+  notifyInterrupt,
+  onChange,
+  removeSession,
+  setHookStatus,
+  setIdle,
 } from './session-activity';
 
 beforeEach(() => {

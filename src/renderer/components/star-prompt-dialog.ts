@@ -2,7 +2,7 @@ import { appState } from '../state.js';
 import { createModalShell } from './modal-shell.js';
 
 const STAR_THRESHOLD = 10;
-const REPO_URL = 'https://github.com/elirantutia/vibeyard';
+const REPO_URL = 'https://github.com/mikulgohil/ai-yard';
 
 let cleanupFn: (() => void) | null = null;
 
@@ -12,7 +12,7 @@ function showStarPromptDialog(): void {
 
   const { overlay, body, actions } = createModalShell({
     id: 'star-prompt-overlay',
-    title: 'Enjoying Vibeyard?',
+    title: 'Enjoying AI-yard?',
   });
   body.innerHTML = '';
   actions.innerHTML = '';
@@ -28,7 +28,7 @@ function showStarPromptDialog(): void {
   const message = document.createElement('div');
   message.className = 'star-prompt-message';
   message.textContent =
-    "If Vibeyard has been useful to you, consider giving it a star on GitHub. It helps others discover the project!";
+    "If AI-yard has been useful to you, consider giving it a star on GitHub. It helps others discover the project!";
   container.appendChild(message);
 
   const innerActions = document.createElement('div');
@@ -62,7 +62,7 @@ function showStarPromptDialog(): void {
   };
 
   const handleStar = () => {
-    window.vibeyard.app.openExternal(REPO_URL);
+    window.aiyard.app.openExternal(REPO_URL);
     appState.dismissStarPrompt();
     close();
   };

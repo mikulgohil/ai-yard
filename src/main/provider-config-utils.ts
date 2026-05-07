@@ -1,7 +1,7 @@
 import * as path from 'path';
-import { readDirSafe, readFileSafe, readJsonSafe } from './fs-utils';
-import { parseFrontmatter, parseFrontmatterContent } from './frontmatter';
 import type { Agent, McpServer, Skill } from '../shared/types';
+import { parseFrontmatter, parseFrontmatterContent } from './frontmatter';
+import { readDirSafe, readFileSafe, readJsonSafe } from './fs-utils';
 
 export function readMcpServersFromJson(filePath: string, scope: 'user' | 'project'): McpServer[] {
   const json = readJsonSafe(filePath);

@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -23,8 +23,8 @@ vi.mock('./session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
 
+import { _resetForTesting, clearSession, parseTitle } from './session-title';
 import { appState, _resetForTesting as resetAppState } from './state';
-import { parseTitle, clearSession, _resetForTesting } from './session-title';
 
 beforeEach(() => {
   _resetForTesting();

@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { handleToolFailure, onLargeFileAlert, _resetForTesting, type LargeFileAlert } from './large-file-detector.js';
-import { appState, _resetForTesting as resetState } from '../state.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ToolFailureData } from '../../shared/types.js';
+import { appState, _resetForTesting as resetState } from '../state.js';
+import { _resetForTesting, handleToolFailure, type LargeFileAlert, onLargeFileAlert } from './large-file-detector.js';
 
 const mockReadFile = vi.fn().mockResolvedValue({ ok: true, content: '' });
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: vi.fn().mockResolvedValue(null), save: vi.fn() },
     session: { onToolFailure: vi.fn() },
     fs: { readFile: mockReadFile },
@@ -313,9 +313,9 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(0);
   });
 
-  // --- .vibeyardignore exclusions ---
+  // --- .ai-yardignore exclusions ---
 
-  it('does not alert for files matching .vibeyardignore patterns', async () => {
+  it('does not alert for files matching .ai-yardignore patterns', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -327,7 +327,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(0);
   });
 
-  it('still alerts for files not matching .vibeyardignore patterns', async () => {
+  it('still alerts for files not matching .ai-yardignore patterns', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -339,7 +339,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(1);
   });
 
-  it('handles missing .vibeyardignore gracefully', async () => {
+  it('handles missing .ai-yardignore gracefully', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -351,7 +351,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(1);
   });
 
-  it('caches .vibeyardignore patterns per project', async () => {
+  it('caches .ai-yardignore patterns per project', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];

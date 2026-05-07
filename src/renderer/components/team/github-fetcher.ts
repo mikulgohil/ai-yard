@@ -1,5 +1,5 @@
-import type { TeamMember } from '../../../shared/types.js';
 import { buildContentsApiUrl } from '../../../shared/team-config.js';
+import type { TeamMember } from '../../../shared/types.js';
 import { memberFromMarkdown } from './frontmatter.js';
 
 interface GithubContentEntry {

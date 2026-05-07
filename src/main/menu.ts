@@ -1,4 +1,4 @@
-import { app, Menu, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import { isMac, isWin } from './platform';
 
 export function createAppMenu(debugMode = false): void {

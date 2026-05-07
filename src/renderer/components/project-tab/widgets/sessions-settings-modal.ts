@@ -1,5 +1,5 @@
-import { createModalShell, createModalButton } from '../../modal-shell.js';
 import type { OverviewWidget } from '../../../../shared/types.js';
+import { createModalButton, createModalShell } from '../../modal-shell.js';
 import {
   DEFAULT_SESSIONS_CONFIG,
   SESSIONS_RECENT_LIMIT_MAX,
@@ -57,7 +57,7 @@ export function showSessionsSettings(
     const raw = parseInt(limitInput.value, 10);
     const clamped = Math.max(
       SESSIONS_RECENT_LIMIT_MIN,
-      Math.min(SESSIONS_RECENT_LIMIT_MAX, isNaN(raw) ? DEFAULT_SESSIONS_CONFIG.recentLimit : raw),
+      Math.min(SESSIONS_RECENT_LIMIT_MAX, Number.isNaN(raw) ? DEFAULT_SESSIONS_CONFIG.recentLimit : raw),
     );
     onSave({ recentLimit: clamped });
     close();

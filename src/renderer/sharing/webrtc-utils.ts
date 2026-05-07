@@ -1,7 +1,7 @@
 // Shared WebRTC utilities for P2P session sharing.
 
 import type { ShareMessage } from '../../shared/sharing-types.js';
-import { encryptPayload, decryptPayload } from './share-crypto.js';
+import { decryptPayload, encryptPayload } from './share-crypto.js';
 
 export const ICE_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],

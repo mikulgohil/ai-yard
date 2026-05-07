@@ -1,5 +1,5 @@
-import type { TeamMember } from '../../../shared/types.js';
 import { isTeamDomain } from '../../../shared/team-config.js';
+import type { TeamMember } from '../../../shared/types.js';
 
 export interface ParsedTeamFile {
   meta: Record<string, string>;

@@ -1,5 +1,5 @@
-import { appState, type SessionRecord } from '../../state.js';
 import { isCliSession } from '../../session-utils.js';
+import { appState, type SessionRecord } from '../../state.js';
 import { getTerminalInstance } from '../terminal-pane.js';
 import type { BrowserTabInstance } from './types.js';
 
@@ -22,7 +22,7 @@ function makeSessionItem(session: SessionRecord, onClick: () => void): HTMLButto
   const status = sessionStatus(session.id);
   const btn = document.createElement('button');
   btn.className = 'send-menu-item';
-  btn.dataset['sessionId'] = session.id;
+  btn.dataset.sessionId = session.id;
   btn.title = `${session.name} — ${status}`;
 
   const dot = document.createElement('span');

@@ -1,5 +1,5 @@
-import type { TeamMember } from '../../../shared/types.js';
 import type { TeamDomain } from '../../../shared/team-config.js';
+import type { TeamMember } from '../../../shared/types.js';
 
 export type DomainFilter = TeamDomain | 'all';
 

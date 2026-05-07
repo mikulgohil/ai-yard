@@ -1,10 +1,10 @@
 // Share dialog — host-side UI for sharing a session via P2P.
 
 import type { ShareMode } from '../../shared/sharing-types.js';
-import { shareSession, acceptShareAnswer, endShare } from '../sharing/share-manager.js';
-import { isSharing, isConnected } from '../sharing/peer-host.js';
-import { validatePin } from '../sharing/share-crypto.js';
 import { createPinInput } from '../dom-utils.js';
+import { isConnected, isSharing } from '../sharing/peer-host.js';
+import { validatePin } from '../sharing/share-crypto.js';
+import { acceptShareAnswer, endShare, shareSession } from '../sharing/share-manager.js';
 
 let activeOverlay: HTMLElement | null = null;
 let pendingShareSessionId: string | null = null;

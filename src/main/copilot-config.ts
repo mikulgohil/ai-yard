@@ -1,9 +1,9 @@
-import * as path from 'path';
 import { homedir } from 'os';
-import { readDirSafe } from './fs-utils';
-import { parseFrontmatter } from './frontmatter';
-import { dedupeByName, readMcpServersFromJson, readSkillsFromDir } from './provider-config-utils';
+import * as path from 'path';
 import type { Agent, McpServer, ProviderConfig } from '../shared/types';
+import { parseFrontmatter } from './frontmatter';
+import { readDirSafe } from './fs-utils';
+import { dedupeByName, readMcpServersFromJson, readSkillsFromDir } from './provider-config-utils';
 
 export const AGENT_EXT = '.agent.md';
 

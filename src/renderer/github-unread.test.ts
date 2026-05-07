@@ -18,24 +18,28 @@ vi.mock('./state.js', () => {
         return () => listeners.get(event)?.delete(cb);
       },
       __reset: () => { lastSeen.clear(); listeners.clear(); },
-      __emit: (event: string) => { listeners.get(event)?.forEach((cb) => cb()); },
+      __emit: (event: string) => {
+        listeners.get(event)?.forEach((cb) => {
+          cb();
+        });
+      },
     },
   };
 });
 
-import {
-  ingestItems,
-  isUnread,
-  hasUnreadInProject,
-  unreadCountInProject,
-  markRead,
-  markAllReadInProject,
-  makeItemId,
-  onChange,
-  init,
-  _resetForTesting,
-} from './github-unread';
 import type { GithubItem } from '../shared/types';
+import {
+  _resetForTesting,
+  hasUnreadInProject,
+  ingestItems,
+  init,
+  isUnread,
+  makeItemId,
+  markAllReadInProject,
+  markRead,
+  onChange,
+  unreadCountInProject,
+} from './github-unread';
 import { appState } from './state.js';
 
 function fakeItem(num: number, updated: string): GithubItem {
@@ -148,7 +152,7 @@ describe('init', () => {
       on(e: string, cb: (data?: unknown) => void): () => void;
     });
     // Re-init to add our own listener that simulates project-removed with the id payload
-    let received: unknown = undefined;
+    let received: unknown ;
     listeners.on('project-removed', (data) => { received = data; });
     expect(received).toBeUndefined();
   });

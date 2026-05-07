@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { isWin } from '../platform';
 
 vi.mock('fs', () => ({
@@ -30,17 +30,17 @@ vi.mock('../config-watcher', () => ({
 
 vi.mock('../gemini-hooks', () => ({
   installGeminiHooks: vi.fn(),
-  validateGeminiHooks: vi.fn(() => ({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} })),
+  validateGeminiHooks: vi.fn(() => ({ statusLine: 'aiyard', hooks: 'complete', hookDetails: {} })),
   cleanupGeminiHooks: vi.fn(),
-  SESSION_ID_VAR: 'VIBEYARD_SESSION_ID',
+  SESSION_ID_VAR: 'AIYARD_SESSION_ID',
 }));
 
-import * as fs from 'fs';
 import { execSync } from 'child_process';
-import { GeminiProvider, _resetCachedPath } from './gemini-provider';
-import { getGeminiConfig } from '../gemini-config';
+import * as fs from 'fs';
 import { startConfigWatcher, stopConfigWatcher } from '../config-watcher';
-import { installGeminiHooks, validateGeminiHooks, cleanupGeminiHooks } from '../gemini-hooks';
+import { getGeminiConfig } from '../gemini-config';
+import { cleanupGeminiHooks, installGeminiHooks, validateGeminiHooks } from '../gemini-hooks';
+import { _resetCachedPath, GeminiProvider } from './gemini-provider';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockStatSync = vi.mocked(fs.statSync);
@@ -152,9 +152,9 @@ describe('buildEnv', () => {
     expect(env.PATH).toBe(isWin ? '/usr/local/bin;/usr/bin' : '/usr/local/bin:/usr/bin');
   });
 
-  it('sets VIBEYARD_SESSION_ID to the session ID', () => {
+  it('sets AIYARD_SESSION_ID to the session ID', () => {
     const env = provider.buildEnv('sess-123', {});
-    expect(env.VIBEYARD_SESSION_ID).toBe('sess-123');
+    expect(env.AIYARD_SESSION_ID).toBe('sess-123');
   });
 
   it('preserves existing env vars', () => {
@@ -226,7 +226,7 @@ describe('hooks integration', () => {
   it('validateSettings delegates to validateGeminiHooks', () => {
     const result = provider.validateSettings();
     expect(mockValidateGeminiHooks).toHaveBeenCalled();
-    expect(result).toEqual({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} });
+    expect(result).toEqual({ statusLine: 'aiyard', hooks: 'complete', hookDetails: {} });
   });
 
   it('cleanup calls cleanupGeminiHooks and stopConfigWatcher', () => {

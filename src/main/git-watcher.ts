@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import { execFile } from 'child_process';
 import type { BrowserWindow } from 'electron';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const DEBOUNCE_MS = 300;
 const IGNORE_SEGMENTS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', '.cache', 'coverage', '__pycache__']);
@@ -29,7 +29,7 @@ function shouldIgnore(filename: string | null): boolean {
 function watchDir(dirPath: string, shouldSkip?: (filename: string | null) => boolean): void {
   try {
     const watcher = fs.watch(dirPath, { recursive: true }, (_event, filename) => {
-      if (shouldSkip && shouldSkip(filename)) return;
+      if (shouldSkip?.(filename)) return;
       notify();
     });
     watcher.on('error', () => {}); // ignore errors (dir deleted, etc.)

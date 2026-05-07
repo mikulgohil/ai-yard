@@ -1,11 +1,11 @@
+import type { CliProviderMeta, ProviderId, } from '../../shared/types.js';
+import { getProviderAvailabilitySnapshot, loadProviderAvailability } from '../provider-availability.js';
+import { displayKeys, eventToAccelerator, shortcutManager } from '../shortcuts.js';
 import { appState } from '../state.js';
-import { createCustomSelect, type CustomSelectInstance } from './custom-select.js';
 import { applyZoom, getZoomFactor, ZOOM_STEPS } from '../zoom.js';
-import { shortcutManager, displayKeys, eventToAccelerator } from '../shortcuts.js';
-import { loadProviderAvailability, getProviderAvailabilitySnapshot } from '../provider-availability.js';
-import type { CliProviderMeta, ProviderId, SettingsValidationResult } from '../../shared/types.js';
+import { type CustomSelectInstance, createCustomSelect } from './custom-select.js';
+import { createModalButton, createModalShell } from './modal-shell.js';
 import { hasProviderIssue, type ProviderStatus } from './setup-checks.js';
-import { createModalShell, createModalButton } from './modal-shell.js';
 
 let cleanupFn: (() => void) | null = null;
 
@@ -80,6 +80,9 @@ export function showPreferencesModal(): void {
   let debugModeCheckbox: HTMLInputElement | null = null;
   let sidebarCheckboxes: { gitPanel: HTMLInputElement; sessionHistory: HTMLInputElement; costFooter: HTMLInputElement; discussions: HTMLInputElement; fileTree: HTMLInputElement } | null = null;
   let boardCardMetricsCheckbox: HTMLInputElement | null = null;
+  let crashReportsCheckbox: HTMLInputElement | null = null;
+  let telemetryCheckbox: HTMLInputElement | null = null;
+  let costDashboardCheckbox: HTMLInputElement | null = null;
   let activeRecorder: { cleanup: () => void } | null = null;
   const originalTheme = appState.preferences.theme ?? 'dark';
 
@@ -343,6 +346,59 @@ export function showPreferencesModal(): void {
       boardMetricsRow.appendChild(boardCardMetricsCheckbox);
       content.appendChild(boardMetricsRow);
 
+      const costDashRow = document.createElement('div');
+      costDashRow.className = 'modal-toggle-field';
+
+      const costDashLabel = document.createElement('label');
+      costDashLabel.htmlFor = 'pref-cost-dashboard';
+      costDashLabel.textContent = 'Show Cost dashboard sidebar button';
+
+      costDashboardCheckbox = document.createElement('input');
+      costDashboardCheckbox.type = 'checkbox';
+      costDashboardCheckbox.id = 'pref-cost-dashboard';
+      costDashboardCheckbox.checked = appState.preferences.costDashboardEnabled !== false;
+
+      costDashRow.appendChild(costDashLabel);
+      costDashRow.appendChild(costDashboardCheckbox);
+      content.appendChild(costDashRow);
+
+      const privacyHeading = document.createElement('div');
+      privacyHeading.className = 'preferences-subheading';
+      privacyHeading.textContent = 'Privacy';
+      content.appendChild(privacyHeading);
+
+      const crashReportsRow = document.createElement('div');
+      crashReportsRow.className = 'modal-toggle-field';
+
+      const crashReportsLabel = document.createElement('label');
+      crashReportsLabel.htmlFor = 'pref-crash-reports';
+      crashReportsLabel.textContent = 'Send crash reports (requires app restart)';
+
+      crashReportsCheckbox = document.createElement('input');
+      crashReportsCheckbox.type = 'checkbox';
+      crashReportsCheckbox.id = 'pref-crash-reports';
+      crashReportsCheckbox.checked = appState.preferences.crashReportsEnabled ?? false;
+
+      crashReportsRow.appendChild(crashReportsLabel);
+      crashReportsRow.appendChild(crashReportsCheckbox);
+      content.appendChild(crashReportsRow);
+
+      const telemetryRow = document.createElement('div');
+      telemetryRow.className = 'modal-toggle-field';
+
+      const telemetryLabel = document.createElement('label');
+      telemetryLabel.htmlFor = 'pref-telemetry';
+      telemetryLabel.textContent = 'Send anonymous usage stats (requires app restart)';
+
+      telemetryCheckbox = document.createElement('input');
+      telemetryCheckbox.type = 'checkbox';
+      telemetryCheckbox.id = 'pref-telemetry';
+      telemetryCheckbox.checked = appState.preferences.telemetryEnabled ?? false;
+
+      telemetryRow.appendChild(telemetryLabel);
+      telemetryRow.appendChild(telemetryCheckbox);
+      content.appendChild(telemetryRow);
+
     } else if (section === 'shortcuts') {
       renderShortcutsSection(content);
 
@@ -355,7 +411,7 @@ export function showPreferencesModal(): void {
 
       const appName = document.createElement('div');
       appName.className = 'about-app-name';
-      appName.textContent = 'Vibeyard';
+      appName.textContent = 'AI-yard';
 
       const versionLine = document.createElement('div');
       versionLine.className = 'about-version';
@@ -374,18 +430,18 @@ export function showPreferencesModal(): void {
       updateBtn.addEventListener('click', () => {
         updateBtn.disabled = true;
         updateStatus.textContent = 'Checking...';
-        window.vibeyard.update.checkNow().then(() => {
+        window.aiyard.update.checkNow().then(() => {
           // If no update event fires within a few seconds, show "up to date"
           const timeout = setTimeout(() => {
             updateStatus.textContent = 'You\u2019re up to date.';
             updateBtn.disabled = false;
           }, 5000);
-          const unsub = window.vibeyard.update.onAvailable((info) => {
+          const unsub = window.aiyard.update.onAvailable((info) => {
             clearTimeout(timeout);
             updateStatus.textContent = `Update v${info.version} available — downloading...`;
             unsub();
           });
-          const unsubErr = window.vibeyard.update.onError(() => {
+          const unsubErr = window.aiyard.update.onError(() => {
             clearTimeout(timeout);
             updateStatus.textContent = 'Update check failed.';
             updateBtn.disabled = false;
@@ -407,13 +463,13 @@ export function showPreferencesModal(): void {
       ghLink.className = 'about-link';
       ghLink.textContent = 'GitHub';
       ghLink.href = '#';
-      ghLink.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal('https://github.com/elirantutia/vibeyard'); });
+      ghLink.addEventListener('click', (e) => { e.preventDefault(); window.aiyard.app.openExternal('https://github.com/mikulgohil/ai-yard'); });
 
       const bugLink = document.createElement('a');
       bugLink.className = 'about-link';
       bugLink.textContent = 'Report a Bug';
       bugLink.href = '#';
-      bugLink.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal('https://github.com/elirantutia/vibeyard/issues'); });
+      bugLink.addEventListener('click', (e) => { e.preventDefault(); window.aiyard.app.openExternal('https://github.com/mikulgohil/ai-yard/issues'); });
 
       linksDiv.appendChild(ghLink);
       linksDiv.appendChild(bugLink);
@@ -421,8 +477,8 @@ export function showPreferencesModal(): void {
       const communityDiv = document.createElement('div');
       communityDiv.className = 'about-community';
       communityDiv.append(
-        'Vibeyard is open source. ',
-        (() => { const a = document.createElement('a'); a.className = 'about-link'; a.href = '#'; a.textContent = 'Contribute on GitHub'; a.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal('https://github.com/elirantutia/vibeyard'); }); return a; })(),
+        'AI-yard is open source. ',
+        (() => { const a = document.createElement('a'); a.className = 'about-link'; a.href = '#'; a.textContent = 'Contribute on GitHub'; a.addEventListener('click', (e) => { e.preventDefault(); window.aiyard.app.openExternal('https://github.com/mikulgohil/ai-yard'); }); return a; })(),
         ' \u2014 and if you find it useful, give it a star!',
       );
 
@@ -449,7 +505,7 @@ export function showPreferencesModal(): void {
       aboutDiv.appendChild(debugRow);
       content.appendChild(aboutDiv);
 
-      window.vibeyard.app.getVersion().then((ver) => {
+      window.aiyard.app.getVersion().then((ver) => {
         versionLine.textContent = `Version: ${ver}`;
       });
     }
@@ -608,7 +664,7 @@ export function showPreferencesModal(): void {
   }
 
   async function fixAndRerender(providerId?: string) {
-    await window.vibeyard.settings.reinstall(providerId);
+    await window.aiyard.settings.reinstall(providerId);
     renderSection('setup');
   }
 
@@ -620,12 +676,12 @@ export function showPreferencesModal(): void {
   }
 
   async function fetchProviderStatuses(): Promise<ProviderStatus[]> {
-    const providers = await window.vibeyard.provider.listProviders();
+    const providers = await window.aiyard.provider.listProviders();
     return Promise.all(
       providers.map(meta =>
         Promise.all([
-          window.vibeyard.settings.validate(meta.id),
-          window.vibeyard.provider.checkBinary(meta.id),
+          window.aiyard.settings.validate(meta.id),
+          window.aiyard.provider.checkBinary(meta.id),
         ]).then(([validation, binaryOk]) => ({ meta, validation, binaryOk })),
       ),
     );
@@ -665,7 +721,7 @@ export function showPreferencesModal(): void {
       const { capabilities } = meta;
 
       if (capabilities.costTracking || capabilities.contextWindow) {
-        const slOk = validation.statusLine === 'vibeyard';
+        const slOk = validation.statusLine === 'aiyard';
         let slStatus = 'Configured';
         if (validation.statusLine === 'missing') slStatus = 'Not configured';
         else if (validation.statusLine === 'foreign') slStatus = 'Overwritten by another tool';
@@ -710,7 +766,7 @@ export function showPreferencesModal(): void {
         }
         section.appendChild(hookList);
 
-        if (capabilities.costTracking && validation.statusLine !== 'vibeyard' && !hooksOk) {
+        if (capabilities.costTracking && validation.statusLine !== 'aiyard' && !hooksOk) {
           const fixAllRow = document.createElement('div');
           fixAllRow.className = 'setup-fix-all-row';
 
@@ -751,7 +807,7 @@ export function showPreferencesModal(): void {
   // Menu click handler
   menu.addEventListener('click', (e) => {
     const target = (e.target as HTMLElement).closest('.preferences-menu-item') as HTMLElement | null;
-    if (target && target.dataset.section) {
+    if (target?.dataset.section) {
       renderSection(target.dataset.section as Section);
     }
   });
@@ -791,7 +847,7 @@ export function showPreferencesModal(): void {
     }
     if (debugModeCheckbox && debugModeCheckbox.checked !== appState.preferences.debugMode) {
       appState.setPreference('debugMode', debugModeCheckbox.checked);
-      window.vibeyard.menu.rebuild(debugModeCheckbox.checked);
+      window.aiyard.menu.rebuild(debugModeCheckbox.checked);
     }
     if (sidebarCheckboxes) {
       appState.setPreference('sidebarViews', {
@@ -804,6 +860,15 @@ export function showPreferencesModal(): void {
     }
     if (boardCardMetricsCheckbox && boardCardMetricsCheckbox.checked !== (appState.preferences.boardCardMetrics ?? true)) {
       appState.setPreference('boardCardMetrics', boardCardMetricsCheckbox.checked);
+    }
+    if (costDashboardCheckbox && costDashboardCheckbox.checked !== (appState.preferences.costDashboardEnabled !== false)) {
+      appState.setPreference('costDashboardEnabled', costDashboardCheckbox.checked);
+    }
+    if (crashReportsCheckbox && crashReportsCheckbox.checked !== (appState.preferences.crashReportsEnabled ?? false)) {
+      appState.setPreference('crashReportsEnabled', crashReportsCheckbox.checked);
+    }
+    if (telemetryCheckbox && telemetryCheckbox.checked !== (appState.preferences.telemetryEnabled ?? false)) {
+      appState.setPreference('telemetryEnabled', telemetryCheckbox.checked);
     }
   };
 

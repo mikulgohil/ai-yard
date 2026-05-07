@@ -43,7 +43,7 @@ function formatTime(ts: number): string {
 }
 
 function shortSessionId(id: string): string {
-  return id.length > 12 ? id.slice(0, 8) + '..' : id;
+  return id.length > 12 ? `${id.slice(0, 8)}..` : id;
 }
 
 function getSessionName(sessionId: string): string {
@@ -117,7 +117,7 @@ function renderEventRow(ev: DebugEvent): void {
 
   if (ev.data !== undefined) {
     const dataStr = formatData(ev.data);
-    const truncated = dataStr.length > 120 ? dataStr.slice(0, 120) + '...' : dataStr;
+    const truncated = dataStr.length > 120 ? `${dataStr.slice(0, 120)}...` : dataStr;
     const dataEl = document.createElement('span');
     dataEl.className = 'debug-data';
     dataEl.textContent = truncated;

@@ -1,7 +1,7 @@
-import { onToolAlert, type ToolAlert, type FailureReason } from '../tools/missing-tool-detector.js';
 import { dismissInsight } from '../session-insights.js';
 import { appState } from '../state.js';
-import { showAlertBanner, removeAlertBanner } from './alert-banner.js';
+import { type FailureReason, onToolAlert, type ToolAlert } from '../tools/missing-tool-detector.js';
+import { removeAlertBanner, showAlertBanner } from './alert-banner.js';
 import { setPendingPrompt } from './terminal-pane.js';
 
 export function initToolAlert(): void {

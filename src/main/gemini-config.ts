@@ -1,7 +1,7 @@
-import * as path from 'path';
 import { homedir } from 'os';
-import { dedupeByName, readAgentsFromDir, readMcpServersFromJson } from './provider-config-utils';
+import * as path from 'path';
 import type { McpServer, ProviderConfig } from '../shared/types';
+import { dedupeByName, readAgentsFromDir, readMcpServersFromJson } from './provider-config-utils';
 
 export async function getGeminiConfig(projectPath: string): Promise<ProviderConfig> {
   const geminiDir = path.join(homedir(), '.gemini');

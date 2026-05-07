@@ -1,3 +1,4 @@
+import { trackMount } from '../../feature-telemetry.js';
 import { appState } from '../../state.js';
 import { instances } from './instance.js';
 import { createMemberCard } from './member-card.js';
@@ -65,6 +66,7 @@ export function renderTeam(target?: HTMLElement): void {
   if (!container) return;
 
   if (!teamEl) {
+    trackMount('team');
     teamEl = buildTeamShell();
   }
 

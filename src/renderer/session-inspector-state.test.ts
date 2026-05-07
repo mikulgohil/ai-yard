@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InspectorEvent } from '../shared/types';
 import {
+  _resetForTesting,
   addEvents,
-  getEvents,
-  getToolStats,
+  clearSession,
   getContextHistory,
   getCostDeltas,
+  getEvents,
+  getToolStats,
   onChange,
-  clearSession,
-  _resetForTesting,
 } from './session-inspector-state.js';
 
 function makeEvent(partial: Partial<InspectorEvent> & { type: InspectorEvent['type'] }): InspectorEvent {

@@ -83,7 +83,8 @@ export type SessionType =
   | 'browser-tab'
   | 'project-tab'
   | 'kanban'
-  | 'team';
+  | 'team'
+  | 'cost-dashboard';
 
 export interface SessionRecord {
   id: string;
@@ -137,6 +138,28 @@ export interface TeamData {
   predefinedCache?: { fetchedAt: number; suggestions: TeamMember[] };
 }
 
+export interface McpData {
+  marketplaceCache?: { fetchedAt: number; entries: McpServerEntrySnapshot[] };
+}
+
+/**
+ * Persisted snapshot of an MCP marketplace entry — kept in `state.json` so the
+ * Browse modal can render instantly while a fresh fetch runs. Mirrors
+ * `McpServerEntry` from `shared/mcp-config.ts` but lives here to avoid pulling
+ * the entire marketplace module into types.
+ */
+export interface McpServerEntrySnapshot {
+  id: string;
+  name: string;
+  description: string;
+  domain?: string;
+  command?: string;
+  args?: string[];
+  url?: string;
+  env?: Record<string, string>;
+  setupUrl?: string;
+}
+
 export interface ArchivedSession {
   id: string;
   name: string;
@@ -169,7 +192,7 @@ export interface DeepSearchResult {
   projectCwd: string;
   snippet: string;
   score: number;
-  /** Title derived from the first user message — fallback when Vibeyard has no name for this session. */
+  /** Title derived from the first user message — fallback when AI-yard has no name for this session. */
   derivedName?: string;
 }
 
@@ -326,12 +349,18 @@ export interface Preferences {
     fileTree: boolean;
   };
   boardCardMetrics?: boolean;
+  /** Opt-in: send crash reports to Sentry. Off by default. Requires SENTRY_DSN env var. */
+  crashReportsEnabled?: boolean;
+  /** Opt-in: send anonymous usage stats. Off by default. Requires TELEMETRY_ENDPOINT + TELEMETRY_WEBSITE_ID env vars. */
+  telemetryEnabled?: boolean;
+  /** Show Cost Dashboard sidebar button. On by default. */
+  costDashboardEnabled?: boolean;
 }
 
 // --- Settings Validation ---
 
 export interface SettingsValidationResult {
-  statusLine: 'missing' | 'vibeyard' | 'foreign';
+  statusLine: 'missing' | 'aiyard' | 'foreign';
   hooks: 'missing' | 'complete' | 'partial';
   foreignStatusLineCommand?: string;
   hookDetails: Record<string, boolean>;
@@ -359,6 +388,9 @@ export interface PersistedState {
   starPromptDismissed?: boolean;
   discussionsLastSeen?: string;
   team?: TeamData;
+  mcp?: McpData;
+  /** Anonymous, lazy-generated UUID for telemetry deduplication. Cleared by deleting state.json. */
+  telemetryDeviceId?: string;
 }
 
 // --- AI Readiness ---

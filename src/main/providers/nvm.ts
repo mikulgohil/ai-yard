@@ -1,6 +1,6 @@
-import * as path from 'path';
 import * as os from 'os';
-import { fileExists, readDirSafe, readFileSafe, dirExists } from '../fs-utils';
+import * as path from 'path';
+import { dirExists, fileExists, readDirSafe, readFileSafe } from '../fs-utils';
 import { isWin } from '../platform';
 
 function nvmDir(): string {

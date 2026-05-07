@@ -15,12 +15,12 @@ vi.mock('./board/board-context-menu.js', () => ({
 }));
 
 import {
+  _resetForTesting,
+  clearProjectState,
+  type DirEntry,
+  isExpanded,
   sortEntries,
   toggleFolder,
-  isExpanded,
-  clearProjectState,
-  _resetForTesting,
-  DirEntry,
 } from './file-tree.js';
 
 describe('sortEntries', () => {

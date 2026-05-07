@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import type { ExecFileException } from 'child_process';
+import { vi } from 'vitest';
 
 // Mock child_process and fs before importing the module
 vi.mock('child_process', () => ({
@@ -14,9 +14,9 @@ vi.mock('fs', () => ({
 }));
 
 import { execFile } from 'child_process';
-import { readFileSync, promises as fsPromises } from 'fs';
+import { promises as fsPromises, readFileSync } from 'fs';
 import * as path from 'path';
-import { getGitStatus, getGitFiles, getGitDiff, getGitWorktrees, gitDiscardFile } from './git-status';
+import { getGitDiff, getGitFiles, getGitStatus, getGitWorktrees, gitDiscardFile } from './git-status';
 
 const mockExecFile = vi.mocked(execFile);
 const mockReadFileSync = vi.mocked(readFileSync);

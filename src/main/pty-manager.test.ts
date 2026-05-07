@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { isWin } from './platform';
 
 const { mockSpawn, mockWrite, mockResize, mockKill, mockExecFile, mockNvmDefaultNodeBinDir } = vi.hoisted(() => ({
@@ -40,10 +40,10 @@ vi.mock('./providers/nvm', () => ({
   findBinaryInNvm: vi.fn(() => null),
 }));
 
-import * as fs from 'fs';
 import * as child_process from 'child_process';
-import { spawnPty, writePty, resizePty, killPty, getPtyCwd, getRegistryPath, getFullPath, resetPathCache, resolveWindowsShell } from './pty-manager';
+import * as fs from 'fs';
 import { initProviders } from './providers/registry';
+import { getFullPath, getPtyCwd, getRegistryPath, killPty, resetPathCache, resizePty, resolveWindowsShell, spawnPty, writePty } from './pty-manager';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockStatSync = vi.mocked(fs.statSync);
@@ -58,8 +58,16 @@ function createMockPtyProcess() {
     write: mockWrite,
     resize: mockResize,
     kill: mockKill,
-    _emitData: (data: string) => dataCallbacks.forEach(cb => cb(data)),
-    _emitExit: (exitCode: number, signal?: number) => exitCallbacks.forEach(cb => cb({ exitCode, signal })),
+    _emitData: (data: string) => {
+      dataCallbacks.forEach(cb => {
+        cb(data);
+      });
+    },
+    _emitExit: (exitCode: number, signal?: number) => {
+      exitCallbacks.forEach(cb => {
+        cb({ exitCode, signal });
+      });
+    },
   };
   return proc;
 }

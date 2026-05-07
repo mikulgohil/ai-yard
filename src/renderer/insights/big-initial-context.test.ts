@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { bigInitialContext } from './big-initial-context.js';
+import { describe, expect, it } from 'vitest';
 import type { InitialContextSnapshot } from '../../shared/types.js';
+import { bigInitialContext } from './big-initial-context.js';
 
 function makeSnapshot(usedPercentage: number, totalTokens = 30000, contextWindowSize = 200000): InitialContextSnapshot {
   return {

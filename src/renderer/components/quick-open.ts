@@ -60,7 +60,7 @@ async function searchFiles(): Promise<void> {
 
   const { fileQuery } = parseQuery(input.value);
   try {
-    results = await window.vibeyard.fs.listFiles(project.path, fileQuery);
+    results = await window.aiyard.fs.listFiles(project.path, fileQuery);
   } catch {
     results = [];
   }

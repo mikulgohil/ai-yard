@@ -1,28 +1,22 @@
-import { appState } from '../../state.js';
-import { shortcutManager } from '../../shortcuts.js';
-import {
-  VIEWPORT_PRESETS,
-  type BrowserTabInstance,
-  type ElementInfo,
-  type FlowPickerAction,
-  type FlowPickerMetadata,
-  type WebviewElement,
-} from './types.js';
-import { instances, getPreloadPath } from './instance.js';
 import { createPlanModeRow } from '../../dom-utils.js';
-import { navigateTo } from './navigation.js';
-import { applyViewport, openViewportDropdown, closeViewportDropdown } from './viewport.js';
-import { toggleInspectMode, showElementInfo, dismissInspect } from './inspect-mode.js';
+import { trackMount } from '../../feature-telemetry.js';
+import { shortcutManager } from '../../shortcuts.js';
+import { appState } from '../../state.js';
+import { wireSubmitDisabled } from '../submit-disabled.js';
 import {
-  toggleDrawMode,
   clearDrawing,
   dismissDraw,
-  sendDrawToNewSession,
-  sendDrawToCustomSession,
   positionDrawPopover,
+  sendDrawToCustomSession,
+  sendDrawToNewSession,
+  toggleDrawMode,
 } from './draw-mode.js';
+import { dismissFlowPicker, showFlowPicker } from './flow-picker.js';
 import { addFlowStep, clearFlow, toggleFlowMode } from './flow-recording.js';
-import { showFlowPicker, dismissFlowPicker } from './flow-picker.js';
+import { dismissInspect, showElementInfo, toggleInspectMode } from './inspect-mode.js';
+import { getPreloadPath, instances } from './instance.js';
+import { navigateTo } from './navigation.js';
+import { dismissSendMenu, showSendMenu } from './send-menu.js';
 import {
   deliverDraw,
   deliverFlow,
@@ -32,12 +26,20 @@ import {
   sendToCustomSession,
   sendToNewSession,
 } from './session-integration.js';
-import { showSendMenu, dismissSendMenu } from './send-menu.js';
-import { wireSubmitDisabled } from '../submit-disabled.js';
+import {
+  type BrowserTabInstance,
+  type ElementInfo,
+  type FlowPickerAction,
+  type FlowPickerMetadata,
+  VIEWPORT_PRESETS,
+  type WebviewElement,
+} from './types.js';
+import { applyViewport, closeViewportDropdown, openViewportDropdown } from './viewport.js';
 
 export function createBrowserTabPane(sessionId: string, url?: string): void {
   if (instances.has(sessionId)) return;
 
+  trackMount('browser-tab');
   const el = document.createElement('div');
   el.className = 'browser-tab-pane hidden';
 
@@ -169,7 +171,7 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
 
   const ntpLogo = document.createElement('div');
   ntpLogo.className = 'browser-ntp-logo';
-  ntpLogo.textContent = 'Vibeyard';
+  ntpLogo.textContent = 'AI-yard';
   newTabPage.appendChild(ntpLogo);
 
   const ntpSubtitle = document.createElement('div');
@@ -387,7 +389,7 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   for (const opt of pickerOptions) {
     const item = document.createElement('button');
     item.className = 'flow-picker-item';
-    item.dataset['action'] = opt.action;
+    item.dataset.action = opt.action;
     const labelEl = document.createElement('span');
     labelEl.className = 'flow-picker-label';
     labelEl.textContent = opt.label;
@@ -552,7 +554,7 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   flowPickerMenu.addEventListener('click', (e: MouseEvent) => {
     const item = (e.target as HTMLElement).closest<HTMLButtonElement>('.flow-picker-item');
     if (!item || !instance.flowPickerPending) return;
-    const action = item.dataset['action'] as FlowPickerAction;
+    const action = item.dataset.action as FlowPickerAction;
     const metadata = instance.flowPickerPending;
     dismissFlowPicker(instance);
     if (action === 'click' || action === 'click-and-record') {

@@ -1,8 +1,8 @@
-import * as fs from 'fs';
 import { execSync } from 'child_process';
+import * as fs from 'fs';
 import type { ReadinessCheck } from '../../shared/types';
 
-export { readFileSafe, fileExists, dirExists, readDirSafe } from '../fs-utils';
+export { dirExists, fileExists, readDirSafe, readFileSafe } from '../fs-utils';
 
 export function getTrackedFiles(projectPath: string): string[] {
   try {
@@ -26,14 +26,15 @@ export function countFileLines(filePath: string, maxLines?: number): number {
   try {
     const buffer = Buffer.alloc(64 * 1024);
     let lines = 0;
-    let bytesRead: number;
-    outer: while ((bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+    let bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null);
+    outer: while (bytesRead > 0) {
       for (let i = 0; i < bytesRead; i++) {
         if (buffer[i] === 0x0a) {
           lines++;
           if (maxLines !== undefined && lines > maxLines) break outer;
         }
       }
+      bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null);
     }
     if (maxLines !== undefined && lines > maxLines) return lines;
     const stat = fs.fstatSync(fd);

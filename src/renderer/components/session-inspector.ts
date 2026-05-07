@@ -1,13 +1,13 @@
-import { appState } from '../state.js';
 import {
-  onChange as onInspectorChange,
   clearSession,
+  onChange as onInspectorChange,
 } from '../session-inspector-state.js';
-import { fitAllVisible } from './terminal-pane.js';
+import { appState } from '../state.js';
 import { inspectorState } from './session-inspector-state-ui.js';
-import { resetUIState, canInspectSession } from './session-inspector-utils.js';
 import { renderTimeline } from './session-inspector-timeline.js';
-import { renderCosts, renderTools, renderContext } from './session-inspector-views.js';
+import { canInspectSession, resetUIState } from './session-inspector-utils.js';
+import { renderContext, renderCosts, renderTools } from './session-inspector-views.js';
+import { fitAllVisible } from './terminal-pane.js';
 
 export function isInspectorOpen(): boolean {
   return inspectorState.inspectorPanel !== null && inspectorState.inspectedSessionId !== null;
@@ -191,12 +191,14 @@ function createPanel(): HTMLElement {
   ];
   for (const tab of tabs) {
     const btn = document.createElement('button');
-    btn.className = 'inspector-tab' + (tab.id === inspectorState.activeTab ? ' active' : '');
+    btn.className = `inspector-tab${tab.id === inspectorState.activeTab ? ' active' : ''}`;
     btn.textContent = tab.label;
     btn.dataset.tab = tab.id;
     btn.addEventListener('click', () => {
       inspectorState.activeTab = tab.id;
-      tabBar.querySelectorAll('.inspector-tab').forEach(t => t.classList.remove('active'));
+      tabBar.querySelectorAll('.inspector-tab').forEach(t => {
+        t.classList.remove('active');
+      });
       btn.classList.add('active');
       renderActiveTab();
     });

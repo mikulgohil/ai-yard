@@ -151,8 +151,16 @@ function makeElement(tagName = 'div'): Record<string, any> {
       for (const listener of listeners[event.type] ?? []) listener(event);
     },
     classList: {
-      add(...tokens: string[]) { tokens.forEach((token) => classValues.add(token)); },
-      remove(...tokens: string[]) { tokens.forEach((token) => classValues.delete(token)); },
+      add(...tokens: string[]) {
+        tokens.forEach((token) => {
+          classValues.add(token);
+        });
+      },
+      remove(...tokens: string[]) {
+        tokens.forEach((token) => {
+          classValues.delete(token);
+        });
+      },
       toggle(token: string, force?: boolean) {
         const shouldAdd = force ?? !classValues.has(token);
         if (shouldAdd) classValues.add(token);
@@ -232,7 +240,7 @@ describe('showPreferencesModal theme preference', () => {
     });
 
     vi.stubGlobal('window', {
-      vibeyard: {
+      aiyard: {
         provider: {
           listProviders: vi.fn(async () => []),
           checkBinary: vi.fn(async () => true),

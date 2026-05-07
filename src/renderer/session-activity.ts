@@ -22,7 +22,7 @@ function setStatus(sessionId: string, status: SessionStatus): void {
  */
 export function setHookStatus(sessionId: string, status: 'working' | 'waiting' | 'completed' | 'input', hookName?: string): void {
   const state = sessions.get(sessionId);
-  if (!state) return;  // Ignore events for sessions not managed by Vibeyard
+  if (!state) return;  // Ignore events for sessions not managed by AI-yard
 
   // Don't let Stop/StopFailure ('waiting') overwrite a just-set 'completed' status.
   // Completed is sticky until a new prompt ('working') or PTY exit ('idle').

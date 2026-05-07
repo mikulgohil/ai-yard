@@ -1,11 +1,11 @@
 import type { TeamMember } from '../../../../shared/types.js';
-import { appState } from '../../../state.js';
-import { showMemberSessionsModal } from '../../team/member-sessions-modal.js';
-import { showContextMenu } from '../../board/board-context-menu.js';
 import {
   getTeamChatProviderMetas,
   loadProviderAvailability,
 } from '../../../provider-availability.js';
+import { appState } from '../../../state.js';
+import { showContextMenu } from '../../board/board-context-menu.js';
+import { showMemberSessionsModal } from '../../team/member-sessions-modal.js';
 import { createWidgetEmpty } from './widget-empty.js';
 import type { WidgetFactory } from './widget-host.js';
 

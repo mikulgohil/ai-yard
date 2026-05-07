@@ -25,14 +25,14 @@ vi.mock('./platform', () => ({
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { installEventScript } from './hook-commands';
 import {
+  _resetForTesting,
+  COPILOT_HOOK_MARKER,
+  cleanupCopilotHooks,
   installCopilotHooks,
   validateCopilotHooks,
-  cleanupCopilotHooks,
-  COPILOT_HOOK_MARKER,
-  _resetForTesting,
 } from './copilot-hooks';
+import { installEventScript } from './hook-commands';
 
 const mockReadFileSync = vi.mocked(fs.readFileSync);
 const mockWriteFileSync = vi.mocked(fs.writeFileSync);
@@ -42,7 +42,7 @@ const mockInstallEventScript = vi.mocked(installEventScript);
 const n = (p: string) => p.replace(/\\/g, '/');
 
 const PROJECT = '/mock/project';
-const HOOK_FILE = path.join(PROJECT, '.github', 'hooks', 'vibeyard-copilot-hooks.json');
+const HOOK_FILE = path.join(PROJECT, '.github', 'hooks', 'ai-yard-copilot-hooks.json');
 
 function mockFiles(rawFiles: Record<string, string>): void {
   const files: Record<string, string> = {};
@@ -121,7 +121,7 @@ describe('installCopilotHooks', () => {
     }
   });
 
-  it('every entry contains the vibeyard hook marker', () => {
+  it('every entry contains the ai-yard hook marker', () => {
     mockFiles({});
     installCopilotHooks(PROJECT);
     const { hooks } = JSON.parse(String(findWrite(HOOK_FILE)![1]));
@@ -142,7 +142,7 @@ describe('installCopilotHooks', () => {
     expect(start).toContain('"sessionStart"');
     expect(start).toContain('"session_start"');
     expect(start).toContain('"waiting"');
-    expect(start).toContain('"VIBEYARD_SESSION_ID"');
+    expect(start).toContain('"AIYARD_SESSION_ID"');
 
     const submit = hooks.userPromptSubmitted[0].bash as string;
     expect(submit).toContain('"userPromptSubmitted"');

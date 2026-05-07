@@ -1,0 +1,15 @@
+{
+  "id": "github",
+  "name": "GitHub",
+  "description": "Browse repositories, read and write issues and pull requests, and search code across GitHub. Requires a personal access token.",
+  "domain": "cloud",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-github"
+  ],
+  "env": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-github-pat>"
+  },
+  "setupUrl": "https://github.com/modelcontextprotocol/servers/tree/main/src/github"
+}

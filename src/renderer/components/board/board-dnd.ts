@@ -33,7 +33,7 @@ export function addDragEndCallback(cb: () => void): () => void {
 function onPointerDown(e: PointerEvent): void {
   if (isDragging) return;
   const card = (e.target as HTMLElement).closest('.board-card') as HTMLElement | null;
-  if (!card || !card.dataset.taskId) return;
+  if (!card?.dataset.taskId) return;
   if ((e.target as HTMLElement).closest('button, input, textarea')) return;
 
   const scope = card.closest('.board-column')?.parentElement as HTMLElement | null;
@@ -66,7 +66,7 @@ function onPointerMove(e: PointerEvent): void {
     ghostEl = card.cloneNode(true) as HTMLElement;
     ghostEl.classList.remove('dragging');
     ghostEl.classList.add('board-card-ghost');
-    ghostEl.style.width = card.offsetWidth + 'px';
+    ghostEl.style.width = `${card.offsetWidth}px`;
     document.body.appendChild(ghostEl);
 
     injectDropTargets(dragTaskId);
@@ -76,8 +76,8 @@ function onPointerMove(e: PointerEvent): void {
   }
 
   if (ghostEl) {
-    ghostEl.style.left = e.clientX - 20 + 'px';
-    ghostEl.style.top = e.clientY - 10 + 'px';
+    ghostEl.style.left = `${e.clientX - 20}px`;
+    ghostEl.style.top = `${e.clientY - 10}px`;
   }
 
   highlightNearestTarget(e.clientX, e.clientY);
@@ -110,7 +110,9 @@ function cancelDrag(): void {
 
   removeDropTargets();
   cachedTargets = [];
-  currentScope?.querySelectorAll('.board-card.dragging').forEach(el => el.classList.remove('dragging'));
+  currentScope?.querySelectorAll('.board-card.dragging').forEach(el => {
+    el.classList.remove('dragging');
+  });
 
   isDragging = false;
   dragTaskId = null;
@@ -165,7 +167,9 @@ function createDropTarget(columnId: string, order: number): HTMLElement {
 }
 
 function removeDropTargets(): void {
-  currentScope?.querySelectorAll('.board-drop-target').forEach(el => el.remove());
+  currentScope?.querySelectorAll('.board-drop-target').forEach(el => {
+    el.remove();
+  });
 }
 
 function highlightNearestTarget(x: number, y: number): void {

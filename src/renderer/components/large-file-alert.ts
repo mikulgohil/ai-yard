@@ -1,9 +1,9 @@
-import { onLargeFileAlert, type LargeFileAlert } from '../tools/large-file-detector.js';
+import { basename } from '../../shared/platform.js';
 import { dismissInsight } from '../session-insights.js';
 import { appState } from '../state.js';
-import { showAlertBanner, removeAlertBanner } from './alert-banner.js';
+import { type LargeFileAlert, onLargeFileAlert } from '../tools/large-file-detector.js';
+import { removeAlertBanner, showAlertBanner } from './alert-banner.js';
 import { setPendingPrompt } from './terminal-pane.js';
-import { basename } from '../../shared/platform.js';
 
 export function initLargeFileAlert(): void {
   onLargeFileAlert((alert) => {

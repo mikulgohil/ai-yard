@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as path from 'path';
+import { describe, expect, it, vi } from 'vitest';
 import { isWin } from './platform';
 
-const SCRIPT_DIR = path.join('/home/test', '.vibeyard', 'run');
+const SCRIPT_DIR = path.join('/home/test', '.ai-yard', 'run');
 const STATUSLINE_SCRIPT = path.join(SCRIPT_DIR, isWin ? 'statusline.cmd' : 'statusline.sh');
 
 vi.mock('os', () => ({
@@ -28,44 +28,44 @@ vi.mock('fs', () => ({
   watch: vi.fn(),
 }));
 
-import { isVibeyardStatusLine, shouldWarnStatusLine } from './settings-guard';
+import { isAIYardStatusLine, shouldWarnStatusLine } from './settings-guard';
 
-describe('isVibeyardStatusLine', () => {
+describe('isAIYardStatusLine', () => {
   it('returns true for current statusline path', () => {
-    expect(isVibeyardStatusLine({ command: STATUSLINE_SCRIPT })).toBe(true);
+    expect(isAIYardStatusLine({ command: STATUSLINE_SCRIPT })).toBe(true);
   });
 
   it('returns true for legacy tmp-dir statusline path (unix)', () => {
-    expect(isVibeyardStatusLine({
-      command: '/var/folders/_k/hyr0867141z9_6ghbmwh65g80000gn/T/vibeyard/statusline.sh',
+    expect(isAIYardStatusLine({
+      command: '/var/folders/_k/hyr0867141z9_6ghbmwh65g80000gn/T/ai-yard/statusline.sh',
     })).toBe(true);
   });
 
-  it('returns true for legacy /tmp/vibeyard path', () => {
-    expect(isVibeyardStatusLine({ command: '/tmp/vibeyard/statusline.sh' })).toBe(true);
+  it('returns true for legacy /tmp/ai-yard path', () => {
+    expect(isAIYardStatusLine({ command: '/tmp/ai-yard/statusline.sh' })).toBe(true);
   });
 
   it('returns true for legacy windows tmp-dir statusline path', () => {
-    expect(isVibeyardStatusLine({
-      command: 'C:\\Users\\test\\AppData\\Local\\Temp\\vibeyard\\statusline.cmd',
+    expect(isAIYardStatusLine({
+      command: 'C:\\Users\\test\\AppData\\Local\\Temp\\ai-yard\\statusline.cmd',
     })).toBe(true);
   });
 
   it('returns false for foreign statusline', () => {
-    expect(isVibeyardStatusLine({ command: '/usr/local/bin/some-other-tool.sh' })).toBe(false);
+    expect(isAIYardStatusLine({ command: '/usr/local/bin/some-other-tool.sh' })).toBe(false);
   });
 
   it('returns false for null/undefined', () => {
-    expect(isVibeyardStatusLine(null)).toBe(false);
-    expect(isVibeyardStatusLine(undefined)).toBe(false);
+    expect(isAIYardStatusLine(null)).toBe(false);
+    expect(isAIYardStatusLine(undefined)).toBe(false);
   });
 
   it('returns false for non-object', () => {
-    expect(isVibeyardStatusLine('string')).toBe(false);
+    expect(isAIYardStatusLine('string')).toBe(false);
   });
 
   it('returns false for object without command', () => {
-    expect(isVibeyardStatusLine({ url: 'http://example.com' })).toBe(false);
+    expect(isAIYardStatusLine({ url: 'http://example.com' })).toBe(false);
   });
 });
 
@@ -73,10 +73,10 @@ describe('shouldWarnStatusLine', () => {
   const FOREIGN = '/usr/local/bin/other-tool.sh';
   const DIFFERENT_FOREIGN = '/opt/another/tool.sh';
 
-  it('never warns when statusLine is Vibeyard', () => {
-    expect(shouldWarnStatusLine('vibeyard', null, null, null)).toBe(false);
-    expect(shouldWarnStatusLine('vibeyard', 'granted', FOREIGN, null)).toBe(false);
-    expect(shouldWarnStatusLine('vibeyard', 'declined', FOREIGN, null)).toBe(false);
+  it('never warns when statusLine is AI-yard', () => {
+    expect(shouldWarnStatusLine('aiyard', null, null, null)).toBe(false);
+    expect(shouldWarnStatusLine('aiyard', 'granted', FOREIGN, null)).toBe(false);
+    expect(shouldWarnStatusLine('aiyard', 'declined', FOREIGN, null)).toBe(false);
   });
 
   it('suppresses warning when user declined the same foreign command', () => {

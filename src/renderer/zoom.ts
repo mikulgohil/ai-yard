@@ -1,6 +1,6 @@
-import { appState } from './state.js';
+import { ZOOM_MAX, ZOOM_MIN } from '../shared/types.js';
 import { fitAllVisible } from './components/terminal-pane.js';
-import { ZOOM_MIN, ZOOM_MAX } from '../shared/types.js';
+import { appState } from './state.js';
 
 export const ZOOM_STEPS = [0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0] as const;
 
@@ -12,7 +12,7 @@ export function applyZoom(factor: number): void {
   const clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, factor));
   if (clamped === getZoomFactor()) return;
   appState.setPreference('zoomFactor', clamped);
-  window.vibeyard.zoom.set(clamped);
+  window.aiyard.zoom.set(clamped);
   requestAnimationFrame(() => fitAllVisible());
 }
 

@@ -1,4 +1,4 @@
-import type { ProviderId, CliProviderMeta, CliProviderCapabilities } from '../shared/types.js';
+import type { CliProviderCapabilities, CliProviderMeta, ProviderId } from '../shared/types.js';
 
 let cachedProviders: CliProviderMeta[] | null = null;
 let cachedAvailability: Map<ProviderId, boolean> | null = null;
@@ -6,7 +6,7 @@ let availabilityLoadPromise: Promise<void> | null = null;
 
 export async function loadProviderMetas(): Promise<void> {
   if (!cachedProviders) {
-    cachedProviders = await window.vibeyard.provider.listProviders();
+    cachedProviders = await window.aiyard.provider.listProviders();
   }
 }
 
@@ -16,7 +16,7 @@ export async function loadProviderAvailability(): Promise<void> {
   availabilityLoadPromise = (async () => {
     await loadProviderMetas();
     const checks = await Promise.all(
-      cachedProviders!.map(async p => ({ id: p.id, ok: await window.vibeyard.provider.checkBinary(p.id) }))
+      cachedProviders!.map(async p => ({ id: p.id, ok: await window.aiyard.provider.checkBinary(p.id) }))
     );
     cachedAvailability = new Map(checks.map(c => [c.id, c.ok]));
   })();

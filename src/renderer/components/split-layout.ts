@@ -1,86 +1,94 @@
-import { appState, ProjectRecord } from '../state.js';
 import { isUnread, onChange as onUnreadChange } from '../session-unread.js';
+import { isCliSession } from '../session-utils.js';
+import { appState, type ProjectRecord } from '../state.js';
 import {
-  createTerminalPane,
-  attachToContainer,
-  showPane,
-  hideAllPanes,
-  fitAllVisible,
-  setFocused,
-  spawnTerminal,
-  setPendingPrompt,
-  setPendingSystemPrompt,
-  destroyTerminal,
-  getTerminalInstance,
-} from './terminal-pane.js';
-import {
-  createInspectorPane,
-  destroyInspectorPane,
-  showInspectorPane,
-  hideAllInspectorPanes,
-  attachInspectorToContainer,
-  getInspectorInstance,
-  disconnectInspector,
-} from './mcp-inspector.js';
-import { isInspectorOpen } from './session-inspector.js';
-import {
-  createFileViewerPane,
-  destroyFileViewerPane,
-  showFileViewerPane,
-  hideAllFileViewerPanes,
-  attachFileViewerToContainer,
-  getFileViewerInstance,
-} from './file-viewer.js';
-import {
-  createFileReaderPane,
-  destroyFileReaderPane,
-  showFileReaderPane,
-  hideAllFileReaderPanes,
-  attachFileReaderToContainer,
-  getFileReaderInstance,
-  setFileReaderLine,
-} from './file-reader.js';
-import {
-  getRemoteTerminalInstance,
-  destroyRemoteTerminal,
-  attachRemoteToContainer,
-  showRemotePane,
-  hideAllRemotePanes,
-} from './remote-terminal-pane.js';
-import {
+  attachBrowserTabToContainer,
   createBrowserTabPane,
   destroyBrowserTabPane,
-  showBrowserTabPane,
-  hideAllBrowserTabPanes,
-  attachBrowserTabToContainer,
   getBrowserTabInstance,
+  hideAllBrowserTabPanes,
+  showBrowserTabPane,
 } from './browser-tab-pane.js';
 import {
-  createProjectTabPane,
-  destroyProjectTabPane,
-  showProjectTabPane,
-  hideAllProjectTabPanes,
-  attachProjectTabToContainer,
-  getProjectTabInstance,
-} from './project-tab/pane.js';
+  attachCostDashboardToContainer,
+  createCostDashboardPane,
+  destroyCostDashboardPane,
+  getCostDashboardInstance,
+  hideAllCostDashboardPanes,
+  showCostDashboardPane,
+} from './cost-dashboard/pane.js';
 import {
+  attachFileReaderToContainer,
+  createFileReaderPane,
+  destroyFileReaderPane,
+  getFileReaderInstance,
+  hideAllFileReaderPanes,
+  setFileReaderLine,
+  showFileReaderPane,
+} from './file-reader.js';
+import {
+  attachFileViewerToContainer,
+  createFileViewerPane,
+  destroyFileViewerPane,
+  getFileViewerInstance,
+  hideAllFileViewerPanes,
+  showFileViewerPane,
+} from './file-viewer.js';
+import {
+  attachKanbanToContainer,
   createKanbanPane,
   destroyKanbanPane,
-  showKanbanPane,
-  hideAllKanbanPanes,
-  attachKanbanToContainer,
   getKanbanInstance,
+  hideAllKanbanPanes,
+  showKanbanPane,
 } from './kanban/pane.js';
 import {
+  attachInspectorToContainer,
+  createInspectorPane,
+  destroyInspectorPane,
+  disconnectInspector,
+  getInspectorInstance,
+  hideAllInspectorPanes,
+  showInspectorPane,
+} from './mcp-inspector.js';
+import {
+  attachProjectTabToContainer,
+  createProjectTabPane,
+  destroyProjectTabPane,
+  getProjectTabInstance,
+  hideAllProjectTabPanes,
+  showProjectTabPane,
+} from './project-tab/pane.js';
+import {
+  attachRemoteToContainer,
+  destroyRemoteTerminal,
+  getRemoteTerminalInstance,
+  hideAllRemotePanes,
+  showRemotePane,
+} from './remote-terminal-pane.js';
+import { isInspectorOpen } from './session-inspector.js';
+import { quickNewSession } from './tab-bar.js';
+import {
+  attachTeamToContainer,
   createTeamPane,
   destroyTeamPane,
-  showTeamPane,
-  hideAllTeamPanes,
-  attachTeamToContainer,
   getTeamInstance,
+  hideAllTeamPanes,
+  showTeamPane,
 } from './team/pane.js';
-import { quickNewSession } from './tab-bar.js';
-import { isCliSession } from '../session-utils.js';
+import {
+  attachToContainer,
+  createTerminalPane,
+  destroyTerminal,
+  fitAllVisible,
+  getTerminalInstance,
+  hideAllPanes,
+  setFocused,
+  setPendingPrompt,
+  setPendingSystemPrompt,
+  showPane,
+  spawnTerminal,
+} from './terminal-pane.js';
 
 const container = document.getElementById('terminal-container')!;
 
@@ -153,6 +161,9 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'team') {
     createTeamPane(session.id, projectId);
     renderLayout();
+  } else if (session.type === 'cost-dashboard') {
+    createCostDashboardPane(session.id, projectId);
+    renderLayout();
   } else {
     // Create and spawn immediately
     createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude', project.id);
@@ -193,6 +204,8 @@ function onSessionRemoved(data: unknown): void {
     destroyKanbanPane(sessionId);
   } else if (getTeamInstance(sessionId)) {
     destroyTeamPane(sessionId);
+  } else if (getCostDashboardInstance(sessionId)) {
+    destroyCostDashboardPane(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -212,14 +225,19 @@ export function renderLayout(): void {
     hideAllProjectTabPanes();
     hideAllKanbanPanes();
     hideAllTeamPanes();
+    hideAllCostDashboardPanes();
     setContainerClass('');
     showEmptyState(project);
     return;
   }
 
   removeEmptyState();
-  container.querySelectorAll('.swarm-grid-wrapper').forEach(el => el.remove());
-  container.querySelectorAll('.swarm-empty-cell').forEach(el => el.remove());
+  container.querySelectorAll('.swarm-grid-wrapper').forEach(el => {
+    el.remove();
+  });
+  container.querySelectorAll('.swarm-empty-cell').forEach(el => {
+    el.remove();
+  });
 
   // Ensure all sessions have their respective instances
   for (const session of project.sessions) {
@@ -253,6 +271,10 @@ export function renderLayout(): void {
       if (!getTeamInstance(session.id)) {
         createTeamPane(session.id, project.id);
       }
+    } else if (session.type === 'cost-dashboard') {
+      if (!getCostDashboardInstance(session.id)) {
+        createCostDashboardPane(session.id, project.id);
+      }
     } else {
       if (!getTerminalInstance(session.id)) {
         createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude', project.id);
@@ -269,6 +291,7 @@ export function renderLayout(): void {
   hideAllProjectTabPanes();
   hideAllKanbanPanes();
   hideAllTeamPanes();
+  hideAllCostDashboardPanes();
 
   if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
     renderSwarmMode(project);
@@ -310,6 +333,9 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'team') {
     attachTeamToContainer(session.id, target);
     showTeamPane(session.id, inSplit);
+  } else if (session.type === 'cost-dashboard') {
+    attachCostDashboardToContainer(session.id, target);
+    showCostDashboardPane(session.id, inSplit);
   }
 }
 

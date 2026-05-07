@@ -1,5 +1,5 @@
-import { appState } from './state.js';
 import { isMac } from './platform.js';
+import { appState } from './state.js';
 
 export interface ShortcutDef {
   id: string;

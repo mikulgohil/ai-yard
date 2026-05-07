@@ -1,27 +1,26 @@
-import { appState, MAX_SESSION_NAME_LENGTH, type ProjectRecord, type SessionRecord } from '../state.js';
 import type { ProviderId } from '../../shared/types.js';
-import { showModal, closeModal, setModalError, FieldDef } from './modal.js';
-import { onChange as onStatusChange, getStatus, type SessionStatus } from '../session-activity.js';
-import { onChange as onGitStatusChange, getGitStatus, getActiveGitPath, refreshGitStatus } from '../git-status.js';
-
-import { isUnread, onChange as onUnreadChange } from '../session-unread.js';
+import { getActiveGitPath, getGitStatus, onChange as onGitStatusChange, refreshGitStatus } from '../git-status.js';
 import { hasUnreadInProject as hasGithubUnread, onChange as onGithubUnreadChange } from '../github-unread.js';
-import { showHelpDialog } from './help-dialog.js';
-import { showShareDialog } from './share-dialog.js';
-import { showJoinDialog } from './join-dialog.js';
-import { isSharing } from '../sharing/peer-host.js';
-import { endShare, onShareChange } from '../sharing/share-manager.js';
-import { openInspector, isInspectorOpen, getInspectedSessionId, closeInspector } from './session-inspector.js';
-import { loadProviderAvailability, hasMultipleAvailableProviders, getProviderAvailabilitySnapshot, getProviderCapabilities } from '../provider-availability.js';
-import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
-import { isCliSession } from '../session-utils.js';
+import { getProviderAvailabilitySnapshot, getProviderCapabilities, hasMultipleAvailableProviders, loadProviderAvailability } from '../provider-availability.js';
+import { getStatus, onChange as onStatusChange, type SessionStatus } from '../session-activity.js';
 import {
-  closeSessionWithConfirm,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
-  closeSessionsFromRightWithConfirm,
   closeSessionsFromLeftWithConfirm,
+  closeSessionsFromRightWithConfirm,
+  closeSessionWithConfirm,
 } from '../session-close.js';
+import { isUnread, onChange as onUnreadChange } from '../session-unread.js';
+import { isCliSession } from '../session-utils.js';
+import { isSharing } from '../sharing/peer-host.js';
+import { endShare, onShareChange } from '../sharing/share-manager.js';
+import { appState, MAX_SESSION_NAME_LENGTH, type ProjectRecord, type SessionRecord } from '../state.js';
+import { showHelpDialog } from './help-dialog.js';
+import { showJoinDialog } from './join-dialog.js';
+import { closeModal, type FieldDef, setModalError, showModal } from './modal.js';
+import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
+import { closeInspector, getInspectedSessionId, isInspectorOpen, openInspector } from './session-inspector.js';
+import { showShareDialog } from './share-dialog.js';
 
 const tabListEl = document.getElementById('tab-list')!;
 const gitStatusEl = document.getElementById('git-status')!;
@@ -80,7 +79,7 @@ export function initTabBar(): void {
   onShareChange(render);
 
   onStatusChange((sessionId, status) => {
-    const prev = prevStatus.get(sessionId);
+    const _prev = prevStatus.get(sessionId);
     prevStatus.set(sessionId, status);
 
     const dot = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"] .tab-status`) as HTMLElement | null;
@@ -110,7 +109,7 @@ export function initTabBar(): void {
 }
 
 function startRename(tab: HTMLElement, project: ProjectRecord, session: SessionRecord): void {
-  if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'team') return;
+  if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'team' || session.type === 'cost-dashboard') return;
   const nameSpan = tab.querySelector('.tab-name') as HTMLElement;
   if (nameSpan.querySelector('input')) return;
 
@@ -157,9 +156,9 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   menu.style.left = `${x}px`;
   menu.style.top = `${y}px`;
 
-  const renamable = session.type !== 'kanban' && session.type !== 'project-tab' && session.type !== 'team';
+  const renamable = session.type !== 'kanban' && session.type !== 'project-tab' && session.type !== 'team' && session.type !== 'cost-dashboard';
   const renameItem = document.createElement('div');
-  renameItem.className = 'tab-context-menu-item' + (renamable ? '' : ' disabled');
+  renameItem.className = `tab-context-menu-item${renamable ? '' : ' disabled'}`;
   renameItem.textContent = 'Rename';
   if (renamable) {
     renameItem.addEventListener('click', (e) => {
@@ -194,7 +193,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   });
 
   const closeOthersItem = document.createElement('div');
-  closeOthersItem.className = 'tab-context-menu-item' + (totalSessions <= 1 ? ' disabled' : '');
+  closeOthersItem.className = `tab-context-menu-item${totalSessions <= 1 ? ' disabled' : ''}`;
   closeOthersItem.textContent = 'Close Others';
   if (totalSessions > 1) {
     closeOthersItem.addEventListener('click', (e) => {
@@ -205,7 +204,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const closeRightItem = document.createElement('div');
-  closeRightItem.className = 'tab-context-menu-item' + (sessionIdx >= totalSessions - 1 ? ' disabled' : '');
+  closeRightItem.className = `tab-context-menu-item${sessionIdx >= totalSessions - 1 ? ' disabled' : ''}`;
   closeRightItem.textContent = 'Close to the Right';
   if (sessionIdx < totalSessions - 1) {
     closeRightItem.addEventListener('click', (e) => {
@@ -216,7 +215,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const closeLeftItem = document.createElement('div');
-  closeLeftItem.className = 'tab-context-menu-item' + (sessionIdx <= 0 ? ' disabled' : '');
+  closeLeftItem.className = `tab-context-menu-item${sessionIdx <= 0 ? ' disabled' : ''}`;
   closeLeftItem.textContent = 'Close to the Left';
   if (sessionIdx > 0) {
     closeLeftItem.addEventListener('click', (e) => {
@@ -227,7 +226,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const moveLeftItem = document.createElement('div');
-  moveLeftItem.className = 'tab-context-menu-item' + (sessionIdx <= 0 ? ' disabled' : '');
+  moveLeftItem.className = `tab-context-menu-item${sessionIdx <= 0 ? ' disabled' : ''}`;
   moveLeftItem.textContent = 'Move Left';
   if (sessionIdx > 0) {
     moveLeftItem.addEventListener('click', (e) => {
@@ -238,7 +237,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const moveRightItem = document.createElement('div');
-  moveRightItem.className = 'tab-context-menu-item' + (sessionIdx >= totalSessions - 1 ? ' disabled' : '');
+  moveRightItem.className = `tab-context-menu-item${sessionIdx >= totalSessions - 1 ? ' disabled' : ''}`;
   moveRightItem.textContent = 'Move Right';
   if (sessionIdx < totalSessions - 1) {
     moveRightItem.addEventListener('click', (e) => {
@@ -259,7 +258,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   shareSeparator.className = 'tab-context-menu-separator';
 
   const shareItem = document.createElement('div');
-  shareItem.className = 'tab-context-menu-item' + (!isCli || currentlySharing ? ' disabled' : '');
+  shareItem.className = `tab-context-menu-item${!isCli || currentlySharing ? ' disabled' : ''}`;
   shareItem.textContent = 'Share Session\u2026';
   if (isCli && !currentlySharing) {
     shareItem.addEventListener('click', (e) => {
@@ -270,7 +269,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const stopShareItem = document.createElement('div');
-  stopShareItem.className = 'tab-context-menu-item' + (!currentlySharing ? ' disabled' : '');
+  stopShareItem.className = `tab-context-menu-item${!currentlySharing ? ' disabled' : ''}`;
   stopShareItem.textContent = 'Stop Sharing';
   if (currentlySharing) {
     stopShareItem.addEventListener('click', (e) => {
@@ -292,7 +291,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
     const hasCliSession = !!cliSessionId;
 
     const copySessionIdItem = document.createElement('div');
-    copySessionIdItem.className = 'tab-context-menu-item' + (!hasCliSession ? ' disabled' : '');
+    copySessionIdItem.className = `tab-context-menu-item${!hasCliSession ? ' disabled' : ''}`;
     copySessionIdItem.textContent = 'Copy CLI Session ID';
     if (hasCliSession) {
       copySessionIdItem.addEventListener('click', (e) => {
@@ -319,7 +318,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   // Inspect item — only for CLI sessions
   const inspectItem = document.createElement('div');
   const isCurrentlyInspecting = isInspectorOpen() && getInspectedSessionId() === session.id;
-  inspectItem.className = 'tab-context-menu-item' + (!canInspect ? ' disabled' : '');
+  inspectItem.className = `tab-context-menu-item${!canInspect ? ' disabled' : ''}`;
   inspectItem.textContent = isCurrentlyInspecting ? 'Close Inspector' : 'Inspect';
   if (canInspect) {
     inspectItem.addEventListener('click', (e) => {
@@ -400,16 +399,17 @@ function render(): void {
     const unread = !isActive && (isProjectTab ? hasGithubUnread(project.id) : isUnread(session.id));
     const isKanban = session.type === 'kanban';
     const isTeam = session.type === 'team';
-    const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam;
+    const isCostDashboard = session.type === 'cost-dashboard';
+    const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam || isCostDashboard;
     const sharing = isSharing(session.id);
-    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : session.name;
-    tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '') + (sharing ? ' tab-sharing' : '') + (isRemoteTab ? ' tab-remote' : '');
+    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : isCostDashboard ? `${project.name} - Cost` : session.name;
+    tab.className = `tab-item${isActive ? ' active' : ''}${unread ? ' unread' : ''}${sharing ? ' tab-sharing' : ''}${isRemoteTab ? ' tab-remote' : ''}`;
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : buildTooltip(getStatus(session.id), session.cliSessionId);
+    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : isCostDashboard ? 'Cost dashboard' : buildTooltip(getStatus(session.id), session.cliSessionId);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
-    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? '<span class="tab-project-badge">&#x2699;</span> ' : isKanban ? '<span class="tab-kanban-badge">&#x25A6;</span> ' : isTeam ? '<span class="tab-team-badge">TEAM</span> ' : !isSpecial ? providerIcon : '';
+    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? '<span class="tab-project-badge">&#x2699;</span> ' : isKanban ? '<span class="tab-kanban-badge">&#x25A6;</span> ' : isTeam ? '<span class="tab-team-badge">TEAM</span> ' : isCostDashboard ? '<span class="tab-cost-badge">$</span> ' : !isSpecial ? providerIcon : '';
     const shareIndicator = sharing ? '<span class="tab-share-indicator" title="Sharing"></span>' : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
@@ -515,7 +515,7 @@ function renderGitStatus(): void {
   }
 
   const status = getGitStatus(project.id);
-  if (!status || !status.isGitRepo) {
+  if (!status?.isGitRepo) {
     gitStatusEl.innerHTML = '';
     return;
   }
@@ -549,7 +549,7 @@ async function showBranchContextMenu(e: MouseEvent): Promise<void> {
   if (!project) return;
 
   const status = getGitStatus(project.id);
-  if (!status || !status.isGitRepo) return;
+  if (!status?.isGitRepo) return;
 
   const gitPath = getActiveGitPath(project.id);
 
@@ -571,7 +571,7 @@ async function showBranchContextMenu(e: MouseEvent): Promise<void> {
   activeContextMenu = menu;
 
   try {
-    const branches = await window.vibeyard.git.listBranches(gitPath);
+    const branches = await window.aiyard.git.listBranches(gitPath);
 
     // Menu was dismissed during loading
     if (activeContextMenu !== menu) return;
@@ -723,7 +723,7 @@ async function switchBranch(gitPath: string, branchName: string): Promise<void> 
   }
 
   try {
-    await window.vibeyard.git.checkoutBranch(gitPath, branchName);
+    await window.aiyard.git.checkoutBranch(gitPath, branchName);
     refreshGitStatus();
   } catch (err) {
     alert(`Failed to switch branch: ${err instanceof Error ? err.message : err}`);
@@ -744,7 +744,7 @@ function promptCreateBranch(gitPath: string): void {
       return;
     }
     try {
-      await window.vibeyard.git.createBranch(gitPath, name);
+      await window.aiyard.git.createBranch(gitPath, name);
       closeModal();
       refreshGitStatus();
     } catch (err) {
@@ -869,7 +869,7 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
       const args = values['session-args']?.trim() || undefined;
       const keepArgs = values['keep-args'] === 'true';
       project.defaultArgs = keepArgs ? (args || undefined) : undefined;
-      const providerId = (values['provider'] || 'claude') as ProviderId;
+      const providerId = (values.provider || 'claude') as ProviderId;
       const session = appState.addSession(project.id, name, args, providerId);
       if (session && onCreated) onCreated(session);
     }

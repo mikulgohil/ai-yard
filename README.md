@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="build/vibeyard-black.png" alt="Vibeyard" width="128" />
+  <img src="build/ai-yard-black.png" alt="AI-yard" width="128" />
 </p>
 
-<h1 align="center">Vibeyard</h1>
+<h1 align="center">AI-yard</h1>
 
 <p align="center">
-  <a href="https://github.com/elirantutia/vibeyard/releases"><img src="https://img.shields.io/github/v/release/elirantutia/vibeyard" alt="GitHub Release" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elirantutia/vibeyard" alt="License" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/issues"><img src="https://img.shields.io/github/issues/elirantutia/vibeyard" alt="Issues" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
-  <a href="https://star-history.com/#elirantutia/vibeyard&Date"><img src="https://img.shields.io/github/stars/elirantutia/vibeyard?style=social" alt="GitHub Stars" /></a>
+  <a href="https://github.com/mikulgohil/ai-yard/releases"><img src="https://img.shields.io/github/v/release/mikulgohil/ai-yard" alt="GitHub Release" /></a>
+  <a href="https://github.com/mikulgohil/ai-yard/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mikulgohil/ai-yard" alt="License" /></a>
+  <a href="https://github.com/mikulgohil/ai-yard/issues"><img src="https://img.shields.io/github/issues/mikulgohil/ai-yard" alt="Issues" /></a>
+  <a href="https://github.com/mikulgohil/ai-yard/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
+  <a href="https://star-history.com/#mikulgohil/ai-yard&Date"><img src="https://img.shields.io/github/stars/mikulgohil/ai-yard?style=social" alt="GitHub Stars" /></a>
   <a href="https://x.com/EliranTutia"><img src="https://img.shields.io/badge/Follow-%40EliranTutia-black?logo=x" alt="Follow on X" /></a>
 </p>
 
@@ -21,20 +21,20 @@
 ---
 
 <p align="center">
-  <img src="assets/vibyard_720.gif" alt="Vibeyard Demo" width="800" />
+  <img src="assets/vibyard_720.gif" alt="AI-yard Demo" width="800" />
 </p>
 
 <p align="center">
-  <img src="assets/web-ui-short.gif" alt="Vibeyard UI Edit Demo" width="800" />
+  <img src="assets/web-ui-short.gif" alt="AI-yard UI Edit Demo" width="800" />
 </p>
 
 <p align="center">
-  <img src="assets/kanban.gif" alt="Vibeyard Kanban Board Demo" width="800" />
+  <img src="assets/kanban.gif" alt="AI-yard Kanban Board Demo" width="800" />
 </p>
 
-## Why Vibeyard?
+## Why AI-yard?
 
-Running AI coding agents in a bare terminal gets messy fast. Vibeyard gives you a proper workspace — a customizable project dashboard, a kanban task board, multi-session management, split panes, swarm mode, cost tracking, and session resume — so you can focus on building, not juggling terminals.
+Running AI coding agents in a bare terminal gets messy fast. AI-yard gives you a proper workspace — a customizable project dashboard, a kanban task board, multi-session management, split panes, swarm mode, cost tracking, and session resume — so you can focus on building, not juggling terminals.
 
 ## Highlights
 
@@ -42,7 +42,7 @@ Running AI coding agents in a bare terminal gets messy fast. Vibeyard gives you 
 - **Kanban task board** — plan work on a per-project board with drag-and-drop, search, and tag filtering; each card can spawn or resume a CLI session in one click, and tasks auto-move to Done when their session completes
 - **P2P session sharing** — share live terminal sessions with teammates over encrypted peer-to-peer connections (WebRTC), with read-only or read-write modes and PIN-based authentication
 - **Multi-session management** — run multiple agent sessions per project, each in its own PTY; use swarm mode for a grid view of all sessions at once and spin up new ones with `Cmd+\`
-- **Cost & context tracking** — real-time spend, token usage, and context window monitoring per session
+- **Cost & context tracking** — real-time spend, token usage, and context window monitoring per session, plus a Cost dashboard tab with daily/weekly/monthly trends, per-provider and per-project breakdowns, and top runs across active + archived sessions
 - **Session inspector** — real-time session telemetry with timeline, cost breakdown, tool usage stats, and context window monitoring (`Cmd+Shift+I`)
 - **AI Readiness Score** — see how well-prepared your project is for AI-assisted coding, with one-click fixes
 - **Session resume** — pick up where you left off, even after restarting the app
@@ -60,30 +60,30 @@ Requires at least one supported CLI installed and authenticated: [Claude Code](h
 
 ### macOS
 
-Download the latest `.dmg` from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases), drag to Applications, and launch. Signed and notarized by Apple.
+Download the latest `.dmg` from [GitHub Releases](https://github.com/mikulgohil/ai-yard/releases), drag to Applications, and launch. Signed and notarized by Apple.
 
 ### Linux
 
-Download the latest `.deb` (Debian/Ubuntu) or `.AppImage` (universal) from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases).
+Download the latest `.deb` (Debian/Ubuntu) or `.AppImage` (universal) from [GitHub Releases](https://github.com/mikulgohil/ai-yard/releases).
 
 ```bash
 # Debian/Ubuntu
-sudo dpkg -i vibeyard_*.deb
+sudo dpkg -i ai-yard_*.deb
 
 # AppImage
-chmod +x Vibeyard-*.AppImage
-./Vibeyard-*.AppImage
+chmod +x AI-yard-*.AppImage
+./AI-yard-*.AppImage
 ```
 
 ### Windows
 
-Download the latest Setup `.exe` (NSIS installer) or portable `.exe` from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases). Run the installer and launch Vibeyard from the Start menu, or run the portable build directly.
+Download the latest Setup `.exe` (NSIS installer) or portable `.exe` from [GitHub Releases](https://github.com/mikulgohil/ai-yard/releases). Run the installer and launch AI-yard from the Start menu, or run the portable build directly.
 
 ### npm (macOS, Linux & Windows)
 
 ```bash
-npm i -g vibeyard
-vibeyard
+npm i -g @mikulgohil/ai-yard
+ai-yard
 ```
 
 On first run, the app is automatically downloaded and launched. No extra steps needed.
@@ -91,12 +91,21 @@ On first run, the app is automatically downloaded and launched. No extra steps n
 ### Build from Source
 
 ```bash
-git clone https://github.com/elirantutia/vibeyard.git
-cd vibeyard
+git clone https://github.com/mikulgohil/ai-yard.git
+cd ai-yard
 npm install && npm start
 ```
 
 Requires Node v24+ (see `.nvmrc`).
+
+## Privacy
+
+AI-yard runs locally — your projects, sessions, and transcripts never leave your machine by default. Two outbound network features are **opt-in and off by default**, both toggleable in **Preferences → General → Privacy**:
+
+- **Send crash reports** — anonymized stack traces via Sentry. Home-directory and `~/.ai-yard` paths are scrubbed before send.
+- **Send anonymous usage stats** — counters for app launch, session start (per provider), and feature use (kanban / team / browser-tab / overview). No file paths, project names, or session contents are ever sent.
+
+See [docs/PRIVACY.md](docs/PRIVACY.md) for the exact payload shape, the device-id mechanism, and how to clear it.
 
 ## Contributing
 
@@ -109,13 +118,13 @@ PRs welcome! See the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct]
 ---
 
 <p align="center">
-  <a href="https://github.com/elirantutia/vibeyard"><img src="https://img.shields.io/badge/Star%20Vibeyard%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
+  <a href="https://github.com/mikulgohil/ai-yard"><img src="https://img.shields.io/badge/Star%20AI-yard%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
 </p>
 
 <p align="center">
-  If Vibeyard helps your workflow, a star helps us grow. Thanks for the support!
+  If AI-yard helps your workflow, a star helps us grow. Thanks for the support!
 </p>
 
 <p align="center">
-  <sub>Vibeyard is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
+  <sub>AI-yard is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
 </p>

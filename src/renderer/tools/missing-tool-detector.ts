@@ -1,7 +1,7 @@
 import type { ToolFailureData } from '../../shared/types.js';
+import { appState } from '../state.js';
 import type { ToolInfo } from './tool-catalog.js';
 import { findTool } from './tool-catalog.js';
-import { appState } from '../state.js';
 
 export type FailureReason = 'not-found' | 'permission-denied' | 'auth-required' | 'other';
 
@@ -79,7 +79,7 @@ export function handleToolFailure(sessionId: string, data: ToolFailureData): voi
 }
 
 export function initToolDetector(): void {
-  window.vibeyard.session.onToolFailure((sessionId, data) => {
+  window.aiyard.session.onToolFailure((sessionId, data) => {
     handleToolFailure(sessionId, data);
   });
 

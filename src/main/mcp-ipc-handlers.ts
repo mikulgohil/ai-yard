@@ -1,7 +1,28 @@
 import { ipcMain } from 'electron';
+import { addMcpServer, type McpServerConfig, removeMcpServer } from './claude-cli';
 import * as mcpClient from './mcp-client';
 
 export function registerMcpHandlers(): void {
+  ipcMain.handle('mcp:addServer', (_event, name: string, config: McpServerConfig, scope: 'user' | 'project', projectPath?: string) => {
+    try {
+      addMcpServer(name, config, scope, projectPath);
+      return { success: true };
+    } catch (err) {
+      console.error('mcp:addServer failed:', err);
+      return { success: false, error: String(err) };
+    }
+  });
+
+  ipcMain.handle('mcp:removeServer', (_event, name: string, filePath: string, scope: 'user' | 'project', projectPath?: string) => {
+    try {
+      removeMcpServer(name, filePath, scope, projectPath);
+      return { success: true };
+    } catch (err) {
+      console.error('mcp:removeServer failed:', err);
+      return { success: false, error: String(err) };
+    }
+  });
+
   ipcMain.handle('mcp:connect', (_event, id: string, url: string) =>
     mcpClient.connect(id, url));
 

@@ -1,5 +1,5 @@
+import type { BoardColumn, BoardData, BoardTask, ColumnBehavior, TagDefinition } from '../shared/types.js';
 import { appState } from './state.js';
-import type { BoardTask, BoardColumn, BoardData, ColumnBehavior, TagDefinition } from '../shared/types.js';
 
 export function getBoard(): BoardData | undefined {
   return appState.activeProject?.board;
@@ -87,7 +87,9 @@ export function deleteTask(taskId: string): void {
 
   board.tasks
     .filter(t => t.columnId === columnId && t.order > order)
-    .forEach(t => t.order--);
+    .forEach(t => {
+      t.order--;
+    });
 
   appState.notifyBoardChanged();
 }
@@ -104,17 +106,23 @@ export function moveTask(taskId: string, toColumnId: string, toOrder: number): v
   if (fromColumnId !== toColumnId) {
     board.tasks
       .filter(t => t.columnId === fromColumnId && t.order > task.order)
-      .forEach(t => t.order--);
+      .forEach(t => {
+        t.order--;
+      });
   } else {
     // Same column: remove from current position first
     board.tasks
       .filter(t => t.columnId === fromColumnId && t.id !== taskId && t.order > task.order)
-      .forEach(t => t.order--);
+      .forEach(t => {
+        t.order--;
+      });
   }
 
   board.tasks
     .filter(t => t.columnId === toColumnId && t.order >= toOrder && t.id !== taskId)
-    .forEach(t => t.order++);
+    .forEach(t => {
+      t.order++;
+    });
 
   task.columnId = toColumnId;
   task.order = toOrder;
@@ -138,7 +146,9 @@ export function addColumn(title: string, afterColumnId?: string): BoardColumn | 
   // Shift columns at or after insertion point
   board.columns
     .filter(c => c.order >= insertOrder)
-    .forEach(c => c.order++);
+    .forEach(c => {
+      c.order++;
+    });
 
   const column: BoardColumn = {
     id: crypto.randomUUID(),
@@ -186,7 +196,9 @@ export function deleteColumn(columnId: string): void {
   });
 
   board.columns = board.columns.filter(c => c.id !== columnId);
-  board.columns.sort((a, b) => a.order - b.order).forEach((c, i) => c.order = i);
+  board.columns.sort((a, b) => a.order - b.order).forEach((c, i) => {
+    c.order = i;
+  });
 
   appState.notifyBoardChanged();
 }
@@ -220,7 +232,7 @@ export function addTag(name: string, color?: string): TagDefinition | undefined 
 
 export function removeTag(name: string): void {
   const board = getBoard();
-  if (!board || !board.tags) return;
+  if (!board?.tags) return;
 
   const normalized = name.toLowerCase().trim();
   board.tags = board.tags.filter(t => t.name !== normalized);
@@ -234,7 +246,7 @@ export function removeTag(name: string): void {
 
 export function updateTagColor(name: string, color: string): void {
   const board = getBoard();
-  if (!board || !board.tags) return;
+  if (!board?.tags) return;
 
   const normalized = name.toLowerCase().trim();
   const tag = board.tags.find(t => t.name === normalized);
@@ -267,7 +279,7 @@ export function removeTagFromTask(taskId: string, tagName: string): void {
   const board = getBoard();
   if (!board) return;
   const task = board.tasks.find(t => t.id === taskId);
-  if (!task || !task.tags) return;
+  if (!task?.tags) return;
 
   const normalized = tagName.toLowerCase().trim();
   task.tags = task.tags.filter(t => t !== normalized);

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
-import { customExtensionsProducer } from './custom-extensions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisContext } from '../types';
+import { customExtensionsProducer } from './custom-extensions';
 
 vi.mock('fs');
 

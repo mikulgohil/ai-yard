@@ -1,9 +1,9 @@
-import { appState, type SessionRecord } from '../state.js';
+import type { CliProviderCapabilities, InspectorEvent, ProviderId } from '../../shared/types.js';
 import { getProviderCapabilities, getProviderDisplayName } from '../provider-availability.js';
-import type { ProviderId, CliProviderCapabilities, InspectorEvent } from '../../shared/types.js';
-import { getTerminalInstance } from './terminal-pane.js';
-import { inspectorState } from './session-inspector-state-ui.js';
 import { isCliSession } from '../session-utils.js';
+import { appState, type SessionRecord } from '../state.js';
+import { inspectorState } from './session-inspector-state-ui.js';
+import { getTerminalInstance } from './terminal-pane.js';
 
 export function resetUIState(): void {
   inspectorState.expandedRows.clear();
@@ -50,7 +50,7 @@ export function createToolInputEl(toolInput: unknown): HTMLPreElement {
   el.className = 'inspector-tool-input';
   el.addEventListener('click', (e) => e.stopPropagation());
   const text = JSON.stringify(toolInput, null, 2);
-  el.textContent = text.length > 2000 ? text.slice(0, 2000) + '\n...' : text;
+  el.textContent = text.length > 2000 ? `${text.slice(0, 2000)}\n...` : text;
   return el;
 }
 
@@ -163,7 +163,7 @@ export function createAgentDetailEl(ev: InspectorEvent, duration: number | null)
     if (ev.agent_transcript_path) entries.push(['Transcript', ev.agent_transcript_path]);
     if (ev.last_assistant_message) {
       const msg = ev.last_assistant_message.length > 500
-        ? ev.last_assistant_message.slice(0, 500) + '...'
+        ? `${ev.last_assistant_message.slice(0, 500)}...`
         : ev.last_assistant_message;
       entries.push(['Result', msg]);
     }

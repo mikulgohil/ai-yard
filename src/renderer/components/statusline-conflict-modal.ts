@@ -45,7 +45,7 @@ export function showStatusLineConflictModal(foreignCommand: string): Promise<'re
       <code>${escapeHtml(foreignCommand)}</code>
     </div>
     <p class="statusline-conflict-text statusline-conflict-warning">
-      Vibeyard needs its own statusLine for cost tracking and context window monitoring.
+      AI-yard needs its own statusLine for cost tracking and context window monitoring.
       If you keep the existing setting, these features will be unavailable.
     </p>`;
 

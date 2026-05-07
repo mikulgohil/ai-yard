@@ -1,9 +1,9 @@
 import { appState } from './state.js';
 
-const DISCUSSIONS_BASE = 'https://github.com/elirantutia/vibeyard/discussions';
+const DISCUSSIONS_BASE = 'https://github.com/mikulgohil/ai-yard/discussions';
 const SORT_QUERY = '?discussions_q=sort:date_created';
 export const DISCUSSIONS_URL = DISCUSSIONS_BASE + SORT_QUERY;
-const FEED_URL = DISCUSSIONS_BASE + '.atom' + SORT_QUERY;
+const FEED_URL = `${DISCUSSIONS_BASE}.atom${SORT_QUERY}`;
 const POLL_INTERVAL = 3_600_000;
 
 type ChangeCallback = () => void;

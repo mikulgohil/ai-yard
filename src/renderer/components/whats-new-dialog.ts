@@ -1,5 +1,5 @@
 import { appState } from '../state.js';
-import { createModalShell, createModalButton } from './modal-shell.js';
+import { createModalButton, createModalShell } from './modal-shell.js';
 
 interface ReleaseNotes {
   date: string;
@@ -131,7 +131,7 @@ function buildSection(title: string, items: string[]): HTMLElement {
 }
 
 export async function checkWhatsNew(): Promise<void> {
-  const currentVersion = await window.vibeyard.app.getVersion();
+  const currentVersion = await window.aiyard.app.getVersion();
   const lastSeen = appState.lastSeenVersion;
 
   // Skip on a fresh install — no previous version to compare against, so nothing's "new"

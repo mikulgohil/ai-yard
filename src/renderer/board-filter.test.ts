@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { BoardTask } from '../shared/types';
-import {
-  setSearchQuery, getSearchQuery, toggleTagFilter, isTagFilterActive,
-  hasActiveFilters, matchesFilter, getFilteredTasks, clearFilters,
+import {clearFilters,getFilteredTasks, getSearchQuery, 
+  hasActiveFilters, isTagFilterActive,matchesFilter, 
+  setSearchQuery, toggleTagFilter, 
 } from './board-filter';
 
 function makeTask(overrides: Partial<BoardTask> = {}): BoardTask {

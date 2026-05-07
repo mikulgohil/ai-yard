@@ -1,6 +1,6 @@
 import type { TeamMember } from '../../../shared/types.js';
-import { appState } from '../../state.js';
 import { getTeamChatProviderMetas } from '../../provider-availability.js';
+import { appState } from '../../state.js';
 import { showContextMenu } from '../board/board-context-menu.js';
 import { showConfirmModal } from '../modal.js';
 import { showTeamMemberModal } from './member-modal.js';
@@ -9,7 +9,7 @@ import { showMemberSessionsModal } from './member-sessions-modal.js';
 export function createMemberCard(member: TeamMember, projectId: string): HTMLElement {
   const card = document.createElement('div');
   card.className = 'team-card';
-  card.dataset['memberId'] = member.id;
+  card.dataset.memberId = member.id;
 
   const header = document.createElement('div');
   header.className = 'team-card-header';

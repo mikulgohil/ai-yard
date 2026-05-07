@@ -1,16 +1,16 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-import type { CliProvider, TranscriptDescriptor } from './provider';
-import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '../../shared/types';
-import { getFullPath } from '../pty-manager';
-import { resolveBinary, validateBinaryExists } from './resolve-binary';
-import { getCodexConfig } from '../codex-config';
-import { installCodexHooks, validateCodexHooks, cleanupCodexHooks, SESSION_ID_VAR } from '../codex-hooks';
-import { startConfigWatcher as startConfigWatch, stopConfigWatcher as stopConfigWatch } from '../config-watcher';
-import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR } from './transcript-utils';
-import { writeAgentFile, deleteAgentFile } from './agent-files';
 import type { BrowserWindow } from 'electron';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '../../shared/types';
+import { getCodexConfig } from '../codex-config';
+import { cleanupCodexHooks, installCodexHooks, SESSION_ID_VAR, validateCodexHooks } from '../codex-hooks';
+import { startConfigWatcher as startConfigWatch, stopConfigWatcher as stopConfigWatch } from '../config-watcher';
+import { getFullPath } from '../pty-manager';
+import { deleteAgentFile, writeAgentFile } from './agent-files';
+import type { CliProvider, TranscriptDescriptor } from './provider';
+import { resolveBinary, validateBinaryExists } from './resolve-binary';
+import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR } from './transcript-utils';
 
 const CODEX_FILE_RE = /-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i;
 
@@ -177,7 +177,7 @@ export class CodexProvider implements CliProvider {
         if (!p || p.type !== 'message' || p.role !== 'user' || !Array.isArray(p.content)) continue;
         let text = '';
         for (const block of p.content) {
-          if (block && typeof block.text === 'string') text += block.text + '\n';
+          if (block && typeof block.text === 'string') text += `${block.text}\n`;
         }
         if (text) {
           texts.push(text.trim());

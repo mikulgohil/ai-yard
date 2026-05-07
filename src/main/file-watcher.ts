@@ -1,5 +1,5 @@
-import * as fs from 'fs';
 import type { BrowserWindow } from 'electron';
+import * as fs from 'fs';
 
 const DEBOUNCE_MS = 500;
 

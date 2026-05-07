@@ -1,11 +1,11 @@
 // Host-side WebRTC logic for P2P session sharing.
 // Uses native RTCPeerConnection (available in Electron's Chromium).
 
-import type { ShareMode, ShareMessage } from '../../shared/sharing-types.js';
-import { getTerminalInstance } from '../components/terminal-pane.js';
 import { SerializeAddon } from '@xterm/addon-serialize';
-import { ICE_CONFIG, sendMessage, waitForIceGathering, encodeConnectionCode, decodeConnectionCode } from './webrtc-utils.js';
-import { generateChallenge, computeChallengeResponse, bytesToHex, hexToBytes } from './share-crypto.js';
+import type { ShareMessage, ShareMode } from '../../shared/sharing-types.js';
+import { getTerminalInstance } from '../components/terminal-pane.js';
+import { bytesToHex, computeChallengeResponse, generateChallenge, } from './share-crypto.js';
+import { decodeConnectionCode, encodeConnectionCode, ICE_CONFIG, sendMessage, waitForIceGathering } from './webrtc-utils.js';
 
 interface HostPeer {
   sessionId: string;
@@ -160,7 +160,7 @@ export function startShare(sessionId: string, mode: ShareMode, passphrase: strin
     if (hostPeer.authState !== 'verified') return;
 
     if (msg.type === 'input' && mode === 'readwrite') {
-      window.vibeyard.pty.write(sessionId, msg.payload);
+      window.aiyard.pty.write(sessionId, msg.payload);
     } else if (msg.type === 'pong') {
       hostPeer.missedPongs = 0;
     }

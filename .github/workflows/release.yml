@@ -162,6 +162,9 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          TELEMETRY_ENDPOINT: ${{ secrets.TELEMETRY_ENDPOINT }}
+          TELEMETRY_WEBSITE_ID: ${{ secrets.TELEMETRY_WEBSITE_ID }}
 
       - name: Update release notes
         run: gh release edit "${{ needs.prepare.outputs.tag }}" --notes-file RELEASE_NOTES.md
@@ -197,6 +200,9 @@ jobs:
         run: npm run build && npx electron-builder --linux --publish always --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          TELEMETRY_ENDPOINT: ${{ secrets.TELEMETRY_ENDPOINT }}
+          TELEMETRY_WEBSITE_ID: ${{ secrets.TELEMETRY_WEBSITE_ID }}
 
   build-windows:
     needs: [prepare]
@@ -227,6 +233,9 @@ jobs:
         run: npm run build && npx electron-builder --win --publish always --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          TELEMETRY_ENDPOINT: ${{ secrets.TELEMETRY_ENDPOINT }}
+          TELEMETRY_WEBSITE_ID: ${{ secrets.TELEMETRY_WEBSITE_ID }}
 
   publish-npm:
     needs: [prepare, build, build-linux, build-windows]

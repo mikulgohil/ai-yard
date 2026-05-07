@@ -1,4 +1,4 @@
-import type { ReadinessCheck, ProviderId } from '../../shared/types';
+import type { ProviderId, ReadinessCheck } from '../../shared/types';
 
 export type TopCategory = 'instructions' | 'context' | 'optimizations';
 

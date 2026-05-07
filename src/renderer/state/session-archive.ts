@@ -66,7 +66,7 @@ export function buildResumedSession(archived: ArchivedSession): SessionRecord {
   };
 }
 
-/** Build a fresh SessionRecord from a bare cliSessionId (no Vibeyard history entry required). */
+/** Build a fresh SessionRecord from a bare cliSessionId (no AI-yard history entry required). */
 export function buildResumedSessionFromCliId(cliSessionId: string, name: string, providerId: ProviderId = 'claude'): SessionRecord {
   return {
     id: crypto.randomUUID(),

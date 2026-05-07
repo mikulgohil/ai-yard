@@ -1,7 +1,8 @@
-export type { McpServer, Agent, Skill, Command, ProviderConfig, ClaudeConfig, GitWorktree, GitFileEntry, CostData, McpResult, ProviderId, CliProviderMeta, CliProviderCapabilities, StatsCache, ReadinessResult, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus } from '../shared/types.js';
-import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliProviderMeta, StatsCache, ReadinessResult } from '../shared/types.js';
+export type { Agent, ClaudeConfig, CliProviderCapabilities, CliProviderMeta, Command, CostData, GitFileEntry, GitWorktree, McpResult, McpServer, ProviderConfig, ProviderId, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ReadinessResult, Skill, StatsCache } from '../shared/types.js';
 
-export interface VibeyardApi {
+import type { CliProviderMeta, CostData, GitWorktree, McpResult, ProviderConfig, ProviderId, ReadinessResult, StatsCache } from '../shared/types.js';
+
+export interface AIYardApi {
   pty: {
     create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, systemPrompt?: string): Promise<void>;
     createShell(sessionId: string, cwd: string): Promise<void>;

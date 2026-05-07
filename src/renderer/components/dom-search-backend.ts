@@ -122,13 +122,14 @@ export class DomSearchBackend implements SearchBackend {
     for (const el of elements) {
       const htmlEl = el as HTMLElement;
       const text = htmlEl.textContent || '';
-      let match: RegExpExecArray | null;
       pattern.lastIndex = 0;
-      while ((match = pattern.exec(text)) !== null) {
+      let match = pattern.exec(text);
+      while (match !== null) {
         this.matches.push({ element: htmlEl, startOffset: match.index, length: match[0].length });
         if (match[0].length === 0) {
           pattern.lastIndex++;
         }
+        match = pattern.exec(text);
       }
     }
     return true;

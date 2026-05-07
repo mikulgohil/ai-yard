@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -36,15 +36,15 @@ vi.mock('./session-activity.js', () => ({
   getStatus: mockGetStatus,
 }));
 
-import { appState, _resetForTesting } from './state';
 import {
-  closeSessionWithConfirm,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
-  closeSessionsFromRightWithConfirm,
   closeSessionsFromLeftWithConfirm,
+  closeSessionsFromRightWithConfirm,
+  closeSessionWithConfirm,
   confirmAppClose,
 } from './session-close';
+import { _resetForTesting, appState } from './state';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -356,7 +356,7 @@ describe('confirmAppClose', () => {
 
     expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
     const [title, message, options] = mockShowConfirmDialog.mock.calls[0];
-    expect(title).toBe('Quit Vibeyard');
+    expect(title).toBe('Quit AI-yard');
     expect(message).toBe('A session is still active. Quitting will interrupt it.');
     expect(options.confirmLabel).toBe('Quit');
     expect(onConfirm).not.toHaveBeenCalled();
@@ -398,7 +398,7 @@ describe('confirmAppClose', () => {
 
     expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
     const [title, message, options] = mockShowConfirmDialog.mock.calls[0];
-    expect(title).toBe('Quit Vibeyard');
+    expect(title).toBe('Quit AI-yard');
     expect(message).toBe('3 sessions are still active. Quitting will interrupt them.');
     expect(options.confirmLabel).toBe('Quit');
   });

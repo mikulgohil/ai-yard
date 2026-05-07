@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('fs');
 vi.mock('child_process');
 
-import { validatePrerequisites } from './prerequisites';
 import { isWin } from './platform';
+import { validatePrerequisites } from './prerequisites';
 
 describe('validatePrerequisites', () => {
   beforeEach(() => {

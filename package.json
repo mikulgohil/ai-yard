@@ -1,22 +1,25 @@
 {
-  "name": "vibeyard",
+  "name": "@mikulgohil/ai-yard",
   "version": "0.2.35",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "A terminal-centric IDE for AI-powered CLI tools, built on Electron",
   "author": {
-    "name": "Eliran Tutia",
-    "email": "elirantutia@gmail.com"
+    "name": "Mikul Gohil",
+    "email": "mikulgohil@outlook.com"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/elirantutia/vibeyard.git"
+    "url": "https://github.com/mikulgohil/ai-yard.git"
   },
-  "homepage": "https://github.com/elirantutia/vibeyard",
+  "homepage": "https://github.com/mikulgohil/ai-yard",
   "bugs": {
-    "url": "https://github.com/elirantutia/vibeyard/issues"
+    "url": "https://github.com/mikulgohil/ai-yard/issues"
   },
   "bin": {
-    "vibeyard": "bin/vibeyard.js"
+    "ai-yard": "bin/ai-yard.js"
   },
   "keywords": [
     "electron",
@@ -37,21 +40,25 @@
   },
   "main": "./dist/main/main/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && npm run build:renderer && npm run copy-assets",
-    "build:renderer": "esbuild src/renderer/index.ts --bundle --outfile=dist/renderer/index.js --platform=browser --format=iife --target=es2022 --sourcemap --loader:.ts=ts",
+    "build": "npm run gen-build-config && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && npm run build:renderer && npm run copy-assets",
+    "build:renderer": "esbuild src/renderer/index.ts --bundle --outfile=dist/renderer/index.js --platform=browser --format=iife --target=es2022 --sourcemap --loader:.ts=ts --minify-syntax --minify-whitespace --legal-comments=none",
     "copy-assets": "node scripts/copy-assets.js",
+    "gen-build-config": "node scripts/gen-build-config.js",
     "start": "npm run build && electron .",
     "dev": "npm run build && electron .",
     "postinstall": "node -e \"try{require('electron-builder/package.json');require('child_process').execSync('electron-builder install-app-deps',{stdio:'inherit'})}catch{}\"",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "npm run gen-build-config && vitest run",
+    "test:watch": "npm run gen-build-config && vitest",
+    "test:coverage": "npm run gen-build-config && vitest run --coverage",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --write src/",
+    "test:e2e": "npm run build && playwright test"
   },
   "build": {
-    "appId": "com.vibeyard.app",
-    "productName": "Vibeyard",
+    "appId": "com.aiyard.app",
+    "productName": "AI-yard",
     "icon": "build/icon.png",
     "files": [
       "dist/main/**/*",
@@ -89,15 +96,11 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "elirantutia",
-      "repo": "vibeyard",
-      "releaseType": "release"
     }
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
+    "@playwright/test": "^1.59.1",
     "@types/dompurify": "^3.0.5",
     "@types/picomatch": "^4.0.2",
     "@vitest/coverage-v8": "^4.1.0",
@@ -109,6 +112,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@sentry/electron": "^7.13.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-search": "^0.16.0",
     "@xterm/addon-serialize": "^0.14.0",

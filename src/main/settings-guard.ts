@@ -1,13 +1,13 @@
-import * as path from 'path';
+import { type BrowserWindow, ipcMain } from 'electron';
 import { homedir } from 'os';
-import { ipcMain, BrowserWindow } from 'electron';
-import { getStatusLineScriptPath } from './hook-status';
-import { HOOK_MARKER, installHooksOnly, installStatusLine, getSupportedHookEvents } from './claude-cli';
-import { readJsonSafe } from './fs-utils';
-import { loadState, saveState } from './store';
+import * as path from 'path';
 import type { SettingsValidationResult } from '../shared/types';
+import { getSupportedHookEvents, HOOK_MARKER, installHooksOnly, installStatusLine } from './claude-cli';
+import { readJsonSafe } from './fs-utils';
+import { getStatusLineScriptPath } from './hook-status';
+import { loadState, saveState } from './store';
 
-const LEGACY_STATUSLINE_RE = /[/\\]vibeyard[/\\]statusline\.(sh|cmd)$/;
+const LEGACY_STATUSLINE_RE = /[/\\]ai-yard[/\\]statusline\.(sh|cmd)$/;
 
 const CANDIDATE_HOOK_EVENTS = [
   'SessionStart', 'UserPromptSubmit', 'PostToolUse',
@@ -29,11 +29,11 @@ function readClaudeSettings(): Record<string, unknown> {
   return readJsonSafe(path.join(homedir(), '.claude', 'settings.json')) ?? {};
 }
 
-export function isVibeyardStatusLine(statusLine: unknown): boolean {
+export function isAIYardStatusLine(statusLine: unknown): boolean {
   if (!statusLine || typeof statusLine !== 'object') return false;
   const sl = statusLine as Record<string, unknown>;
   if (sl.command === getStatusLineScriptPath()) return true;
-  // Recognize legacy Vibeyard statusline paths (e.g. /tmp/vibeyard/statusline.sh)
+  // Recognize legacy AI-yard statusline paths (e.g. /tmp/ai-yard/statusline.sh)
   // so upgrades silently replace them without showing a conflict dialog.
   if (typeof sl.command === 'string') {
     return LEGACY_STATUSLINE_RE.test(sl.command);
@@ -48,8 +48,8 @@ export function validateSettings(): SettingsValidationResult {
   let statusLine: SettingsValidationResult['statusLine'] = 'missing';
   let foreignStatusLineCommand: string | undefined;
   if (settings.statusLine) {
-    if (isVibeyardStatusLine(settings.statusLine)) {
-      statusLine = 'vibeyard';
+    if (isAIYardStatusLine(settings.statusLine)) {
+      statusLine = 'aiyard';
     } else {
       statusLine = 'foreign';
       const sl = settings.statusLine as Record<string, unknown>;
@@ -91,12 +91,12 @@ export function shouldWarnStatusLine(
   consentCommand: string | null | undefined,
   currentForeignCommand: string | null | undefined,
 ): boolean {
-  if (statusLine === 'vibeyard') return false;
+  if (statusLine === 'aiyard') return false;
   if (
     statusLine === 'foreign' &&
     consent === 'declined' &&
-    !!consentCommand &&
-    !!currentForeignCommand &&
+    consentCommand &&
+    currentForeignCommand &&
     consentCommand === currentForeignCommand
   ) {
     return false;
@@ -115,7 +115,7 @@ export async function guardedInstall(win: BrowserWindow | null): Promise<void> {
   // Always install hooks (additive, non-destructive)
   installHooksOnly();
 
-  if (validation.statusLine === 'vibeyard' || validation.statusLine === 'missing') {
+  if (validation.statusLine === 'aiyard' || validation.statusLine === 'missing') {
     installStatusLine();
     return;
   }
@@ -188,7 +188,7 @@ export function reinstallSettings(): void {
 
   const state = loadState();
   state.preferences.statusLineConsent = 'granted';
-  // No specific foreign command anymore — Vibeyard now owns the statusLine.
+  // No specific foreign command anymore — AI-yard now owns the statusLine.
   state.preferences.statusLineConsentCommand = null;
   saveState(state);
 }

@@ -1,6 +1,6 @@
 import type { BoardColumn, BoardData, PersistedState, Preferences, ProjectRecord, SessionRecord } from '../../shared/types.js';
-import { restoreCost } from '../session-cost.js';
 import { restoreContext } from '../session-context.js';
+import { restoreCost } from '../session-cost.js';
 import { buildKanbanSession } from './session-factory.js';
 
 export function createDefaultBoard(): BoardData {

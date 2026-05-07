@@ -1,19 +1,19 @@
-import { appState, MAX_PROJECT_NAME_LENGTH, ProjectRecord } from '../state.js';
-import { showModal, setModalError, closeModal, showConfirmDialog } from './modal.js';
-import { showPreferencesModal } from './preferences-modal.js';
-import { onChange as onCostChange, getAggregateCost } from '../session-cost.js';
-import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
-import { init as initDiscussionsBadge, getNewCount as getDiscussionsNewCount, markSeen as markDiscussionsSeen, onChange as onDiscussionsChange, DISCUSSIONS_URL } from '../discussions-badge.js';
 import { basename, lastSeparatorIndex } from '../../shared/platform.js';
 import { deriveProjectName } from '../../shared/project-name.js';
+import { DISCUSSIONS_URL, getNewCount as getDiscussionsNewCount, init as initDiscussionsBadge, markSeen as markDiscussionsSeen, onChange as onDiscussionsChange } from '../discussions-badge.js';
 import { esc, scoreColor } from '../dom-utils.js';
-import { renderFileTree, clearProjectState as clearFileTreeState, closeFileTree } from './file-tree.js';
-import {
-  renderSessionHistory,
-  closeSessionHistory,
-  clearProjectState as clearSessionHistoryState,
-} from './session-history.js';
+import { getAggregateCost, onChange as onCostChange } from '../session-cost.js';
+import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
+import { appState, MAX_PROJECT_NAME_LENGTH, type ProjectRecord } from '../state.js';
+import { clearProjectState as clearFileTreeState, closeFileTree, renderFileTree } from './file-tree.js';
 import { attachHoverCard } from './hover-card.js';
+import { closeModal, setModalError, showConfirmDialog, showModal } from './modal.js';
+import { showPreferencesModal } from './preferences-modal.js';
+import {
+  clearProjectState as clearSessionHistoryState,
+  closeSessionHistory,
+  renderSessionHistory,
+} from './session-history.js';
 
 type ProjectPanel = 'history' | 'files' | null;
 const projectPanelOpen = new Map<string, ProjectPanel>();
@@ -42,6 +42,7 @@ const ICON_TEAM = '<svg viewBox="100 -760 760 580" width="14" height="14" fill="
 const ICON_FILES = svgIcon('<path d="M1.5 3.5a1 1 0 0 1 1-1h3l1.5 1.5h4.5a1 1 0 0 1 1 1V11a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/>');
 const ICON_OVERVIEW = '<svg viewBox="160 -800 640 640" width="14" height="14" fill="currentColor"><path d="M224.62-160q-26.85 0-45.74-18.88Q160-197.77 160-224.62v-510.76q0-26.85 18.88-45.74Q197.77-800 224.62-800h510.76q26.85 0 45.74 18.88Q800-762.23 800-735.38v510.76q0 26.85-18.88 45.74Q762.23-160 735.38-160H224.62ZM420-200v-260H200v235.38q0 10.77 6.92 17.7 6.93 6.92 17.7 6.92H420Zm40 0h275.38q10.77 0 17.7-6.92 6.92-6.93 6.92-17.7V-460H460v260ZM200-500h560v-235.38q0-10.77-6.92-17.7-6.93-6.92-17.7-6.92H224.62q-10.77 0-17.7 6.92-6.92 6.93-6.92 17.7V-500Z"/></svg>';
 const ICON_DISCUSSIONS = '<svg viewBox="0 -960 960 960" width="14" height="14" fill="currentColor"><path d="m240-240-92 92q-19 19-43.5 8.5T80-177v-623q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240Zm-34-80h594v-480H160v525l46-45Zm-46 0v-480 480Zm120-80h240q17 0 28.5-11.5T560-440q0-17-11.5-28.5T520-480H280q-17 0-28.5 11.5T240-440q0 17 11.5 28.5T280-400Zm0-120h400q17 0 28.5-11.5T720-560q0-17-11.5-28.5T680-600H280q-17 0-28.5 11.5T240-560q0 17 11.5 28.5T280-520Zm0-120h400q17 0 28.5-11.5T720-680q0-17-11.5-28.5T680-720H280q-17 0-28.5 11.5T240-680q0 17 11.5 28.5T280-640Z"/></svg>';
+const ICON_COST = svgIcon('<path d="M7 1v12M10 4.5C10 3.4 8.7 2.5 7 2.5S4 3.4 4 4.5s1.3 2 3 2 3 .9 3 2-1.3 2-3 2-3-.9-3-2"/>');
 
 export function toggleSidebar(): void {
   appState.toggleSidebar();
@@ -62,7 +63,7 @@ export function initSidebar(): void {
   applyDiscussionsVisibility();
   sidebarDiscussionsEl.addEventListener('click', () => {
     markDiscussionsSeen();
-    window.vibeyard.app.openExternal(DISCUSSIONS_URL);
+    window.aiyard.app.openExternal(DISCUSSIONS_URL);
   });
   initDiscussionsBadge();
   onDiscussionsChange(renderDiscussions);
@@ -70,7 +71,7 @@ export function initSidebar(): void {
   initResizeHandle();
   appState.on('state-loaded', () => {
     if (appState.sidebarWidth) {
-      sidebarEl.style.width = appState.sidebarWidth + 'px';
+      sidebarEl.style.width = `${appState.sidebarWidth}px`;
     }
     applySidebarCollapsed();
     render();
@@ -126,7 +127,7 @@ function render(): void {
     wrapper.className = 'project-row';
 
     const el = document.createElement('div');
-    el.className = 'project-item' + (isActive ? ' active' : '');
+    el.className = `project-item${isActive ? ' active' : ''}`;
     el.dataset.projectId = project.id;
     el.innerHTML = `
       <div style="flex:1;min-width:0">
@@ -221,6 +222,15 @@ function buildProjectActions(
   });
   actions.appendChild(teamBtn);
 
+  if (appState.preferences.costDashboardEnabled !== false) {
+    const costBtn = makeActionButton('Cost', ICON_COST, false);
+    costBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      appState.openCostDashboardTab(project.id);
+    });
+    actions.appendChild(costBtn);
+  }
+
   if (opts.fileTreeEnabled) {
     const filesBtn = makeActionButton('Files', ICON_FILES, openPanel === 'files');
     filesBtn.classList.add('panel-toggle');
@@ -237,7 +247,7 @@ function buildProjectActions(
 function makeActionButton(label: string, iconSvg: string, active: boolean, hint?: string): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'project-action-btn' + (active ? ' active' : '');
+  btn.className = `project-action-btn${active ? ' active' : ''}`;
   btn.innerHTML = `<span class="action-icon" aria-hidden="true">${iconSvg}</span><span class="action-label">${esc(label)}</span>`;
   attachHoverCard(btn, hint ?? label);
   return btn;
@@ -262,7 +272,7 @@ export function promptNewProject(): void {
       label: 'Path', id: 'project-path', placeholder: '/path/to/project',
       buttonLabel: 'Browse',
       onButtonClick: async (input) => {
-        const dir = await window.vibeyard.fs.browseDirectory();
+        const dir = await window.aiyard.fs.browseDirectory();
         if (!dir) return;
         input.value = dir;
         autoFillName(dir);
@@ -273,8 +283,8 @@ export function promptNewProject(): void {
     const rawPath = values['project-path']?.trim();
     if (!name || !rawPath) return;
 
-    const projectPath = await window.vibeyard.fs.expandPath(rawPath);
-    const isDir = await window.vibeyard.fs.isDirectory(projectPath);
+    const projectPath = await window.aiyard.fs.expandPath(rawPath);
+    const isDir = await window.aiyard.fs.isDirectory(projectPath);
     if (!isDir) {
       setModalError('project-path', 'Directory does not exist');
       return;
@@ -341,7 +351,7 @@ export function promptNewProject(): void {
       const dirPart = value.substring(0, lastSlash + 1);
       const namePart = value.substring(lastSlash + 1).toLowerCase();
 
-      const dirs = await window.vibeyard.fs.listDirs(dirPart, namePart || undefined);
+      const dirs = await window.aiyard.fs.listDirs(dirPart, namePart || undefined);
       showSuggestions(dirs, dirPart);
     });
 
@@ -404,7 +414,7 @@ function initResizeHandle(): void {
       return;
     }
     const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
-    sidebarEl.style.width = width + 'px';
+    sidebarEl.style.width = `${width}px`;
   });
 
   document.addEventListener('mouseup', () => {
@@ -450,7 +460,7 @@ function renderCostFooter(): void {
 function confirmRemoveProject(project: ProjectRecord): void {
   const historyCount = project.sessionHistory?.length ?? 0;
   const message = historyCount > 0
-    ? `Remove project "${project.name}"? This will delete all sessions and history (${historyCount} entries) from Vibeyard. No files on disk will be affected.`
+    ? `Remove project "${project.name}"? This will delete all sessions and history (${historyCount} entries) from AI-yard. No files on disk will be affected.`
     : `Remove project "${project.name}"? No files on disk will be affected.`;
   showConfirmDialog('Remove project', message, {
     confirmLabel: 'Remove',
@@ -521,7 +531,7 @@ function showProjectContextMenu(x: number, y: number, project: ProjectRecord): v
   const hasSessions = project.sessions.length > 0;
 
   const closeAllItem = document.createElement('div');
-  closeAllItem.className = 'tab-context-menu-item' + (!hasSessions ? ' disabled' : '');
+  closeAllItem.className = `tab-context-menu-item${!hasSessions ? ' disabled' : ''}`;
   closeAllItem.textContent = 'Close All Sessions';
   if (hasSessions) {
     closeAllItem.addEventListener('click', (e) => {
@@ -572,11 +582,11 @@ function renderDiscussions(): void {
   // inline badge is shown only when expanded (text visible). CSS picks one per mode.
   const dot = count > 0 ? '<span class="discussions-icon-dot"></span>' : '';
   const inlineBadge = count > 0 ? ` <span class="discussions-badge">${count}</span>` : '';
-  sidebarDiscussionsEl.title = 'Vibeyard Discussions';
+  sidebarDiscussionsEl.title = 'AI-yard Discussions';
   sidebarDiscussionsEl.innerHTML =
     `<span class="action-icon" aria-hidden="true">${ICON_DISCUSSIONS}${dot}</span>` +
     `<div class="discussions-text">` +
-      `<div class="discussions-title">Vibeyard Discussions${inlineBadge}</div>` +
+      `<div class="discussions-title">AI-yard Discussions${inlineBadge}</div>` +
       `<div class="discussions-desc">Join the conversation about coding with AI</div>` +
     `</div>`;
 }

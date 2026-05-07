@@ -1,6 +1,6 @@
 import type { ArchivedSession } from '../../../../shared/types.js';
-import { appState } from '../../../state.js';
 import { getProviderDisplayName } from '../../../provider-availability.js';
+import { appState } from '../../../state.js';
 import type { WidgetFactory } from './widget-host.js';
 
 export const createFavoriteSessionsWidget: WidgetFactory = (host) => {

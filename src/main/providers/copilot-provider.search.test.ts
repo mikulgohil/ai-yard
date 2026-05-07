@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('fs', () => ({
   existsSync: vi.fn(() => true),
@@ -35,7 +35,7 @@ describe('CopilotProvider.discoverTranscripts()', () => {
   it('uses dir name as cliSessionId and parses cwd from workspace.yaml', async () => {
     mockReaddir.mockResolvedValueOnce([dir(UUID), dir('not-a-uuid'), file('stray.txt')] as any);
     mockReadFile.mockResolvedValueOnce(
-      'id: ' + UUID + '\ncwd: /Users/me/dev/repo\nsummary_count: 0\n' as any,
+      `id: ${UUID}\ncwd: /Users/me/dev/repo\nsummary_count: 0\n` as any,
     );
 
     const out = await new CopilotProvider().discoverTranscripts();
@@ -76,7 +76,7 @@ describe('CopilotProvider.indexTranscript()', () => {
   });
 
   it('tolerates malformed lines', async () => {
-    const jsonl = '{broken\n' + JSON.stringify({ type: 'user.message', data: { content: 'good prompt' } });
+    const jsonl = `{broken\n${JSON.stringify({ type: 'user.message', data: { content: 'good prompt' } })}`;
     mockReadFile.mockResolvedValueOnce(jsonl as any);
     const r = await new CopilotProvider().indexTranscript('/p');
     expect(r.text).toContain('good prompt');

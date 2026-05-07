@@ -1,21 +1,20 @@
-import { getEvents, getCostDeltas } from '../session-inspector-state.js';
 import type { InspectorEvent } from '../../shared/types.js';
+import { getCostDeltas, getEvents } from '../session-inspector-state.js';
 import { inspectorState } from './session-inspector-state-ui.js';
 import {
-  emptyMessage,
-  formatRelativeTime,
-  formatDuration,
+  agentLabel,
   badgeClass,
   badgeLabel,
-  agentLabel,
-  isAgentEvent,
-  findAgentDuration,
-  makeExpandable,
-  createToolDetailEl,
   createAgentDetailEl,
-  parseMcpToolName,
+  createToolDetailEl,
+  emptyMessage,
+  findAgentDuration,
+  formatDuration,
+  formatRelativeTime,
+  isAgentEvent,
   isMcpToolEvent,
-  escapeHtml,
+  makeExpandable,
+  parseMcpToolName,
 } from './session-inspector-utils.js';
 
 export interface AgentSpan {
@@ -356,7 +355,7 @@ export function renderTimeline(container: HTMLElement): void {
     if (ev.error) {
       const errorEl = document.createElement('div');
       errorEl.className = 'inspector-error-text';
-      errorEl.textContent = ev.error.length > 200 ? ev.error.slice(0, 200) + '...' : ev.error;
+      errorEl.textContent = ev.error.length > 200 ? `${ev.error.slice(0, 200)}...` : ev.error;
       row.appendChild(errorEl);
     }
 

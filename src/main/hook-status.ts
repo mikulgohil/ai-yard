@@ -1,11 +1,11 @@
+import type { BrowserWindow } from 'electron';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
-import { BrowserWindow } from 'electron';
+import * as path from 'path';
 import { isWin } from './platform';
 
-export const STATUS_DIR = path.join(os.tmpdir(), 'vibeyard');
-export const SCRIPT_DIR = path.join(os.homedir(), '.vibeyard', 'run');
+export const STATUS_DIR = path.join(os.tmpdir(), 'ai-yard');
+export const SCRIPT_DIR = path.join(os.homedir(), '.ai-yard', 'run');
 const STATUSLINE_SCRIPT = path.join(SCRIPT_DIR, isWin ? 'statusline.cmd' : 'statusline.sh');
 
 const KNOWN_EXTENSIONS = ['.status', '.sessionid', '.cost', '.toolfailure', '.events'];

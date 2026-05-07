@@ -1,62 +1,62 @@
-import { appState } from './state.js';
-import { initSidebar, promptNewProject } from './components/sidebar.js';
-import { initTabBar } from './components/tab-bar.js';
-import { initSplitLayout } from './components/split-layout.js';
-import { initKeybindings } from './keybindings.js';
-import { handlePtyData, destroyTerminal, updateCostDisplay, updateContextDisplay, applyThemeToAllTerminals } from './components/terminal-pane.js';
-import { setIdle, setHookStatus, notifyInterrupt } from './session-activity.js';
-import { parseCost, setCostData, onChange as onCostChange } from './session-cost.js';
-import { parseTitle, clearSession as clearTitleSession } from './session-title.js';
-import { setContextData, onChange as onContextChange } from './session-context.js';
-import { initNotificationSound } from './notification-sound.js';
-import { initNotificationDesktop } from './notification-desktop.js';
-import { init as initSessionUnread } from './session-unread.js';
-import { init as initGithubUnread } from './github-unread.js';
-import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSessionId, applyThemeToAllShells } from './components/project-terminal.js';
-import { startPolling as startGitPolling } from './git-status.js';
-import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
-import { initGitPanel } from './components/git-panel.js';
-import { disconnectInspector } from './components/mcp-inspector.js';
-import { initUpdateBanner } from './components/update-banner.js';
-import { initSessionHistory } from './components/session-history.js';
-import { showUsageModal } from './components/usage-modal.js';
-import { captureInitialContext } from './session-insights.js';
-import { initInsightAlert } from './components/insight-alert.js';
-import { initToolDetector } from './tools/missing-tool-detector.js';
-import { initToolAlert } from './components/tool-alert.js';
-import { initLargeFileDetector } from './tools/large-file-detector.js';
-import { initLargeFileAlert } from './components/large-file-alert.js';
-import { initSettingsGuard } from './components/settings-guard-ui.js';
-import { checkWhatsNew } from './components/whats-new-dialog.js';
-import { initShareManager, forwardPtyData, endShare, cleanupAllShares } from './sharing/share-manager.js';
-import { isSharing } from './sharing/peer-host.js';
-import { checkStarPrompt } from './components/star-prompt-dialog.js';
-import { addEvents as addInspectorEvents } from './session-inspector-state.js';
 import type { InspectorEvent } from '../shared/types.js';
-import { getContext } from './session-context.js';
-import { initSessionInspector } from './components/session-inspector.js';
-import { initFilePrompt } from './components/file-prompt.js';
-import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pane.js';
-import { loadProviderMetas } from './provider-availability.js';
-import { initBoard } from './components/board/board-view.js';
 import { initBoardSessionSync } from './board-session-sync.js';
+import { initBoard } from './components/board/board-view.js';
+import { initCostDashboard } from './components/cost-dashboard/dashboard-view.js';
+import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
+import { initFilePrompt } from './components/file-prompt.js';
+import { initGitPanel } from './components/git-panel.js';
+import { initInsightAlert } from './components/insight-alert.js';
+import { initLargeFileAlert } from './components/large-file-alert.js';
+import { applyThemeToAllShells, handleShellPtyData, handleShellPtyExit, initProjectTerminal, isShellSessionId } from './components/project-terminal.js';
+import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pane.js';
+import { initSessionHistory } from './components/session-history.js';
+import { initSessionInspector } from './components/session-inspector.js';
+import { initSettingsGuard } from './components/settings-guard-ui.js';
+import { initSidebar, promptNewProject } from './components/sidebar.js';
+import { initSplitLayout } from './components/split-layout.js';
+import { checkStarPrompt } from './components/star-prompt-dialog.js';
+import { initTabBar } from './components/tab-bar.js';
 import { initTeamView } from './components/team/team-view.js';
-import { getZoomFactor } from './zoom.js';
+import { applyThemeToAllTerminals, destroyTerminal, handlePtyData, updateContextDisplay, updateCostDisplay } from './components/terminal-pane.js';
+import { initToolAlert } from './components/tool-alert.js';
+import { initUpdateBanner } from './components/update-banner.js';
+import { showUsageModal } from './components/usage-modal.js';
+import { checkWhatsNew } from './components/whats-new-dialog.js';
+import { startPolling as startGitPolling } from './git-status.js';
+import { init as initGithubUnread } from './github-unread.js';
+import { initKeybindings } from './keybindings.js';
+import { initNotificationDesktop } from './notification-desktop.js';
+import { initNotificationSound } from './notification-sound.js';
+import { loadProviderMetas } from './provider-availability.js';
+import { initRendererSentry } from './sentry.js';
+import { notifyInterrupt, setHookStatus, } from './session-activity.js';
 import { confirmAppClose } from './session-close.js';
+import { getContext, onChange as onContextChange, setContextData } from './session-context.js';
+import { onChange as onCostChange, parseCost, setCostData } from './session-cost.js';
+import { captureInitialContext } from './session-insights.js';
+import { addEvents as addInspectorEvents } from './session-inspector-state.js';
+import { clearSession as clearTitleSession, parseTitle } from './session-title.js';
+import { init as initSessionUnread } from './session-unread.js';
+import { isSharing } from './sharing/peer-host.js';
+import { cleanupAllShares, endShare, forwardPtyData, initShareManager } from './sharing/share-manager.js';
+import { appState } from './state.js';
+import { initLargeFileDetector } from './tools/large-file-detector.js';
+import { initToolDetector } from './tools/missing-tool-detector.js';
+import { getZoomFactor } from './zoom.js';
 
 let isQuitting = false;
-window.vibeyard.app.onQuitting(() => {
+window.aiyard.app.onQuitting(() => {
   isQuitting = true;
   cleanupAllShares();
 });
 
-window.vibeyard.app.onConfirmClose(() => {
-  confirmAppClose(() => window.vibeyard.app.closeConfirmed());
+window.aiyard.app.onConfirmClose(() => {
+  confirmAppClose(() => window.aiyard.app.closeConfirmed());
 });
 
 async function main(): Promise<void> {
   // Wire PTY data/exit events from main process
-  window.vibeyard.pty.onData((sessionId, data) => {
+  window.aiyard.pty.onData((sessionId, data) => {
     if (isShellSessionId(sessionId)) {
       handleShellPtyData(sessionId, data);
     } else if (!isMcpSession(sessionId)) {
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
     }
   });
 
-  window.vibeyard.session.onCostData((sessionId, costData) => {
+  window.aiyard.session.onCostData((sessionId, costData) => {
     if (!appState.hasSession(sessionId)) return;
     logDebugEvent('costData', sessionId, costData);
     setCostData(sessionId, costData);
@@ -113,19 +113,19 @@ async function main(): Promise<void> {
     appState.updateSessionContext(sessionId, info);
   });
 
-  window.vibeyard.session.onHookStatus((sessionId, status, hookName) => {
+  window.aiyard.session.onHookStatus((sessionId, status, hookName) => {
     if (!appState.hasSession(sessionId)) return;
     logDebugEvent('hookStatus', sessionId, hookName ? `${hookName}: ${status}` : status);
     setHookStatus(sessionId, status, hookName);
   });
 
-  window.vibeyard.session.onInspectorEvents((sessionId, events) => {
+  window.aiyard.session.onInspectorEvents((sessionId, events) => {
     if (!appState.hasSession(sessionId)) return;
     logDebugEvent('inspectorEvents', sessionId, { count: events.length });
     addInspectorEvents(sessionId, events);
   });
 
-  window.vibeyard.session.onCliSessionId((sessionId, cliSessionId) => {
+  window.aiyard.session.onCliSessionId((sessionId, cliSessionId) => {
     logDebugEvent('cliSessionId', sessionId, cliSessionId);
     // Find the project containing this session and persist the CLI session ID
     const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
     }
   });
 
-  window.vibeyard.pty.onExit((sessionId, exitCode) => {
+  window.aiyard.pty.onExit((sessionId, exitCode) => {
     logDebugEvent('ptyExit', sessionId, { exitCode });
     if (isShellSessionId(sessionId)) {
       handleShellPtyExit(sessionId, exitCode);
@@ -182,6 +182,7 @@ async function main(): Promise<void> {
   initBoard();
   initBoardSessionSync();
   initTeamView();
+  initCostDashboard();
   initFilePrompt();
   startGitPolling();
 
@@ -210,6 +211,14 @@ async function main(): Promise<void> {
   // Load persisted state
   await appState.load();
 
+  // Init Sentry (no-op when crashReportsEnabled is off). Must run after
+  // appState.load() so we can read the user's preference.
+  initRendererSentry({
+    prefs: appState.preferences,
+    homeDir: window.aiyard.app.envPaths.home,
+    stateDir: window.aiyard.app.envPaths.state,
+  });
+
   // Apply theme from loaded preferences
   const initialTheme = appState.preferences.theme ?? 'dark';
   document.documentElement.dataset.theme = initialTheme;
@@ -223,7 +232,7 @@ async function main(): Promise<void> {
     applyThemeToAllRemoteTerminals(theme);
   });
   const savedZoom = getZoomFactor();
-  if (savedZoom !== 1.0) window.vibeyard.zoom.set(savedZoom);
+  if (savedZoom !== 1.0) window.aiyard.zoom.set(savedZoom);
 
   // Auto-open new project modal when no projects exist
   if (appState.projects.length === 0) {

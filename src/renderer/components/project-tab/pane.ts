@@ -1,10 +1,11 @@
+import type { OverviewLayout, OverviewWidget } from '../../../shared/types.js';
+import { trackInteraction, trackMount } from '../../feature-telemetry.js';
 import { appState } from '../../state.js';
-import { instances, type ProjectTabInstance } from './instance.js';
 import { createProjectTabGrid, type ProjectTabGrid } from './grid.js';
-import { showWidgetPicker } from './widgets/widget-picker-modal.js';
+import { instances, type ProjectTabInstance } from './instance.js';
 import { showGithubSettings } from './widgets/github-settings-modal.js';
 import { showSessionsSettings } from './widgets/sessions-settings-modal.js';
-import type { OverviewLayout, OverviewWidget } from '../../../shared/types.js';
+import { showWidgetPicker } from './widgets/widget-picker-modal.js';
 
 function defaultLayout(): OverviewLayout {
   return {
@@ -21,11 +22,12 @@ function defaultLayout(): OverviewLayout {
 export function createProjectTabPane(sessionId: string, projectId: string): void {
   if (instances.has(sessionId)) return;
 
+  trackMount('overview');
   const project = appState.projects.find(p => p.id === projectId);
 
   const el = document.createElement('div');
   el.className = 'project-tab-pane hidden';
-  el.dataset['sessionId'] = sessionId;
+  el.dataset.sessionId = sessionId;
 
   if (!project) {
     const empty = document.createElement('div');
@@ -110,6 +112,7 @@ export function createProjectTabPane(sessionId: string, projectId: string): void
     const widgets = fresh?.overviewLayout?.widgets ?? [];
     showWidgetPicker(widgets, (type) => {
       grid?.addWidget(type);
+      trackInteraction('overview', `widget-added:${type}`);
     });
   });
 

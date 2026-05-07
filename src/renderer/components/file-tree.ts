@@ -1,8 +1,8 @@
-import { appState, ProjectRecord } from '../state.js';
-import { pathToFileURL } from '../file-url.js';
-import { showContextMenu, MenuOption } from './board/board-context-menu.js';
-import { showConfirmModal } from './modal.js';
 import { FILE_PATH_DRAG_TYPE } from '../drag-types.js';
+import { pathToFileURL } from '../file-url.js';
+import { appState, type ProjectRecord } from '../state.js';
+import { type MenuOption, showContextMenu } from './board/board-context-menu.js';
+import { showConfirmModal } from './modal.js';
 
 export interface DirEntry {
   name: string;
@@ -30,19 +30,19 @@ function watchFolder(projectId: string, folderPath: string): void {
   const set = getWatchedSet(projectId);
   if (set.has(folderPath)) return;
   set.add(folderPath);
-  window.vibeyard.fs.watchFile(folderPath);
+  window.aiyard.fs.watchFile(folderPath);
 }
 
 function unwatchFolder(projectId: string, folderPath: string): void {
   const set = watchedByProject.get(projectId);
-  if (!set || !set.has(folderPath)) return;
+  if (!set?.has(folderPath)) return;
   set.delete(folderPath);
-  window.vibeyard.fs.unwatchFile(folderPath);
+  window.aiyard.fs.unwatchFile(folderPath);
 }
 
 function ensureChangeSubscription(): void {
   if (unsubFileChanged) return;
-  unsubFileChanged = window.vibeyard.fs.onFileChanged((changedPath) => {
+  unsubFileChanged = window.aiyard.fs.onFileChanged((changedPath) => {
     for (const [projectId, paths] of watchedByProject) {
       if (!paths.has(changedPath)) continue;
       entryCache.delete(changedPath);
@@ -99,7 +99,7 @@ export function clearProjectState(projectId: string): void {
 export function closeFileTree(projectId: string): void {
   const watched = watchedByProject.get(projectId);
   if (watched) {
-    for (const p of watched) window.vibeyard.fs.unwatchFile(p);
+    for (const p of watched) window.aiyard.fs.unwatchFile(p);
     watched.clear();
   }
   activeTrees.delete(projectId);
@@ -124,7 +124,7 @@ async function loadEntries(folderPath: string): Promise<DirEntry[]> {
   const pending = inflight.get(folderPath);
   if (pending) return pending;
 
-  const promise = window.vibeyard.fs.listDir(folderPath).then((entries) => {
+  const promise = window.aiyard.fs.listDir(folderPath).then((entries) => {
     const sorted = sortEntries(entries);
     entryCache.set(folderPath, sorted);
     inflight.delete(folderPath);
@@ -139,7 +139,7 @@ async function loadEntries(folderPath: string): Promise<DirEntry[]> {
 
 function makeRow(depth: number, entry: DirEntry, projectId: string): HTMLElement {
   const row = document.createElement('div');
-  row.className = 'file-tree-row' + (entry.isDirectory ? ' is-dir' : ' is-file');
+  row.className = `file-tree-row${entry.isDirectory ? ' is-dir' : ' is-file'}`;
   row.style.paddingLeft = `${20 + depth * 14}px`;
   row.title = entry.path;
 
@@ -262,7 +262,7 @@ function confirmAndTrash(entry: DirEntry): void {
     `Delete ${kind}`,
     message,
     async () => {
-      const result = await window.vibeyard.fs.trashItem(entry.path);
+      const result = await window.aiyard.fs.trashItem(entry.path);
       if (!result.ok) {
         console.warn(`Failed to trash ${entry.path}: ${result.error ?? 'unknown error'}`);
       }

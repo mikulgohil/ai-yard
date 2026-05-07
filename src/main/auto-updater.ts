@@ -22,6 +22,14 @@ export function quitAndInstall(): void {
 export function initAutoUpdater(): void {
   if (!app.isPackaged) return;
 
+  // The auto-updater is currently dormant: package.json's electron-builder block has no `publish`
+  // target after the Vibeyard → AI-yard rename (see docs/RENAME.md Tier 2 and docs/IMPROVEMENTS.md A4).
+  // Without a publish target, electron-updater throws "No publish configuration found" on every check.
+  // We suppress those errors here rather than spamming the renderer's update banner.
+  // To re-enable: add a `publish` block to package.json's `build` field, then remove this guard.
+  const updaterConfigured = false;
+  if (!updaterConfigured) return;
+
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 

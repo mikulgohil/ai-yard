@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { isCliSession } from './session-utils';
+import { describe, expect, it } from 'vitest';
 import type { SessionType } from '../shared/types';
+import { isCliSession } from './session-utils';
 
 describe('isCliSession', () => {
   it('returns true when type is undefined (regular CLI session)', () => {

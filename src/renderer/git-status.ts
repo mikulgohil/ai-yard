@@ -1,5 +1,5 @@
-import { appState } from './state.js';
 import { onChange as onStatusChange } from './session-activity.js';
+import { appState } from './state.js';
 import type { GitWorktree } from './types.js';
 
 export interface GitStatus {
@@ -33,7 +33,7 @@ let unwatchGitChanged: (() => void) | null = null;
 
 async function refreshWorktrees(projectId: string, projectPath: string): Promise<void> {
   try {
-    const worktrees = await window.vibeyard.git.getWorktrees(projectPath) as GitWorktree[];
+    const worktrees = await window.aiyard.git.getWorktrees(projectPath) as GitWorktree[];
     const prev = worktreeCache.get(projectId);
     worktreeCache.set(projectId, worktrees);
 
@@ -56,7 +56,7 @@ async function detectSessionWorktree(sessionId: string): Promise<void> {
   if (!project) return;
 
   try {
-    const cwd = await window.vibeyard.pty.getCwd(sessionId);
+    const cwd = await window.aiyard.pty.getCwd(sessionId);
     if (!cwd) return;
 
     const worktrees = worktreeCache.get(project.id);
@@ -65,7 +65,7 @@ async function detectSessionWorktree(sessionId: string): Promise<void> {
     // Find which worktree the cwd falls under (longest path match)
     let bestMatch = '';
     for (const wt of worktrees) {
-      if ((cwd === wt.path || cwd.startsWith(wt.path + '/')) && wt.path.length > bestMatch.length) {
+      if ((cwd === wt.path || cwd.startsWith(`${wt.path}/`)) && wt.path.length > bestMatch.length) {
         bestMatch = wt.path;
       }
     }
@@ -102,7 +102,7 @@ async function poll(): Promise<void> {
 
     // Query git status using the resolved worktree path
     const gitPath = getActiveGitPath(project.id);
-    const status = await window.vibeyard.git.getStatus(gitPath) as GitStatus;
+    const status = await window.aiyard.git.getStatus(gitPath) as GitStatus;
     const cacheKey = `${project.id}:${gitPath}`;
     const prev = cache.get(cacheKey);
     cache.set(cacheKey, status);
@@ -187,12 +187,12 @@ export function startPolling(): void {
 
   // Subscribe to main-process file system watcher push events (once)
   if (!unwatchGitChanged) {
-    unwatchGitChanged = window.vibeyard.git.onChanged(() => poll());
+    unwatchGitChanged = window.aiyard.git.onChanged(() => poll());
   }
 
   // Start watcher for current project
   if (appState.activeProject) {
-    window.vibeyard.git.watchProject(appState.activeProject.path);
+    window.aiyard.git.watchProject(appState.activeProject.path);
   }
 
   // Pause/resume when window visibility changes
@@ -210,7 +210,7 @@ export function startPolling(): void {
     if (!appState.activeProject) {
       stopInterval();
     } else {
-      window.vibeyard.git.watchProject(appState.activeProject.path);
+      window.aiyard.git.watchProject(appState.activeProject.path);
       startInterval();
     }
   });

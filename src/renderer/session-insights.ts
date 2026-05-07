@@ -1,6 +1,6 @@
 import type { InitialContextSnapshot } from '../shared/types.js';
-import type { InsightResult } from './insights/types.js';
 import { analyzeInitialContext } from './insights/registry.js';
+import type { InsightResult } from './insights/types.js';
 import { appState } from './state.js';
 
 type AlertCallback = (projectId: string, results: InsightResult[]) => void;

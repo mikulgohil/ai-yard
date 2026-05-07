@@ -1,14 +1,14 @@
-import { getEvents, getToolStats, getContextHistory, getCostDeltas } from '../session-inspector-state.js';
 import type { InspectorEventType } from '../../shared/types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
+import { getContextHistory, getCostDeltas, getEvents, getToolStats } from '../session-inspector-state.js';
 import { inspectorState } from './session-inspector-state-ui.js';
 import {
-  emptyMessage,
-  formatTokenCount,
   badgeLabel,
+  emptyMessage,
   escapeHtml,
-  renderUnsupportedGuard,
+  formatTokenCount,
   getInspectedProviderId,
+  renderUnsupportedGuard,
 } from './session-inspector-utils.js';
 
 // --- Costs View ---
@@ -193,12 +193,12 @@ export function renderContext(container: HTMLElement): void {
     });
 
     const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
-    const areaPoints = `${padding.left},${padding.top + chartH} ` + polylinePoints + ` ${points[points.length - 1].x},${padding.top + chartH}`;
+    const areaPoints = `${padding.left},${padding.top + chartH} ${polylinePoints} ${points[points.length - 1].x},${padding.top + chartH}`;
 
     // Time labels
     const durationMin = (maxTime - minTime) / 60000;
-    const midLabel = (durationMin / 2).toFixed(0) + 'm';
-    const endLabel = durationMin.toFixed(0) + 'm';
+    const midLabel = `${(durationMin / 2).toFixed(0)}m`;
+    const endLabel = `${durationMin.toFixed(0)}m`;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);

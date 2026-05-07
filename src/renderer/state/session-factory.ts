@@ -89,6 +89,17 @@ export function buildTeamSession(opts: BaseOpts & { projectName: string }): Sess
   };
 }
 
+export function buildCostDashboardSession(opts: BaseOpts & { projectName: string }): SessionRecord {
+  const { projectName, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
+  return {
+    id,
+    name: `${projectName} - Cost`,
+    type: 'cost-dashboard',
+    cliSessionId: null,
+    createdAt,
+  };
+}
+
 export function buildFileReaderSession(opts: BaseOpts & { name: string; filePath: string; lineNumber?: number }): SessionRecord {
   const { name, filePath, lineNumber, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {

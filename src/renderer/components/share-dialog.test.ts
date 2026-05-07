@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock peer-host before importing share-dialog
 const mockIsSharing = vi.fn(() => false);
@@ -24,7 +24,7 @@ vi.mock('../sharing/share-crypto.js', () => ({
 }));
 
 // Minimal DOM stubs so share-dialog can create elements without jsdom
-const elementStubs = new Map<string, Record<string, unknown>>();
+const _elementStubs = new Map<string, Record<string, unknown>>();
 function makeElement(): Record<string, unknown> {
   const el: Record<string, unknown> = {
     className: '',
@@ -38,15 +38,15 @@ function makeElement(): Record<string, unknown> {
     value: '',
     checked: false,
     disabled: false,
-    _listeners: {} as Record<string, Function[]>,
+    _listeners: {} as Record<string, Array<(...args: unknown[]) => unknown>>,
     appendChild(child: Record<string, unknown>) { return child; },
     remove() {},
     classList: {
       add() {},
       remove() {},
     },
-    addEventListener(event: string, cb: Function) {
-      const listeners = (el._listeners as Record<string, Function[]>);
+    addEventListener(event: string, cb: (...args: unknown[]) => unknown) {
+      const listeners = (el._listeners as Record<string, Array<(...args: unknown[]) => unknown>>);
       if (!listeners[event]) listeners[event] = [];
       listeners[event].push(cb);
     },
@@ -75,7 +75,7 @@ vi.stubGlobal('navigator', {
   clipboard: { writeText: vi.fn() },
 });
 
-import { showShareDialog, closeShareDialog } from './share-dialog.js';
+import { closeShareDialog, showShareDialog } from './share-dialog.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -94,8 +94,8 @@ function findButton(text: string): Record<string, unknown> | undefined {
 function clickButton(text: string): void {
   const btn = findButton(text);
   if (!btn) throw new Error(`Button "${text}" not found`);
-  const listeners = (btn._listeners as Record<string, Function[]>);
-  for (const cb of listeners['click'] ?? []) cb();
+  const listeners = (btn._listeners as Record<string, Array<(...args: unknown[]) => unknown>>);
+  for (const cb of listeners.click ?? []) cb();
 }
 
 describe('share-dialog cleanup on close', () => {
@@ -106,9 +106,9 @@ describe('share-dialog cleanup on close', () => {
   });
 
   it('calls endShare when dialog closed after starting share but before connection', async () => {
-    let onConnectedCb: (() => void) | undefined;
+    let _onConnectedCb: (() => void) | undefined;
     const mockHandle = {
-      onConnected: (cb: () => void) => { onConnectedCb = cb; },
+      onConnected: (cb: () => void) => { _onConnectedCb = cb; },
       onAuthFailed: () => {},
     };
     mockShareSession.mockResolvedValue({ offer: 'test-offer', handle: mockHandle });

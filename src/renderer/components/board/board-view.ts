@@ -1,21 +1,22 @@
-import { appState } from '../../state.js';
-import { getBoard, addTag, removeTag, updateTagColor, getTagCount, TAG_COLORS } from '../../board-state.js';
-import { createColumnElement } from './board-column.js';
-import { showTaskModal } from './board-task-modal.js';
-import { initBoardDnd, isDragActive, addDragEndCallback } from './board-dnd.js';
-import { showConfirmModal } from '../modal.js';
-import { showContextMenu } from './board-context-menu.js';
-import { showBoardHelpDialog } from './board-help-dialog.js';
-import { instances as kanbanInstances } from '../kanban/instance.js';
-import type { BoardColumn, TagDefinition, BoardData } from '../../../shared/types.js';
-import {
-  setSearchQuery, getSearchQuery, toggleTagFilter, isTagFilterActive,
-  hasActiveFilters, getFilteredTasks, onFilterChange, getActiveTagFilters,
+import type { BoardData, TagDefinition } from '../../../shared/types.js';
+import {getActiveTagFilters,getFilteredTasks, getSearchQuery, 
+  hasActiveFilters, isTagFilterActive,onFilterChange, 
+  setSearchQuery, toggleTagFilter, 
 } from '../../board-filter.js';
+import { addTag, getBoard, getTagCount, removeTag, TAG_COLORS, updateTagColor } from '../../board-state.js';
+import { trackMount } from '../../feature-telemetry.js';
 import { onChange as onStatusChange } from '../../session-activity.js';
-import { onChange as onCostChange, getCost } from '../../session-cost.js';
-import { onChange as onContextChange, getContext } from '../../session-context.js';
+import { getContext, onChange as onContextChange } from '../../session-context.js';
+import { getCost, onChange as onCostChange } from '../../session-cost.js';
+import { appState } from '../../state.js';
+import { instances as kanbanInstances } from '../kanban/instance.js';
+import { showConfirmModal } from '../modal.js';
 import { STATUS_LABELS, updateMetricsRow } from './board-card.js';
+import { createColumnElement } from './board-column.js';
+import { showContextMenu } from './board-context-menu.js';
+import { addDragEndCallback, initBoardDnd, isDragActive } from './board-dnd.js';
+import { showBoardHelpDialog } from './board-help-dialog.js';
+import { showTaskModal } from './board-task-modal.js';
 
 let boardEl: HTMLElement | null = null;
 let pendingRender = false;
@@ -74,6 +75,7 @@ export function initBoard(): void {
 }
 
 export function createBoardView(): HTMLElement {
+  trackMount('kanban');
   const el = document.createElement('div');
   el.className = 'board-view';
 

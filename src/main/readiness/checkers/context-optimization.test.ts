@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as fs from 'fs';
 import * as child_process from 'child_process';
-import { genericContextProducer } from './context-optimization';
+import * as fs from 'fs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisContext } from '../types';
+import { genericContextProducer } from './context-optimization';
 
 vi.mock('fs');
 vi.mock('child_process');
 
 const mockFs = vi.mocked(fs);
-const mockCp = vi.mocked(child_process);
+const _mockCp = vi.mocked(child_process);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -18,14 +18,14 @@ function makeCtx(trackedFiles: string[]): AnalysisContext {
   return { trackedFiles };
 }
 
-/** Mock .vibeyardignore auto-creation: writeFileSync captures content, readFileSync returns it after creation. */
-function mockVibeyardignoreAutoCreate(): void {
-  let vibeyardignoreContent: string | null = null;
+/** Mock .ai-yardignore auto-creation: writeFileSync captures content, readFileSync returns it after creation. */
+function mockAIYardIgnoreAutoCreate(): void {
+  let aiYardIgnoreContent: string | null = null;
   mockFs.writeFileSync.mockImplementation((_p: fs.PathOrFileDescriptor, data: string | NodeJS.ArrayBufferView) => {
-    if (String(_p).endsWith('.vibeyardignore')) vibeyardignoreContent = String(data);
+    if (String(_p).endsWith('.ai-yardignore')) aiYardIgnoreContent = String(data);
   });
   mockFs.readFileSync.mockImplementation((p: fs.PathOrFileDescriptor) => {
-    if (String(p).endsWith('.vibeyardignore') && vibeyardignoreContent) return vibeyardignoreContent;
+    if (String(p).endsWith('.ai-yardignore') && aiYardIgnoreContent) return aiYardIgnoreContent;
     throw new Error('ENOENT');
   });
 }
@@ -86,15 +86,15 @@ describe('genericContextProducer', () => {
     expect(tagged[0].check.providerIds).toBeUndefined();
   });
 
-  it('creates .vibeyardignore with default patterns when it does not exist', () => {
+  it('creates .ai-yardignore with default patterns when it does not exist', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'small.ts': Array(100).fill('line').join('\n') });
 
     genericContextProducer.produce('/test/project', makeCtx(['small.ts']));
 
     expect(mockFs.writeFileSync).toHaveBeenCalledWith(
-      expect.stringContaining('.vibeyardignore'),
+      expect.stringContaining('.ai-yardignore'),
       expect.stringContaining('package-lock.json'),
       'utf-8',
     );
@@ -103,13 +103,13 @@ describe('genericContextProducer', () => {
     expect(writtenContent).toContain('*.generated.*');
   });
 
-  it('does not overwrite existing .vibeyardignore', () => {
+  it('does not overwrite existing .ai-yardignore', () => {
     mockFs.readFileSync.mockImplementation((p: fs.PathOrFileDescriptor) => {
-      if (String(p).endsWith('.vibeyardignore')) return 'custom-pattern.ts\n';
+      if (String(p).endsWith('.ai-yardignore')) return 'custom-pattern.ts\n';
       throw new Error('ENOENT');
     });
     mockFs.statSync.mockImplementation((p: fs.PathLike) => {
-      if (String(p).endsWith('.vibeyardignore')) return { isFile: () => true } as fs.Stats;
+      if (String(p).endsWith('.ai-yardignore')) return { isFile: () => true } as fs.Stats;
       throw new Error('ENOENT');
     });
     mockFs.writeFileSync.mockImplementation(() => {});
@@ -122,18 +122,18 @@ describe('genericContextProducer', () => {
 
   it('detects large files', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'big.ts': Array(6000).fill('line').join('\n') });
 
     const tagged = genericContextProducer.produce('/test/project', makeCtx(['big.ts', 'small.ts']));
     const check = tagged.find(t => t.check.id === 'large-files')!.check;
     expect(check.status).toBe('warning');
-    expect(check.description).toContain('.vibeyardignore');
+    expect(check.description).toContain('.ai-yardignore');
   });
 
   it('flags files just over the 1000-line threshold', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'medium.ts': Array(1001).fill('line').join('\n') });
 
     const tagged = genericContextProducer.produce('/test/project', makeCtx(['medium.ts']));
@@ -144,7 +144,7 @@ describe('genericContextProducer', () => {
 
   it('passes for files at exactly the 1000-line threshold', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'edge.ts': Array(1000).fill('line').join('\n') });
 
     const tagged = genericContextProducer.produce('/test/project', makeCtx(['edge.ts']));
@@ -154,7 +154,7 @@ describe('genericContextProducer', () => {
 
   it('passes when no large files found', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'small.ts': Array(100).fill('line').join('\n') });
 
     const tagged = genericContextProducer.produce('/test/project', makeCtx(['small.ts']));
@@ -162,9 +162,9 @@ describe('genericContextProducer', () => {
     expect(check.status).toBe('pass');
   });
 
-  it('ignores package-lock.json via auto-created .vibeyardignore defaults', () => {
+  it('ignores package-lock.json via auto-created .ai-yardignore defaults', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({ 'package-lock.json': Array(20000).fill('{}').join('\n') });
 
     const tagged = genericContextProducer.produce('/test/project', makeCtx(['package-lock.json']));
@@ -172,13 +172,13 @@ describe('genericContextProducer', () => {
     expect(check.status).toBe('pass');
   });
 
-  it('applies custom .vibeyardignore patterns', () => {
+  it('applies custom .ai-yardignore patterns', () => {
     mockFs.readFileSync.mockImplementation((p: fs.PathOrFileDescriptor) => {
-      if (String(p).endsWith('.vibeyardignore')) return 'generated-data.json\n';
+      if (String(p).endsWith('.ai-yardignore')) return 'generated-data.json\n';
       throw new Error('ENOENT');
     });
     mockFs.statSync.mockImplementation((p: fs.PathLike) => {
-      if (String(p).endsWith('.vibeyardignore')) return { isFile: () => true } as fs.Stats;
+      if (String(p).endsWith('.ai-yardignore')) return { isFile: () => true } as fs.Stats;
       throw new Error('ENOENT');
     });
     mockFs.writeFileSync.mockImplementation(() => {});
@@ -191,7 +191,7 @@ describe('genericContextProducer', () => {
 
   it('still flags large files not matching any ignore pattern', () => {
     mockFs.statSync.mockImplementation(() => { throw new Error('ENOENT'); });
-    mockVibeyardignoreAutoCreate();
+    mockAIYardIgnoreAutoCreate();
     mockCountFileLines({
       'big-module.ts': Array(6000).fill('line').join('\n'),
       'package-lock.json': Array(20000).fill('{}').join('\n'),

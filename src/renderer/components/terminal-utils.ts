@@ -1,7 +1,7 @@
-import type { Terminal } from '@xterm/xterm';
 import { WebglAddon } from '@xterm/addon-webgl';
-import { shortcutManager } from '../shortcuts.js';
+import type { Terminal } from '@xterm/xterm';
 import { isWin } from '../platform.js';
+import { shortcutManager } from '../shortcuts.js';
 import { appState } from '../state.js';
 
 type ExtraKeyHandler = (e: KeyboardEvent) => boolean | undefined;
@@ -18,7 +18,7 @@ export function attachCopyOnSelect(terminal: Terminal): void {
   terminal.onSelectionChange(() => {
     if (!appState.preferences.copyOnSelect) return;
     const selection = terminal.getSelection();
-    if (selection) window.vibeyard.clipboard.write(selection).catch(() => {});
+    if (selection) window.aiyard.clipboard.write(selection).catch(() => {});
   });
 }
 

@@ -1,5 +1,5 @@
-import { stripAnsi } from './ansi';
 import type { CostData, CostInfo } from '../shared/types';
+import { stripAnsi } from './ansi';
 
 export type { CostInfo } from '../shared/types';
 
@@ -42,11 +42,11 @@ export function parseCost(sessionId: string, rawData: string): void {
   if (costs.has(sessionId) && costs.get(sessionId)!.totalInputTokens > 0) return;
 
   const clean = stripAnsi(rawData);
-  let match: RegExpExecArray | null;
   let lastCost: string | null = null;
-
-  while ((match = COST_RE.exec(clean)) !== null) {
+  let match = COST_RE.exec(clean);
+  while (match !== null) {
     lastCost = match[0];
+    match = COST_RE.exec(clean);
   }
 
   if (lastCost) {
@@ -108,8 +108,8 @@ export function restoreCost(sessionId: string, cost: CostInfo): void {
 }
 
 export function formatTokens(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'm';
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}m`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
   return String(n);
 }
 

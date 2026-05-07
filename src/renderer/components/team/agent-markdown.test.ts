@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildAgentMarkdown } from './agent-markdown';
 import type { TeamMember } from '../../../shared/types';
+import { buildAgentMarkdown } from './agent-markdown';
 
 function member(overrides: Partial<TeamMember> = {}): TeamMember {
   return {

@@ -1,4 +1,4 @@
-import type { ILinkProvider, ILink, IBufferRange, Terminal } from '@xterm/xterm';
+import type { IBufferRange, ILink, ILinkProvider, Terminal } from '@xterm/xterm';
 import { appState } from '../state.js';
 
 // Matches GitHub issue/PR references like #123
@@ -18,8 +18,8 @@ export class GithubLinkProvider implements ILinkProvider {
     const links: ILink[] = [];
 
     GITHUB_REF_RE.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = GITHUB_REF_RE.exec(lineText)) !== null) {
+    let match = GITHUB_REF_RE.exec(lineText);
+    while (match !== null) {
       const range: IBufferRange = {
         start: { x: match.index + 1, y: bufferLineNumber },
         end: { x: match.index + match[0].length, y: bufferLineNumber },
@@ -29,9 +29,10 @@ export class GithubLinkProvider implements ILinkProvider {
         range,
         text: match[0],
         activate: () => {
-          window.vibeyard.app.openExternal(`${this.repoUrl}/issues/${issueNumber}`);
+          window.aiyard.app.openExternal(`${this.repoUrl}/issues/${issueNumber}`);
         },
       });
+      match = GITHUB_REF_RE.exec(lineText);
     }
 
     callback(links.length > 0 ? links : undefined);
@@ -40,12 +41,11 @@ export class GithubLinkProvider implements ILinkProvider {
 
 // Matches file paths like: src/foo/bar.ts:10-20, ./src/foo.ts:10, src/foo.ts
 // Must contain a `/` and end with a file extension
-const FILE_PATH_RE = /(?:^|[\s'"(\[{])(\.\/)?((?:[a-zA-Z0-9_@.-]+\/)+[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)(?::(\d+)(?:-(\d+))?)?/g;
+const FILE_PATH_RE = /(?:^|[\s'"([{])(\.\/)?((?:[a-zA-Z0-9_@.-]+\/)+[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)(?::(\d+)(?:-(\d+))?)?/g;
 
 export class FilePathLinkProvider implements ILinkProvider {
   constructor(
-    private projectId: string,
-    private projectPath: string,
+    private projectId: string,_projectPath: string,
     private terminal: Terminal
   ) {}
 
@@ -60,8 +60,8 @@ export class FilePathLinkProvider implements ILinkProvider {
     const links: ILink[] = [];
 
     FILE_PATH_RE.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = FILE_PATH_RE.exec(lineText)) !== null) {
+    let match = FILE_PATH_RE.exec(lineText);
+    while (match !== null) {
       const prefix = match[0].length - (match[1] || '').length - match[2].length - (match[3] ? `:${match[3]}` : '').length - (match[4] ? `-${match[4]}` : '').length;
       const startX = match.index + prefix + 1; // 1-based
       const fullMatchText = match[0].substring(prefix);
@@ -83,6 +83,7 @@ export class FilePathLinkProvider implements ILinkProvider {
           appState.addFileReaderSession(this.projectId, filePath, lineNumber);
         },
       });
+      match = FILE_PATH_RE.exec(lineText);
     }
 
     callback(links.length > 0 ? links : undefined);

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: vi.fn(), save: vi.fn() },
   },
 });
@@ -24,10 +24,10 @@ vi.mock('./provider-availability.js', () => ({
   getProviderCapabilities: vi.fn(),
 }));
 
-import { appState, _resetForTesting } from './state';
-import { addTask, updateTask, getBoard, getColumnByBehavior, getTaskBySessionId } from './board-state';
 import { initBoardSessionSync } from './board-session-sync';
-import { _resetForTesting as resetActivity, setHookStatus, initSession } from './session-activity';
+import { addTask, getBoard, updateTask } from './board-state';
+import { initSession, _resetForTesting as resetActivity, setHookStatus } from './session-activity';
+import { _resetForTesting, appState } from './state';
 
 beforeEach(() => {
   vi.clearAllMocks();

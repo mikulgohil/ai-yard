@@ -1,10 +1,10 @@
 import * as path from 'path';
 import picomatch from 'picomatch';
 import type { ReadinessCheck } from '../../../shared/types';
-import type { ReadinessCheckProducer, TaggedCheck, AnalysisContext } from '../types';
+import type { AnalysisContext, ReadinessCheckProducer, TaggedCheck } from '../types';
 import { fileExists } from '../utils';
-import { checkNotBloated } from './instruction-file-checks';
 import { claudeInstructionFileOpts } from './ai-instructions';
+import { checkNotBloated } from './instruction-file-checks';
 
 const SENSITIVE_FILE_PATTERNS = [
   '.env', '.env.*',

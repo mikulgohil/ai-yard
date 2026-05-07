@@ -1,13 +1,13 @@
-import { Terminal } from '@xterm/xterm';
-import { getTerminalTheme } from '../terminal-theme.js';
 import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
-import { appState } from '../state.js';
-import { fitAllVisible } from './terminal-pane.js';
-import { destroySearchBar, hideSearchBar } from './search-bar.js';
-import { shortcutManager, displayKeys } from '../shortcuts.js';
-import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
+import { Terminal } from '@xterm/xterm';
 import { esc } from '../dom-utils.js';
+import { displayKeys, shortcutManager } from '../shortcuts.js';
+import { appState } from '../state.js';
+import { getTerminalTheme } from '../terminal-theme.js';
+import { destroySearchBar, hideSearchBar } from './search-bar.js';
+import { fitAllVisible } from './terminal-pane.js';
+import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
 
 interface ShellTerminalInstance {
   id: string;
@@ -84,7 +84,7 @@ function createShell(projectId: string): ShellTerminalInstance {
   const shellId = crypto.randomUUID();
   const sessionId = `shell-${projectId}-${shellId}`;
 
-  attachClipboardCopyHandler(terminal, undefined, (data) => window.vibeyard.pty.write(sessionId, data));
+  attachClipboardCopyHandler(terminal, undefined, (data) => window.aiyard.pty.write(sessionId, data));
 
   const instance: ShellTerminalInstance = {
     id: shellId,
@@ -99,7 +99,7 @@ function createShell(projectId: string): ShellTerminalInstance {
   };
 
   terminal.onData((data) => {
-    window.vibeyard.pty.write(sessionId, data);
+    window.aiyard.pty.write(sessionId, data);
   });
 
   getShellsFor(projectId).push(instance);
@@ -113,7 +113,7 @@ async function spawnShell(instance: ShellTerminalInstance, projectPath: string):
   const overlay = instance.element.querySelector('.terminal-exit-overlay');
   if (overlay) overlay.remove();
 
-  await window.vibeyard.pty.createShell(instance.sessionId, projectPath);
+  await window.aiyard.pty.createShell(instance.sessionId, projectPath);
 }
 
 function activateShellInstance(instance: ShellTerminalInstance): void {
@@ -215,7 +215,7 @@ function closeShell(projectId: string, shellId: string): void {
   const instance = list[idx];
 
   destroySearchBar(instance.sessionId);
-  window.vibeyard.pty.kill(instance.sessionId);
+  window.aiyard.pty.kill(instance.sessionId);
   instance.terminal.dispose();
   instance.element.remove();
   list.splice(idx, 1);
@@ -279,7 +279,7 @@ function fitActiveShell(): void {
   try {
     instance.fitAddon.fit();
     const { cols, rows } = instance.terminal;
-    window.vibeyard.pty.resize(instance.sessionId, cols, rows);
+    window.aiyard.pty.resize(instance.sessionId, cols, rows);
   } catch {
     // not visible yet
   }
@@ -336,7 +336,7 @@ function destroyAllShells(projectId: string): void {
   if (!list) return;
   for (const instance of list) {
     destroySearchBar(instance.sessionId);
-    window.vibeyard.pty.kill(instance.sessionId);
+    window.aiyard.pty.kill(instance.sessionId);
     instance.terminal.dispose();
     instance.element.remove();
   }

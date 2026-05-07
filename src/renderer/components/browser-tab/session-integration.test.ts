@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { BrowserTabInstance } from './types.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionRecord } from '../../state.js';
+import type { BrowserTabInstance } from './types.js';
 
 const setActiveSession = vi.fn();
 const promptNewSession = vi.fn();

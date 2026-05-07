@@ -1,6 +1,6 @@
-import type { ReadinessCheckProducer, TaggedCheck, AnalysisContext } from '../types';
-import { runAllInstructionChecks, type InstructionFileOpts } from './instruction-file-checks';
 import type { ProviderId } from '../../../shared/types';
+import type { AnalysisContext, ReadinessCheckProducer, TaggedCheck } from '../types';
+import { type InstructionFileOpts, runAllInstructionChecks } from './instruction-file-checks';
 
 export function makeInstructionProducer(providerId: ProviderId, opts: InstructionFileOpts): ReadinessCheckProducer {
   return {

@@ -1,0 +1,13 @@
+{
+  "id": "postgres",
+  "name": "PostgreSQL",
+  "description": "Read-only SQL access to a PostgreSQL database. Issue SELECT queries and inspect schema; the server never mutates data.",
+  "domain": "data",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-postgres",
+    "postgresql://user:password@host:5432/dbname"
+  ],
+  "setupUrl": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres"
+}

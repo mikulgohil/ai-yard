@@ -1,7 +1,7 @@
-import { appState } from './state.js';
-import { onChange as onStatusChange } from './session-activity.js';
-import { getTaskBySessionId, moveTask, updateTask, getColumnByBehavior } from './board-state.js';
 import type { BoardTask } from '../shared/types.js';
+import { getColumnByBehavior, getTaskBySessionId, moveTask, updateTask } from './board-state.js';
+import { onChange as onStatusChange } from './session-activity.js';
+import { appState } from './state.js';
 
 function moveTaskToDone(task: BoardTask): void {
   const doneCol = getColumnByBehavior('terminal');

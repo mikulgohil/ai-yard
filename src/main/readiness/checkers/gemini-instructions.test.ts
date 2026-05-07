@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
-import { geminiInstructionsProducer } from './gemini-instructions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisContext } from '../types';
+import { geminiInstructionsProducer } from './gemini-instructions';
 
 vi.mock('fs');
 
@@ -59,7 +59,7 @@ describe('geminiInstructionsProducer', () => {
   });
 
   it('passes GEMINI.md exists check', () => {
-    const content = Array(100).fill('# Line').join('\n') + '\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview';
+    const content = `${Array(100).fill('# Line').join('\n')}\n## Build\nnpm run build\n## Testing\nnpm test\n## Architecture\nSome overview`;
     mockFileExists({ 'GEMINI.md': content });
 
     const tagged = geminiInstructionsProducer.produce('/test/project', ctx);

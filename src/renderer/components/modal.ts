@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: overlay is a singleton DOM element with attached cleanup state; introducing a typed shape would be more disruptive than the casts.
 import { createCustomSelect } from './custom-select.js';
 
 export interface FieldDef {

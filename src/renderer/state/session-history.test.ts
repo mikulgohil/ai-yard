@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -29,8 +29,9 @@ vi.mock('../provider-availability.js', () => ({
   getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
-import { appState, _resetForTesting } from '../state';
 import { getCost } from '../session-cost.js';
+import { _resetForTesting, appState } from '../state';
+
 const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {
@@ -235,7 +236,7 @@ describe('archiveSession via removeSession()', () => {
 
   it('bulk removeAllSessions archives each', () => {
     const { project, sessions } = addProjectWithSessions(3);
-    sessions.forEach((s, i) => appState.updateSessionCliId(project.id, s.id, `cli-bulk-${i}`));
+    sessions.forEach((s, i) => { appState.updateSessionCliId(project.id, s.id, `cli-bulk-${i}`); });
     appState.removeAllSessions(project.id);
     expect(appState.getSessionHistory(project.id)).toHaveLength(3);
   });
@@ -348,7 +349,7 @@ describe('removeHistoryEntry()', () => {
 describe('clearSessionHistory()', () => {
   it('clears all history for a project', () => {
     const { project, sessions } = addProjectWithSessions(3);
-    sessions.forEach((s, i) => appState.updateSessionCliId(project.id, s.id, `cli-clear-${i}`));
+    sessions.forEach((s, i) => { appState.updateSessionCliId(project.id, s.id, `cli-clear-${i}`); });
     appState.removeAllSessions(project.id);
     expect(appState.getSessionHistory(project.id)).toHaveLength(3);
     appState.clearSessionHistory(project.id);
@@ -383,7 +384,7 @@ describe('clearSessionHistory()', () => {
 
   it('preserves bookmarked sessions when clearing', () => {
     const { project, sessions } = addProjectWithSessions(3);
-    sessions.forEach((s, i) => appState.updateSessionCliId(project.id, s.id, `cli-bm-clear-${i}`));
+    sessions.forEach((s, i) => { appState.updateSessionCliId(project.id, s.id, `cli-bm-clear-${i}`); });
     appState.removeAllSessions(project.id);
     const historyBefore = appState.getSessionHistory(project.id);
     expect(historyBefore).toHaveLength(3);

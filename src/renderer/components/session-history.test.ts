@@ -30,7 +30,9 @@ const mockAppState = vi.hoisted(() => {
     removeHistoryEntry: vi.fn(),
     resumeFromHistory: vi.fn(),
     emit(event: string) {
-      listeners.get(event)?.forEach(cb => cb());
+      listeners.get(event)?.forEach(cb => {
+        cb();
+      });
     },
     reset() {
       listeners.clear();

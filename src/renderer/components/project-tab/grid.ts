@@ -1,6 +1,6 @@
-import { GridStack, type GridStackNode, type GridItemHTMLElement } from 'gridstack';
+import { type GridItemHTMLElement, GridStack, type GridStackNode } from 'gridstack';
 import type { OverviewLayout, OverviewWidget, OverviewWidgetType } from '../../../shared/types.js';
-import type { WidgetInstance, WidgetHost } from './widgets/widget-host.js';
+import type { WidgetHost, WidgetInstance } from './widgets/widget-host.js';
 import { getWidgetMeta } from './widgets/widget-registry.js';
 
 interface MountedWidget {

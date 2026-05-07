@@ -1,9 +1,9 @@
 import type { BoardColumn, BoardTask } from '../../../shared/types.js';
-import { renameColumn, deleteColumn, addColumn, getBoard, reorderColumns, getColumnByBehavior } from '../../board-state.js';
-import { createCardElement } from './board-card.js';
-import { showTaskModal } from './board-task-modal.js';
-import { showContextMenu } from './board-context-menu.js';
+import { addColumn, deleteColumn, getBoard, getColumnByBehavior, renameColumn, reorderColumns } from '../../board-state.js';
 import { showConfirmModal } from '../modal.js';
+import { createCardElement } from './board-card.js';
+import { showContextMenu } from './board-context-menu.js';
+import { showTaskModal } from './board-task-modal.js';
 import { renderBoard } from './board-view.js';
 
 export function createColumnElement(column: BoardColumn, tasks: BoardTask[], totalCount?: number): HTMLElement {

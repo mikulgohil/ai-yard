@@ -7,27 +7,27 @@ const { execSync, spawn } = require('child_process');
 const os = require('os');
 
 const { version } = require('../package.json');
-const APP_DIR = path.join(os.homedir(), '.vibeyard', 'app');
+const APP_DIR = path.join(os.homedir(), '.ai-yard', 'app');
 const VERSION_FILE = path.join(APP_DIR, 'version.json');
 const isWin = process.platform === 'win32';
 const isMac = process.platform === 'darwin';
 const APP_PATH = isWin
-  ? path.join(APP_DIR, 'Vibeyard.exe')
-  : path.join(APP_DIR, 'Vibeyard.app');
-const REPO = 'elirantutia/vibeyard';
+  ? path.join(APP_DIR, 'AI-yard.exe')
+  : path.join(APP_DIR, 'AI-yard.app');
+const REPO = 'mikulgohil/ai-yard';
 const RELEASES_URL = `https://github.com/${REPO}/releases`;
 
 function getAssetName() {
   if (isWin) {
-    return `Vibeyard-${version}-win-${process.arch === 'arm64' ? 'arm64' : 'x64'}.zip`;
+    return `AI-yard-${version}-win-${process.arch === 'arm64' ? 'arm64' : 'x64'}.zip`;
   }
   if (isMac) {
     return process.arch === 'arm64'
-      ? `Vibeyard-${version}-arm64-mac.zip`
-      : `Vibeyard-${version}-mac.zip`;
+      ? `AI-yard-${version}-arm64-mac.zip`
+      : `AI-yard-${version}-mac.zip`;
   }
   // Linux
-  return `Vibeyard-${version}-linux-${process.arch}.AppImage`;
+  return `AI-yard-${version}-linux-${process.arch}.AppImage`;
 }
 
 function getInstalledVersion() {
@@ -45,7 +45,7 @@ function followRedirects(url, maxRedirects = 10) {
       return reject(new Error('Too many redirects'));
     }
     const mod = url.startsWith('https') ? https : require('http');
-    mod.get(url, { headers: { 'User-Agent': 'vibeyard-cli' } }, (res) => {
+    mod.get(url, { headers: { 'User-Agent': 'ai-yard-cli' } }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         resolve(followRedirects(res.headers.location, maxRedirects - 1));
       } else {
@@ -62,7 +62,7 @@ async function download(assetName) {
   fs.mkdirSync(APP_DIR, { recursive: true });
   fs.rmSync(tmpFile, { force: true });
 
-  console.log(`Downloading Vibeyard v${version} for ${process.platform}-${process.arch}...`);
+  console.log(`Downloading AI-yard v${version} for ${process.platform}-${process.arch}...`);
 
   const res = await followRedirects(url);
 
@@ -158,22 +158,22 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`Vibeyard v${version} — Terminal-centric IDE for AI-powered CLI tools
+    console.log(`AI-yard v${version} — Terminal-centric IDE for AI-powered CLI tools
 
-Usage: vibeyard [options]
+Usage: ai-yard [options]
 
 Options:
   --update    Force re-download of the latest app build
   --version   Print version and exit
   --help      Show this help message
 
-Any other arguments are forwarded to the Vibeyard app.`);
+Any other arguments are forwarded to the AI-yard app.`);
     return;
   }
 
   if (args.includes('--version') || args.includes('-v')) {
     const installed = getInstalledVersion();
-    console.log(`vibeyard v${version} (app: ${installed ? `v${installed}` : 'not installed'})`);
+    console.log(`ai-yard v${version} (app: ${installed ? `v${installed}` : 'not installed'})`);
     return;
   }
 

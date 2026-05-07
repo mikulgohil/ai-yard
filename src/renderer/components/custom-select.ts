@@ -68,14 +68,18 @@ export function createCustomSelect(
     const changed = hidden.value !== opt.value;
     hidden.value = opt.value;
     trigger.textContent = opt.label;
-    items.forEach(el => el.classList.remove('selected'));
+    items.forEach(el => {
+      el.classList.remove('selected');
+    });
     items[index].classList.add('selected');
     closeDropdown();
     if (changed) onChange?.(opt.value);
   }
 
   function updateActive(): void {
-    items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+    items.forEach((el, i) => {
+      el.classList.toggle('active', i === activeIndex);
+    });
     if (activeIndex >= 0) items[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }
 
@@ -90,7 +94,9 @@ export function createCustomSelect(
     dropdown.classList.remove('visible');
     trigger.classList.remove('open');
     activeIndex = -1;
-    items.forEach(el => el.classList.remove('active'));
+    items.forEach(el => {
+      el.classList.remove('active');
+    });
   }
 
   function isOpen(): boolean {
@@ -151,7 +157,9 @@ export function createCustomSelect(
       if (index < 0 || options[index].disabled) return;
       hidden.value = options[index].value;
       trigger.textContent = options[index].label;
-      items.forEach((el, i) => el.classList.toggle('selected', i === index));
+      items.forEach((el, i) => {
+        el.classList.toggle('selected', i === index);
+      });
     },
     destroy() { document.removeEventListener('mousedown', onOutsideClick); },
   };

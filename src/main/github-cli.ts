@@ -2,11 +2,11 @@ import { execFile } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import type { GithubFetchResult, GithubItem, GithubRepo } from '../shared/types';
 import { GITHUB_MAX_PER_PAGE } from '../shared/constants';
-import { getFullPath } from './pty-manager';
+import type { GithubFetchResult, GithubItem, GithubRepo } from '../shared/types';
 import { getGitRemoteUrl } from './git-status';
-import { isWin, pathSep, whichCmd } from './platform';
+import { isWin, whichCmd } from './platform';
+import { getFullPath } from './pty-manager';
 
 let cachedAvailable: boolean | null = null;
 
@@ -71,7 +71,7 @@ interface GhApiOptions {
 
 async function ghApi<T = unknown>(apiPath: string, opts: GhApiOptions = {}): Promise<T> {
   const qs = opts.query
-    ? '?' + Object.entries(opts.query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')
+    ? `?${Object.entries(opts.query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')}`
     : '';
   const fullPath = `${apiPath}${qs}`;
 
@@ -105,7 +105,7 @@ export interface ListOptions {
 }
 
 export async function listPullRequests(repo: string, opts: ListOptions): Promise<GithubFetchResult> {
-  if (!repo || !repo.includes('/')) return { ok: false, error: 'Invalid repo. Expected owner/name.' };
+  if (!repo?.includes('/')) return { ok: false, error: 'Invalid repo. Expected owner/name.' };
   if (!(await isGhAvailable())) return { ok: false, error: 'gh CLI not installed' };
   try {
     const items = await ghApi<GithubItem[]>(`repos/${repo}/pulls`, {
@@ -118,7 +118,7 @@ export async function listPullRequests(repo: string, opts: ListOptions): Promise
 }
 
 export async function listIssues(repo: string, opts: ListOptions): Promise<GithubFetchResult> {
-  if (!repo || !repo.includes('/')) return { ok: false, error: 'Invalid repo. Expected owner/name.' };
+  if (!repo?.includes('/')) return { ok: false, error: 'Invalid repo. Expected owner/name.' };
   if (!(await isGhAvailable())) return { ok: false, error: 'gh CLI not installed' };
   try {
     // /issues endpoint returns PRs too — search API filters server-side via is:issue.

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteAgentFile, writeAgentFile } from './agent-files';
 
 vi.mock('fs', () => {

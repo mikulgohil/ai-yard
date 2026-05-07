@@ -1,5 +1,5 @@
-import { appState } from './state.js';
 import { onChange, type SessionStatus } from './session-activity.js';
+import { appState } from './state.js';
 
 const previousStatus = new Map<string, SessionStatus>();
 
@@ -21,13 +21,13 @@ function showNotification(sessionId: string, status: SessionStatus): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
   const name = getSessionName(sessionId);
-  const notification = new Notification('Vibeyard', {
+  const notification = new Notification('AI-yard', {
     body: bodyForStatus(name, status),
     silent: true,
   });
 
   notification.onclick = () => {
-    window.vibeyard.app.focus();
+    window.aiyard.app.focus();
     const project = appState.projects.find(p =>
       p.sessions.some(s => s.id === sessionId),
     );

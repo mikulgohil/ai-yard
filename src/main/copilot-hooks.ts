@@ -1,17 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { STATUS_DIR, SCRIPT_DIR } from './hook-status';
-import { installEventScript, installHookScripts } from './hook-commands';
+import type { InspectorEventType, SettingsValidationResult } from '../shared/types';
 import { readFileSafe, readJsonSafe } from './fs-utils';
+import { installEventScript, installHookScripts } from './hook-commands';
+import { SCRIPT_DIR, STATUS_DIR } from './hook-status';
 import { pythonBin } from './platform';
-import type { SettingsValidationResult, InspectorEventType } from '../shared/types';
 
 type HookStatus = 'waiting' | 'working' | 'completed';
 
-export const COPILOT_HOOK_MARKER = '# vibeyard-hook';
-export const SESSION_ID_VAR = 'VIBEYARD_SESSION_ID';
+export const COPILOT_HOOK_MARKER = '# ai-yard-hook';
+export const SESSION_ID_VAR = 'AIYARD_SESSION_ID';
 
-const HOOK_FILENAME = 'vibeyard-copilot-hooks.json';
+const HOOK_FILENAME = 'ai-yard-copilot-hooks.json';
 const EVENT_CAPTURE_SCRIPT = 'copilot_event_capture.py';
 
 // Per https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-hooks
@@ -53,7 +53,7 @@ function isIdeHook(h: HookEntry): boolean {
 
 // The Python dispatcher script handles all six events. Dispatched by argv[1].
 // Reads stdin JSON (Copilot hook payload), writes .status + .events keyed off
-// $VIBEYARD_SESSION_ID, opportunistically captures the Copilot session ID into
+// $AIYARD_SESSION_ID, opportunistically captures the Copilot session ID into
 // .sessionid, and for postToolUse failures / errorOccurred also writes a
 // .toolfailure record.
 //
@@ -67,7 +67,7 @@ function isIdeHook(h: HookEntry): boolean {
 // Some Copilot builds nest the payload under `input` / `data`, so the script
 // checks all three shapes before deciding whether it can emit .sessionid.
 //
-// The hook subprocess still keys its sidecar files off the Vibeyard session ID
+// The hook subprocess still keys its sidecar files off the AI-yard session ID
 // from CopilotProvider.buildEnv(), but when Copilot also includes its own
 // session ID we persist that separately for resume/history support.
 const EVENT_CAPTURE_SCRIPT_BODY = `import sys,json,os,time,random,string
@@ -148,7 +148,7 @@ function buildHookEntry(event: string): HookEntry {
   const { status, type } = COPILOT_EVENTS[event];
   const script = path.join(SCRIPT_DIR, EVENT_CAPTURE_SCRIPT).replace(/\\/g, '/');
   const statusDir = STATUS_DIR.replace(/\\/g, '/');
-  // Hook subprocesses spawned by Copilot CLI inherit VIBEYARD_SESSION_ID from
+  // Hook subprocesses spawned by Copilot CLI inherit AIYARD_SESSION_ID from
   // the PTY env. The Python script reads argv[4] as the env var *name*.
   const argv = `"${event}" "${type}" "${status}" "${SESSION_ID_VAR}" "${statusDir}"`;
   const bash = `${pythonBin} "${script}" ${argv} ${COPILOT_HOOK_MARKER}`;
@@ -183,7 +183,7 @@ export function installCopilotHooks(projectPath?: string): void {
     version: 1,
     hooks: buildHooksConfig(),
   };
-  const serialized = JSON.stringify(payload, null, 2) + '\n';
+  const serialized = `${JSON.stringify(payload, null, 2)}\n`;
   // Skip write when content is byte-identical — spawnPty calls this on every
   // Copilot session, and the payload is deterministic across spawns.
   if (readFileSafe(filePath) !== serialized) {
@@ -202,7 +202,7 @@ export function validateCopilotHooks(projectPath?: string): SettingsValidationRe
   );
 
   if (!target) {
-    return { statusLine: 'vibeyard', hooks: 'missing', hookDetails };
+    return { statusLine: 'aiyard', hooks: 'missing', hookDetails };
   }
 
   const raw = readJsonSafe(hookFilePath(target));
@@ -219,7 +219,7 @@ export function validateCopilotHooks(projectPath?: string): SettingsValidationRe
   if (found === EXPECTED_HOOK_EVENTS.length) status = 'complete';
   else if (found > 0) status = 'partial';
 
-  return { statusLine: 'vibeyard', hooks: status, hookDetails };
+  return { statusLine: 'aiyard', hooks: status, hookDetails };
 }
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 import { appState } from '../state.js';
+import { showMcpMarketplace } from './mcp/marketplace-modal.js';
 
 let cleanupFn: (() => void) | null = null;
 let onAddedFn: (() => void) | null = null;
@@ -16,6 +17,8 @@ function getOverlay(): HTMLElement {
       <div class="modal-title">Add MCP Server</div>
       <div id="mcp-add-body" class="modal-body mcp-add-body"></div>
       <div class="modal-actions">
+        <button id="mcp-add-browse" class="modal-btn">Browse marketplace…</button>
+        <span class="modal-actions-spacer" style="flex:1"></span>
         <button id="mcp-add-cancel" class="modal-btn">Cancel</button>
         <button id="mcp-add-confirm" class="modal-btn primary">Add</button>
       </div>
@@ -83,18 +86,28 @@ export function showMcpAddModal(onAdded: () => void): void {
     </div>
     <div id="mcp-add-error" class="modal-error" style="display:none"></div>`;
 
-  body.querySelectorAll('input[name="mcp-add-type"]').forEach(r =>
-    r.addEventListener('change', () => rebuildTypeFields(overlay)),
-  );
+  body.querySelectorAll('input[name="mcp-add-type"]').forEach(r => {
+    r.addEventListener('change', () => rebuildTypeFields(overlay));
+  });
 
   overlay.style.display = '';
   requestAnimationFrame(() => (overlay.querySelector('#mcp-add-name') as HTMLInputElement).focus());
 
   const cancel = overlay.querySelector('#mcp-add-cancel')!;
   const confirm = overlay.querySelector('#mcp-add-confirm')!;
+  const browse = overlay.querySelector('#mcp-add-browse')!;
 
   const handleCancel = () => closeMcpAddModal();
   const handleConfirm = () => submit(overlay);
+  const handleBrowse = () => {
+    void showMcpMarketplace({
+      onInstalled: () => {
+        // Marketplace installed a server → close add modal and notify caller.
+        closeMcpAddModal();
+        onAddedFn?.();
+      },
+    });
+  };
   const handleKeydown = (e: Event) => {
     const ke = e as KeyboardEvent;
     if (ke.key === 'Escape') { ke.preventDefault(); closeMcpAddModal(); }
@@ -103,11 +116,13 @@ export function showMcpAddModal(onAdded: () => void): void {
 
   cancel.addEventListener('click', handleCancel);
   confirm.addEventListener('click', handleConfirm);
+  browse.addEventListener('click', handleBrowse);
   overlay.addEventListener('keydown', handleKeydown);
 
   cleanupFn = () => {
     cancel.removeEventListener('click', handleCancel);
     confirm.removeEventListener('click', handleConfirm);
+    browse.removeEventListener('click', handleBrowse);
     overlay.removeEventListener('keydown', handleKeydown);
   };
 }
@@ -157,7 +172,7 @@ async function submit(overlay: HTMLElement): Promise<void> {
     return;
   }
 
-  const result = await window.vibeyard.mcp.addServer(name, config, scope, projectPath);
+  const result = await window.aiyard.mcp.addServer(name, config, scope, projectPath);
   if (!result.success) {
     showError(overlay, result.error || 'Failed to add server');
     return;

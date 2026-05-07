@@ -1,7 +1,7 @@
-import { SearchAddon } from '@xterm/addon-search';
-import { Terminal } from '@xterm/xterm';
-import { getSearchAddon, getTerminalInstance } from './terminal-pane.js';
+import type { SearchAddon } from '@xterm/addon-search';
+import type { Terminal } from '@xterm/xterm';
 import { getShellTerminalInstance } from './project-terminal.js';
+import { getSearchAddon, getTerminalInstance } from './terminal-pane.js';
 
 export interface SearchResultState {
   currentIndex: number;

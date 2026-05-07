@@ -1,6 +1,6 @@
-import { shortcutManager, displayKeys } from '../shortcuts.js';
-import { createModalShell, createModalButton } from './modal-shell.js';
-import { buildSection, dot, badge, mono, type IndicatorRow } from './help-shared.js';
+import { displayKeys, shortcutManager } from '../shortcuts.js';
+import { badge, buildSection, dot, type IndicatorRow, mono } from './help-shared.js';
+import { createModalButton, createModalShell } from './modal-shell.js';
 
 let cleanupFn: (() => void) | null = null;
 

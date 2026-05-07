@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import type * as fs from 'fs';
 import { vi } from 'vitest';
 
 export function mockInstructionFiles(

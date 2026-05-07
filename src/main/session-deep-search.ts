@@ -64,7 +64,7 @@ function deriveName(text: string): string | undefined {
   if (!first) return undefined;
   const oneLine = first.replace(/\s+/g, ' ');
   return oneLine.length > MAX_DERIVED_NAME_LENGTH
-    ? oneLine.slice(0, MAX_DERIVED_NAME_LENGTH - 1).trimEnd() + '…'
+    ? `${oneLine.slice(0, MAX_DERIVED_NAME_LENGTH - 1).trimEnd()}…`
     : oneLine;
 }
 
@@ -81,8 +81,8 @@ function extractSnippet(text: string, textLower: string, query: string): string 
   const start = Math.max(0, idx - RADIUS);
   const end = Math.min(text.length, idx + q.length + RADIUS);
   let snippet = text.slice(start, end).replace(/\n+/g, ' ').trim();
-  if (start > 0) snippet = '…' + snippet;
-  if (end < text.length) snippet = snippet + '…';
+  if (start > 0) snippet = `…${snippet}`;
+  if (end < text.length) snippet = `${snippet}…`;
   return snippet;
 }
 

@@ -1,5 +1,5 @@
 import type { StatsCache } from '../types.js';
-import { createModalShell, createModalButton } from './modal-shell.js';
+import { createModalButton, createModalShell } from './modal-shell.js';
 
 let cleanupFn: (() => void) | null = null;
 
@@ -8,9 +8,9 @@ function formatNumber(n: number): string {
 }
 
 function formatTokens(n: number): string {
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + 'B';
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toString();
 }
 
@@ -28,7 +28,7 @@ function formatDate(iso: string): string {
 }
 
 function shortDay(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(`${dateStr}T00:00:00`);
   return d.toLocaleDateString(undefined, { weekday: 'short' });
 }
 
@@ -144,7 +144,7 @@ function renderStats(container: HTMLElement, stats: StatsCache): void {
     refreshBtn.textContent = 'Loading...';
     refreshBtn.disabled = true;
     try {
-      const fresh = await window.vibeyard.stats.getCache();
+      const fresh = await window.aiyard.stats.getCache();
       container.innerHTML = '';
       if (fresh) {
         renderStats(container, fresh);
@@ -210,7 +210,7 @@ export async function showUsageModal(): Promise<void> {
   };
 
   try {
-    const stats = await window.vibeyard.stats.getCache();
+    const stats = await window.aiyard.stats.getCache();
     content.innerHTML = '';
     if (stats) {
       renderStats(content, stats);

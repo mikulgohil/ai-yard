@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  aiyard: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -29,8 +29,9 @@ vi.mock('../provider-availability.js', () => ({
   getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
-import { appState, _resetForTesting } from '../state';
 import { getCost } from '../session-cost.js';
+import { _resetForTesting, appState } from '../state';
+
 const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {

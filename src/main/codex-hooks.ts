@@ -1,18 +1,18 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { homedir } from 'os';
-import { STATUS_DIR } from './hook-status';
-import { statusCmd as mkStatusCmd, captureSessionIdCmd as mkCaptureSessionIdCmd, installEventScript, wrapPythonHookCmd, installHookScripts } from './hook-commands';
-import { readFileSafe, readJsonSafe } from './fs-utils';
+import * as path from 'path';
 import type { InspectorEventType, SettingsValidationResult } from '../shared/types';
+import { readFileSafe, readJsonSafe } from './fs-utils';
+import { installEventScript, installHookScripts, captureSessionIdCmd as mkCaptureSessionIdCmd, statusCmd as mkStatusCmd, wrapPythonHookCmd } from './hook-commands';
+import { STATUS_DIR } from './hook-status';
 
-export const CODEX_HOOK_MARKER = '# vibeyard-hook';
+export const CODEX_HOOK_MARKER = '# ai-yard-hook';
 
 const CODEX_DIR = path.join(homedir(), '.codex');
 const HOOKS_JSON_PATH = path.join(CODEX_DIR, 'hooks.json');
 const CONFIG_TOML_PATH = path.join(CODEX_DIR, 'config.toml');
 
-export const SESSION_ID_VAR = 'VIBEYARD_SESSION_ID';
+export const SESSION_ID_VAR = 'AIYARD_SESSION_ID';
 
 const EXPECTED_HOOK_EVENTS = ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Stop'];
 
@@ -200,7 +200,7 @@ with open(os.path.join(status_dir,sid+".events"),"a") as f:
   }
 
   const output = { ...raw, hooks: cleaned };
-  fs.writeFileSync(HOOKS_JSON_PATH, JSON.stringify(output, null, 2) + '\n');
+  fs.writeFileSync(HOOKS_JSON_PATH, `${JSON.stringify(output, null, 2)}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +210,7 @@ with open(os.path.join(status_dir,sid+".events"),"a") as f:
 export function validateCodexHooks(): SettingsValidationResult {
   if (!isCodexHooksFeatureEnabled()) {
     const hookDetails: Record<string, boolean> = Object.fromEntries(EXPECTED_HOOK_EVENTS.map(e => [e, false]));
-    return { statusLine: 'vibeyard', hooks: 'missing', hookDetails };
+    return { statusLine: 'aiyard', hooks: 'missing', hookDetails };
   }
 
   // Check hooks.json
@@ -233,7 +233,7 @@ export function validateCodexHooks(): SettingsValidationResult {
     hooks = 'partial';
   }
 
-  return { statusLine: 'vibeyard', hooks, hookDetails };
+  return { statusLine: 'aiyard', hooks, hookDetails };
 }
 
 // ---------------------------------------------------------------------------
@@ -254,5 +254,5 @@ export function cleanupCodexHooks(): void {
     config.hooks = cleaned;
   }
 
-  fs.writeFileSync(HOOKS_JSON_PATH, JSON.stringify(config, null, 2) + '\n');
+  fs.writeFileSync(HOOKS_JSON_PATH, `${JSON.stringify(config, null, 2)}\n`);
 }

@@ -1,12 +1,12 @@
 import { instances, type TeamInstance } from './instance.js';
-import { renderTeam, hideTeamView } from './team-view.js';
+import { hideTeamView, renderTeam } from './team-view.js';
 
 export function createTeamPane(sessionId: string, projectId: string): void {
   if (instances.has(sessionId)) return;
 
   const el = document.createElement('div');
   el.className = 'team-pane hidden';
-  el.dataset['sessionId'] = sessionId;
+  el.dataset.sessionId = sessionId;
 
   const instance: TeamInstance = {
     sessionId,

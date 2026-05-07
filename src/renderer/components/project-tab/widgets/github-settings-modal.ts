@@ -1,7 +1,7 @@
-import { createModalShell, createModalButton } from '../../modal-shell.js';
-import { createCustomSelect } from '../../custom-select.js';
-import type { OverviewWidget } from '../../../../shared/types.js';
 import { GITHUB_MAX_PER_PAGE } from '../../../../shared/constants.js';
+import type { OverviewWidget } from '../../../../shared/types.js';
+import { createCustomSelect } from '../../custom-select.js';
+import { createModalButton, createModalShell } from '../../modal-shell.js';
 import type { GithubConfig } from './github-types.js';
 
 const STATE_OPTIONS = [
@@ -120,8 +120,8 @@ export function showGithubSettings(
     const patch: Partial<GithubConfig> = {
       repo: repoRaw || undefined,
       state: stateRaw,
-      max: Math.max(1, Math.min(GITHUB_MAX_PER_PAGE, isNaN(maxRaw) ? 10 : maxRaw)),
-      refreshSeconds: isNaN(refreshRaw) ? 300 : refreshRaw,
+      max: Math.max(1, Math.min(GITHUB_MAX_PER_PAGE, Number.isNaN(maxRaw) ? 10 : maxRaw)),
+      refreshSeconds: Number.isNaN(refreshRaw) ? 300 : refreshRaw,
     };
     onSave(patch);
     close();

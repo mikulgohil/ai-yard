@@ -1,6 +1,6 @@
 import type { ProjectRecord } from '../../../state.js';
-import { createModalShell, createModalButton } from '../../modal-shell.js';
-import { renderSessionHistory, closeSessionHistory } from '../../session-history.js';
+import { createModalButton, createModalShell } from '../../modal-shell.js';
+import { closeSessionHistory, renderSessionHistory } from '../../session-history.js';
 
 const INSTANCE_KEY = 'dialog';
 const CLEANUP_PROP = '__sessionsDialogCleanup';

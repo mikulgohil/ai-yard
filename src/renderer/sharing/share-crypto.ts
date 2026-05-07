@@ -11,7 +11,7 @@ export class DecryptionError extends Error {
 const PBKDF2_ITERATIONS = 100_000;
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12;
-const CHALLENGE_SALT = new TextEncoder().encode('vibeyard-challenge-v1');
+const CHALLENGE_SALT = new TextEncoder().encode('ai-yard-challenge-v1');
 const MIN_PIN_LENGTH = 4;
 const MAX_PIN_LENGTH = 8;
 

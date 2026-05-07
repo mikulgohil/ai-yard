@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('fs', () => ({
   watchFile: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('electron', () => ({
 }));
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { startConfigWatcher, stopConfigWatcher } from './config-watcher';
 
 const n = (p: string) => p.replace(/\\/g, '/');

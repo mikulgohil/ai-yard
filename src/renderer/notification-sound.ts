@@ -1,5 +1,5 @@
-import { appState } from './state.js';
 import { onChange, type SessionStatus } from './session-activity.js';
+import { appState } from './state.js';
 
 const previousStatus = new Map<string, SessionStatus>();
 let audioCtx: AudioContext | null = null;

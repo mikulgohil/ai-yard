@@ -1,0 +1,11 @@
+{
+  "id": "fetch",
+  "name": "Web Fetch",
+  "description": "Fetch a URL and convert the response to Markdown. Useful when you want the agent to read documentation, blog posts, or API references on demand.",
+  "domain": "productivity",
+  "command": "uvx",
+  "args": [
+    "mcp-server-fetch"
+  ],
+  "setupUrl": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
+}

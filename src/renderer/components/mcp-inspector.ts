@@ -76,7 +76,9 @@ export function createInspectorPane(sessionId: string): void {
   for (const tab of navTabs) {
     tab.addEventListener('click', () => {
       instance.activeTab = (tab as HTMLElement).dataset.tab as NavTab;
-      navTabs.forEach(t => t.classList.remove('active'));
+      navTabs.forEach(t => {
+        t.classList.remove('active');
+      });
       tab.classList.add('active');
       renderContent(sessionId, instance, content);
     });
@@ -96,7 +98,7 @@ async function doConnect(
   btn.textContent = 'Connecting...';
   dot.className = 'mcp-status connecting';
 
-  const result = await window.vibeyard.mcp.connect(sessionId, url);
+  const result = await window.aiyard.mcp.connect(sessionId, url);
   if (result.success) {
     instance.connected = true;
     instance.url = url;
@@ -119,7 +121,7 @@ async function doDisconnect(
   dot: HTMLElement,
   content: HTMLElement,
 ): Promise<void> {
-  await window.vibeyard.mcp.disconnect(sessionId);
+  await window.aiyard.mcp.disconnect(sessionId);
   instance.connected = false;
   instance.toolsList = [];
   instance.resourcesList = [];
@@ -134,9 +136,9 @@ async function doDisconnect(
 
 async function refreshLists(sessionId: string, instance: McpInspectorInstance, content: HTMLElement): Promise<void> {
   const [tools, resources, prompts] = await Promise.all([
-    window.vibeyard.mcp.listTools(sessionId),
-    window.vibeyard.mcp.listResources(sessionId),
-    window.vibeyard.mcp.listPrompts(sessionId),
+    window.aiyard.mcp.listTools(sessionId),
+    window.aiyard.mcp.listResources(sessionId),
+    window.aiyard.mcp.listPrompts(sessionId),
   ]);
 
   instance.toolsList = tools.success ? (tools.data as unknown[]) : [];
@@ -222,7 +224,7 @@ function renderToolsList(sessionId: string, tools: unknown[], container: HTMLEle
           resultPre.textContent = 'Loading...';
 
           const args = formRef ? formRef.getValues() : {};
-          const res = await window.vibeyard.mcp.callTool(sessionId, tool.name, args);
+          const res = await window.aiyard.mcp.callTool(sessionId, tool.name, args);
           resultPre.textContent = JSON.stringify(res.success ? res.data : { error: res.error }, null, 2);
           execBtn.disabled = false;
           execBtn.textContent = 'Execute';
@@ -268,7 +270,7 @@ function renderResourcesList(sessionId: string, resources: unknown[], container:
         resultPre.textContent = 'Loading...';
         body.appendChild(resultPre);
 
-        const res = await window.vibeyard.mcp.readResource(sessionId, resource.uri);
+        const res = await window.aiyard.mcp.readResource(sessionId, resource.uri);
         resultPre.textContent = JSON.stringify(res.success ? res.data : { error: res.error }, null, 2);
       }
     });
@@ -347,7 +349,7 @@ function renderPromptsList(sessionId: string, prompts: unknown[], container: HTM
               if (input.value.trim()) args[name] = input.value.trim();
             }
           }
-          const res = await window.vibeyard.mcp.getPrompt(sessionId, prompt.name, args);
+          const res = await window.aiyard.mcp.getPrompt(sessionId, prompt.name, args);
           resultPre.textContent = JSON.stringify(res.success ? res.data : { error: res.error }, null, 2);
           execBtn.disabled = false;
           execBtn.textContent = 'Run';
@@ -409,7 +411,7 @@ export function getInspectorInstance(sessionId: string): McpInspectorInstance | 
 export async function disconnectInspector(sessionId: string): Promise<void> {
   const instance = instances.get(sessionId);
   if (instance?.connected) {
-    await window.vibeyard.mcp.disconnect(sessionId);
+    await window.aiyard.mcp.disconnect(sessionId);
   }
 }
 

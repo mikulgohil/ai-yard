@@ -1,18 +1,19 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
 import type { PersistedState } from '../shared/types';
+import { CURRENT_VERSION, runMigrations } from './store-migrations';
 
-export type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types';
+export type { PersistedState, Preferences, ProjectRecord, SessionRecord } from '../shared/types';
 
-const STATE_DIR = path.join(os.homedir(), '.vibeyard');
+const STATE_DIR = path.join(os.homedir(), '.ai-yard');
 const STATE_FILE = path.join(STATE_DIR, 'state.json');
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function defaultState(): PersistedState {
   return {
-    version: 1,
+    version: CURRENT_VERSION,
     projects: [],
     activeProjectId: null,
     preferences: { soundOnSessionWaiting: true, notificationsDesktop: true, debugMode: false, sessionHistoryEnabled: true, insightsEnabled: true, autoTitleEnabled: true, confirmCloseWorkingSession: true },
@@ -20,18 +21,21 @@ function defaultState(): PersistedState {
 }
 
 export function loadState(): PersistedState {
-  for (const file of [STATE_FILE, STATE_FILE + '.tmp']) {
+  for (const file of [STATE_FILE, `${STATE_FILE}.tmp`]) {
     try {
       if (!fs.existsSync(file)) continue;
       const raw = fs.readFileSync(file, 'utf-8');
-      const parsed = JSON.parse(raw) as PersistedState;
-      if (parsed.version !== 1) continue;
+      const parsed = JSON.parse(raw) as Record<string, unknown> & { version?: number };
+      const migrated = runMigrations(parsed);
+      if (!migrated) {
+        console.warn(`State at version ${parsed.version} cannot be migrated to ${CURRENT_VERSION}; skipping`);
+        continue;
+      }
       if (file !== STATE_FILE) {
         console.warn('Recovered state from temp file');
       }
-      return parsed;
+      return migrated;
     } catch {
-      continue;
     }
   }
   console.warn('No valid state file found, using defaults');
@@ -66,7 +70,7 @@ function writeStateAtomically(state: PersistedState): void {
     if (!fs.existsSync(STATE_DIR)) {
       fs.mkdirSync(STATE_DIR, { recursive: true });
     }
-    const tmpFile = STATE_FILE + '.tmp';
+    const tmpFile = `${STATE_FILE}.tmp`;
     fs.writeFileSync(tmpFile, JSON.stringify(state, null, 2), 'utf-8');
     fs.renameSync(tmpFile, STATE_FILE);
   } catch (err) {

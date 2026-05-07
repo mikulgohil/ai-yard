@@ -1,15 +1,15 @@
-import type { ReadinessResult, ProviderId } from '../../shared/types';
-import type { ReadinessCheckProducer, TaggedCheck, TopCategory } from './types';
+import type { ProviderId, ReadinessResult } from '../../shared/types';
 import { getAvailableProviderIds } from '../providers/registry';
-import { computeCategoryScore, getTrackedFiles } from './utils';
 import { aiInstructionsProducer } from './checkers/ai-instructions';
-import { codexInstructionsProducer } from './checkers/codex-instructions';
-import { geminiInstructionsProducer } from './checkers/gemini-instructions';
-import { customExtensionsProducer } from './checkers/custom-extensions';
 import { claudeContextProducer } from './checkers/claude-context';
 import { codexContextProducer } from './checkers/codex-context';
-import { geminiContextProducer } from './checkers/gemini-context';
+import { codexInstructionsProducer } from './checkers/codex-instructions';
 import { genericContextProducer } from './checkers/context-optimization';
+import { customExtensionsProducer } from './checkers/custom-extensions';
+import { geminiContextProducer } from './checkers/gemini-context';
+import { geminiInstructionsProducer } from './checkers/gemini-instructions';
+import type { ReadinessCheckProducer, TaggedCheck, TopCategory } from './types';
+import { computeCategoryScore, getTrackedFiles } from './utils';
 
 const allProducers: ReadinessCheckProducer[] = [
   aiInstructionsProducer,

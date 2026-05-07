@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
-import { geminiContextProducer } from './gemini-context';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockInstructionFiles } from '../test-utils';
 import type { AnalysisContext } from '../types';
+import { geminiContextProducer } from './gemini-context';
 
 vi.mock('fs');
 

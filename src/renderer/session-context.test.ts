@@ -1,11 +1,11 @@
 import {
-  setContextData,
-  getContext,
-  onChange,
-  restoreContext,
-  removeSession,
-  getContextSeverity,
   _resetForTesting,
+  getContext,
+  getContextSeverity,
+  onChange,
+  removeSession,
+  restoreContext,
+  setContextData,
 } from './session-context';
 
 beforeEach(() => {

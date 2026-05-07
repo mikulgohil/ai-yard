@@ -34,24 +34,24 @@ export function initUpdateBanner(): void {
 
   let latestVersion = '';
 
-  window.vibeyard.update.onAvailable((info) => {
+  window.aiyard.update.onAvailable((info) => {
     latestVersion = info.version;
     show(`Downloading update v${info.version}...`);
   });
 
-  window.vibeyard.update.onDownloadProgress((info) => {
+  window.aiyard.update.onDownloadProgress((info) => {
     const label = latestVersion ? `v${latestVersion}` : 'update';
     show(`Downloading ${label}... ${info.percent}%`);
   });
 
-  window.vibeyard.update.onDownloaded((info) => {
+  window.aiyard.update.onDownloaded((info) => {
     show(`Update v${info.version} ready.`, {
       label: 'Restart',
-      action: () => window.vibeyard.update.install(),
+      action: () => window.aiyard.update.install(),
     });
   });
 
-  window.vibeyard.update.onError(() => {
+  window.aiyard.update.onError(() => {
     // Silently ignore update failures
   });
 }

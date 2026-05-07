@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import type { ExecFileException } from 'child_process';
+import { vi } from 'vitest';
 
 vi.mock('child_process', () => ({
   execFile: vi.fn(),
@@ -21,11 +21,11 @@ vi.mock('./git-status', () => ({
 import { execFile } from 'child_process';
 import { getGitRemoteUrl } from './git-status';
 import {
-  parseGithubRepo,
   detectRepo,
   isGhAvailable,
-  listPullRequests,
   listIssues,
+  listPullRequests,
+  parseGithubRepo,
   resetCacheForTesting,
 } from './github-cli';
 

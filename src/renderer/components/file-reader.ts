@@ -1,10 +1,10 @@
-import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { appState } from '../state.js';
-import { closeSessionIfFileMissing } from '../session-close.js';
-import { destroySearchBar } from './search-bar.js';
-import { escapeHtml } from './dom-search-backend.js';
+import { marked } from 'marked';
 import { isAbsolutePath } from '../../shared/platform.js';
+import { closeSessionIfFileMissing } from '../session-close.js';
+import { appState } from '../state.js';
+import { escapeHtml } from './dom-search-backend.js';
+import { destroySearchBar } from './search-bar.js';
 
 interface FileReaderInstance {
   element: HTMLElement;
@@ -118,7 +118,7 @@ async function loadFile(instance: FileReaderInstance, sessionId: string): Promis
     const fullPath = resolveFilePath(instance);
     if (await closeSessionIfFileMissing(sessionId, fullPath)) return;
     if (instance.kind === 'image') {
-      const result = await window.vibeyard.fs.readImage(fullPath);
+      const result = await window.aiyard.fs.readImage(fullPath);
       if (!result) {
         showFileReaderMessage(body, 'Failed to load file');
         return;
@@ -128,7 +128,7 @@ async function loadFile(instance: FileReaderInstance, sessionId: string): Promis
       instance.loaded = true;
       return;
     }
-    const result = await window.vibeyard.fs.readFile(fullPath);
+    const result = await window.aiyard.fs.readFile(fullPath);
     if (!result.ok) {
       showFileReaderMessage(
         body,
@@ -152,7 +152,7 @@ async function loadFile(instance: FileReaderInstance, sessionId: string): Promis
 
 function ensureFileChangedListener(): void {
   if (unwatchFileChanged) return;
-  unwatchFileChanged = window.vibeyard.fs.onFileChanged((changedPath: string) => {
+  unwatchFileChanged = window.aiyard.fs.onFileChanged((changedPath: string) => {
     for (const [sessionId, instance] of instances) {
       if (instance.resolvedPath === changedPath && instance.loaded) {
         reloadFileReader(sessionId);
@@ -246,7 +246,7 @@ export function destroyFileReaderPane(sessionId: string): void {
   const instance = instances.get(sessionId);
   if (!instance) return;
   if (instance.resolvedPath) {
-    window.vibeyard.fs.unwatchFile(instance.resolvedPath);
+    window.aiyard.fs.unwatchFile(instance.resolvedPath);
   }
   destroySearchBar(sessionId);
   destroyGoToLineBar(sessionId);
@@ -266,7 +266,7 @@ export function showFileReaderPane(sessionId: string, isSplit: boolean): void {
     const fullPath = resolveFilePath(instance);
     instance.resolvedPath = fullPath;
     ensureFileChangedListener();
-    window.vibeyard.fs.watchFile(fullPath);
+    window.aiyard.fs.watchFile(fullPath);
   }
 
   loadFile(instance, sessionId);

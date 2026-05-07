@@ -1,13 +1,13 @@
-import { appState } from '../../../state.js';
-import { esc } from '../../../dom-utils.js';
-import { ingestItems, isUnread, makeItemId, markRead, markAllReadInProject } from '../../../github-unread.js';
 import type { GithubItem, ProviderId } from '../../../../shared/types.js';
-import type { WidgetFactory, WidgetHost, WidgetInstance } from './widget-host.js';
-import { DEFAULT_GITHUB_CONFIG, type GithubConfig } from './github-types.js';
-import { setPendingPrompt } from '../../terminal-pane.js';
-import { showTaskModal } from '../../board/board-task-modal.js';
+import { esc } from '../../../dom-utils.js';
+import { ingestItems, isUnread, makeItemId, markAllReadInProject, markRead } from '../../../github-unread.js';
 import { getAvailableProviderMetas } from '../../../provider-availability.js';
+import { appState } from '../../../state.js';
 import { showContextMenu } from '../../board/board-context-menu.js';
+import { showTaskModal } from '../../board/board-task-modal.js';
+import { setPendingPrompt } from '../../terminal-pane.js';
+import { DEFAULT_GITHUB_CONFIG, type GithubConfig } from './github-types.js';
+import type { WidgetFactory, WidgetHost, WidgetInstance } from './widget-host.js';
 
 type ListKind = 'prs' | 'issues';
 
@@ -51,7 +51,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
   root.appendChild(body);
 
   let resolvedRepo: string | null = null;
-  let lastConfigRepo: string | undefined = undefined;
+  let lastConfigRepo: string | undefined ;
   let items: GithubItem[] = [];
   let loading = false;
   let lastError: string | null = null;
@@ -66,7 +66,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
   async function ensureRepo(): Promise<string | null> {
     const cfg = getConfig();
     const trimmedOverride = cfg.repo?.trim();
-    if (trimmedOverride && trimmedOverride.includes('/')) {
+    if (trimmedOverride?.includes('/')) {
       if (resolvedRepo !== trimmedOverride) {
         resolvedRepo = trimmedOverride;
         lastConfigRepo = trimmedOverride;
@@ -77,7 +77,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
     if (resolvedRepo && lastConfigRepo === undefined) return resolvedRepo;
     const project = appState.projects.find(p => p.id === projectId);
     if (!project) return null;
-    const detected = await window.vibeyard.github.detectRepo(project.path);
+    const detected = await window.aiyard.github.detectRepo(project.path);
     if (detected) resolvedRepo = `${detected.owner}/${detected.repo}`;
     lastConfigRepo = undefined;
     return resolvedRepo;
@@ -89,7 +89,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
     const unread = isUnread(projectId, id);
 
     const row = document.createElement('div');
-    row.className = 'widget-github-row' + (unread ? ' unread' : '');
+    row.className = `widget-github-row${unread ? ' unread' : ''}`;
 
     const info = document.createElement('div');
     info.className = 'widget-github-row-info';
@@ -116,7 +116,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       markRead(projectId, repo, item);
-      void window.vibeyard.app.openExternal(item.html_url);
+      void window.aiyard.app.openExternal(item.html_url);
       render();
     });
     title.appendChild(link);
@@ -212,7 +212,7 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
       return;
     }
 
-    if (!(await window.vibeyard.github.isAvailable())) {
+    if (!(await window.aiyard.github.isAvailable())) {
       lastError = 'gh CLI not installed. Install from cli.github.com and run `gh auth login`.';
       loading = false;
       render();
@@ -221,8 +221,8 @@ function makeGithubWidget(kind: ListKind, host: WidgetHost): WidgetInstance {
 
     const cfg = getConfig();
     const result = kind === 'prs'
-      ? await window.vibeyard.github.listPRs(repo, cfg.state, cfg.max)
-      : await window.vibeyard.github.listIssues(repo, cfg.state, cfg.max);
+      ? await window.aiyard.github.listPRs(repo, cfg.state, cfg.max)
+      : await window.aiyard.github.listIssues(repo, cfg.state, cfg.max);
     if (destroyed) return;
 
     if (!result.ok) {

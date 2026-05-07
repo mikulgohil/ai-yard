@@ -388,7 +388,7 @@ describe('installHooks', () => {
     expect(withStatusLine.statusLine.type).toBe('command');
   });
 
-  it('preserves existing non-vibeyard hooks', () => {
+  it('preserves existing non-ai-yard hooks', () => {
     mockReadFileSync.mockImplementation((filePath) => {
       if (n(String(filePath)) === '/mock/home/.claude/settings.json') {
         return JSON.stringify({
@@ -407,7 +407,7 @@ describe('installHooks', () => {
 
     const written = JSON.parse(String(mockWriteFileSync.mock.calls[0][1]));
     const promptHooks = written.hooks.UserPromptSubmit;
-    // Should have the existing user hook matcher + the new vibeyard matcher
+    // Should have the existing user hook matcher + the new ai-yard matcher
     expect(promptHooks.length).toBe(2);
     const userHook = promptHooks.find((m: { hooks: Array<{ command: string }> }) =>
       m.hooks.some((h: { command: string }) => h.command === 'echo user-hook')
@@ -415,14 +415,14 @@ describe('installHooks', () => {
     expect(userHook).toBeDefined();
   });
 
-  it('removes old vibeyard hooks before installing new ones', () => {
+  it('removes old ai-yard hooks before installing new ones', () => {
     mockReadFileSync.mockImplementation((filePath) => {
       if (n(String(filePath)) === '/mock/home/.claude/settings.json') {
         return JSON.stringify({
           hooks: {
             Stop: [{
               matcher: '',
-              hooks: [{ type: 'command', command: 'echo waiting # vibeyard-hook' }],
+              hooks: [{ type: 'command', command: 'echo waiting # ai-yard-hook' }],
             }],
           },
         });
@@ -433,13 +433,13 @@ describe('installHooks', () => {
     installHooks();
 
     const written = JSON.parse(String(mockWriteFileSync.mock.calls[0][1]));
-    // The old vibeyard hook should be replaced, not duplicated
+    // The old ai-yard hook should be replaced, not duplicated
     const stopHooks = written.hooks.Stop;
-    const vibeyardHookCount = stopHooks.reduce((count: number, m: { hooks: Array<{ command: string }> }) =>
-      count + m.hooks.filter((h: { command: string }) => h.command.includes('# vibeyard-hook')).length, 0
+    const aiYardHookCount = stopHooks.reduce((count: number, m: { hooks: Array<{ command: string }> }) =>
+      count + m.hooks.filter((h: { command: string }) => h.command.includes('# ai-yard-hook')).length, 0
     );
-    // Should have exactly 2 vibeyard hooks (status hook + inspector event capture hook)
-    expect(vibeyardHookCount).toBe(2);
+    // Should have exactly 2 ai-yard hooks (status hook + inspector event capture hook)
+    expect(aiYardHookCount).toBe(2);
   });
 
   it('installs all 24 hook events (6 core + 18 inspector-only)', () => {

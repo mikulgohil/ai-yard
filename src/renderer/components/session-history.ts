@@ -1,8 +1,8 @@
-import { appState, ArchivedSession, ProjectRecord } from '../state.js';
-import { loadProviderAvailability } from '../provider-availability.js';
-import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
-import { showConfirmDialog } from './modal.js';
 import type { ProviderId } from '../../shared/types.js';
+import { loadProviderAvailability } from '../provider-availability.js';
+import { type ArchivedSession, appState, type ProjectRecord } from '../state.js';
+import { showConfirmDialog } from './modal.js';
+import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
 
 const MAX_VISIBLE = 50;
 const PROVIDER_LABELS: Record<string, string> = {

@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import type { BrowserWindow } from 'electron';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import type { ProviderId } from '../shared/types';
 
 const DEBOUNCE_MS = 500;
@@ -55,7 +55,7 @@ function setupCopilotWatchers(projectPath: string): void {
   const files = [
     path.join(copilotDir, 'mcp-config.json'),
     path.join(projectPath, '.copilot', 'mcp-config.json'),
-    path.join(projectPath, '.github', 'hooks', 'vibeyard-copilot-hooks.json'),
+    path.join(projectPath, '.github', 'hooks', 'ai-yard-copilot-hooks.json'),
   ];
   for (const f of files) watchFile(f);
 

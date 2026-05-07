@@ -235,7 +235,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Browser flow recording for capturing click/navigate sequences
-- New tab page with Vibeyard branding and dev port quick links
+- New tab page with AI-yard branding and dev port quick links
 - Viewport picker to browser tab for responsive testing
 - Custom size entry to browser tab viewport picker
 
@@ -275,7 +275,7 @@ All notable changes to this project will be documented in this file.
 - Tool alert misclassifying API 404 errors as "not installed"
 - Text selection in git diff panel disappearing on file changes
 - Readiness modal provider filter to only show registered providers
-- External CLI sessions triggering notifications from Vibeyard
+- External CLI sessions triggering notifications from AI-yard
 - Notification click to activate session and focus app window
 - Session inspector shortcut to use Cmd+Shift+I on Mac via menu accelerator
 - Path autocomplete showing only first 20 dirs before filtering
@@ -476,7 +476,7 @@ All notable changes to this project will be documented in this file.
 ### Changes
 - README logo to transparent background version
 - SoundOnSessionWaiting default to enabled
-- Rename app from CCIDE to Vibeyard
+- Rename app from CCIDE to AI-yard
 - Expand missing tool catalog and remove hardcoded install instructions
 - README with swarm mode and missing tool alerts features
 - Default layout mode to swarm for new projects
@@ -490,8 +490,8 @@ All notable changes to this project will be documented in this file.
 - Collapsible sidebar with toggle button and Cmd+B shortcut
 - Cmd+F search in file-reader and diff-viewer panes
 - Cmd+Click requirement to open files from terminal links
-- .vibeyardignore for AI readiness large-file scan exclusions
-- AI readiness scanner with auto-created .vibeyardignore for large-file exclusions
+- .ai-yardignore for AI readiness large-file scan exclusions
+- AI readiness scanner with auto-created .ai-yardignore for large-file exclusions
 - Default args per project with checkbox to persist across sessions
 - Insights preferences toggle and fix-in-new-session CTA button
 - Big initial context alert when pre-context exceeds 15% of context window

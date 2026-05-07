@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockExecSync = vi.fn();
 

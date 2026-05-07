@@ -28,7 +28,9 @@ export function buildSelectorOptions(
     container.appendChild(row);
 
     row.addEventListener('click', () => {
-      optionEls.forEach((el) => el.classList.remove('active'));
+      optionEls.forEach((el) => {
+        el.classList.remove('active');
+      });
       optionEls[i].classList.add('active');
       onActivate(sel);
     });

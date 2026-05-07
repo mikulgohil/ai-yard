@@ -1,14 +1,14 @@
-import type { BoardTask, CostInfo, ContextWindowInfo, ArchivedSession, ProviderId } from '../../../shared/types.js';
-import { appState } from '../../state.js';
-import { getColumnByBehavior, updateTask, moveTask, deleteTask, getTagColor } from '../../board-state.js';
-import { getStatus, type SessionStatus } from '../../session-activity.js';
-import { getCost, formatTokens } from '../../session-cost.js';
-import { getContext, getContextSeverity } from '../../session-context.js';
+import type { ArchivedSession, BoardTask, ContextWindowInfo, CostInfo, ProviderId } from '../../../shared/types.js';
+import { deleteTask, getColumnByBehavior, getTagColor, moveTask, updateTask } from '../../board-state.js';
 import { hasMultipleAvailableProviders } from '../../provider-availability.js';
-import { showTaskModal } from './board-task-modal.js';
-import { showContextMenu } from './board-context-menu.js';
+import { getStatus, type SessionStatus } from '../../session-activity.js';
+import { getContext, getContextSeverity } from '../../session-context.js';
+import { formatTokens, getCost } from '../../session-cost.js';
+import { appState } from '../../state.js';
 import { showConfirmModal } from '../modal.js';
 import { setPendingPrompt } from '../terminal-pane.js';
+import { showContextMenu } from './board-context-menu.js';
+import { showTaskModal } from './board-task-modal.js';
 
 export const STATUS_LABELS: Record<SessionStatus, string> = {
   working: 'Working',
@@ -194,7 +194,7 @@ export function focusTaskSession(task: BoardTask): void {
 function truncate(str: string, len: number): string {
   if (!str) return '';
   const firstLine = str.split('\n')[0];
-  return firstLine.length > len ? firstLine.slice(0, len) + '...' : firstLine;
+  return firstLine.length > len ? `${firstLine.slice(0, len)}...` : firstLine;
 }
 
 function resolveTaskProviderId(task: BoardTask): ProviderId {

@@ -1,6 +1,7 @@
 import type { TeamMember } from '../../../shared/types.js';
+import { trackInteraction } from '../../feature-telemetry.js';
 import { appState } from '../../state.js';
-import { showModal, closeModal, setModalError, type FieldDef } from '../modal.js';
+import { closeModal, type FieldDef, setModalError, showModal } from '../modal.js';
 
 export function showTeamMemberModal(mode: 'create' | 'edit', existing?: TeamMember): void {
   const fields: FieldDef[] = [
@@ -47,8 +48,10 @@ export function showTeamMemberModal(mode: 'create' | 'edit', existing?: TeamMemb
         source: 'custom',
         installAsAgent,
       });
+      trackInteraction('team', 'member-created');
     } else if (existing) {
       appState.updateTeamMember(existing.id, { name, role, description, systemPrompt, installAsAgent });
+      trackInteraction('team', 'member-edited');
     }
 
     closeModal();

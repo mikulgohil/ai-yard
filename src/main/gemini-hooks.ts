@@ -1,17 +1,17 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { homedir } from 'os';
-import { STATUS_DIR } from './hook-status';
-import { statusCmd as mkStatusCmd, captureSessionIdCmd as mkCaptureSessionIdCmd, installEventScript, wrapPythonHookCmd, installHookScripts } from './hook-commands';
-import { readJsonSafe } from './fs-utils';
+import * as path from 'path';
 import type { InspectorEventType, SettingsValidationResult } from '../shared/types';
+import { readJsonSafe } from './fs-utils';
+import { installEventScript, installHookScripts, captureSessionIdCmd as mkCaptureSessionIdCmd, statusCmd as mkStatusCmd, wrapPythonHookCmd } from './hook-commands';
+import { STATUS_DIR } from './hook-status';
 
-export const GEMINI_HOOK_MARKER = '# vibeyard-hook';
+export const GEMINI_HOOK_MARKER = '# ai-yard-hook';
 
 const GEMINI_DIR = path.join(homedir(), '.gemini');
 const SETTINGS_PATH = path.join(GEMINI_DIR, 'settings.json');
 
-export const SESSION_ID_VAR = 'VIBEYARD_SESSION_ID';
+export const SESSION_ID_VAR = 'AIYARD_SESSION_ID';
 
 const EXPECTED_HOOK_EVENTS = ['SessionStart', 'BeforeAgent', 'AfterTool', 'AfterAgent', 'SessionEnd'];
 
@@ -115,18 +115,18 @@ with open(os.path.join(status_dir,sid+".events"),"a") as f:
   for (const [event, status] of Object.entries(ideEvents)) {
     const existing = cleaned[event] ?? [];
     const hooks: HookHandler[] = [
-      { type: 'command', command: statusCmd(event, status), name: 'vibeyard-status' },
+      { type: 'command', command: statusCmd(event, status), name: 'ai-yard-status' },
     ];
     if (event === 'SessionStart' || event === 'BeforeAgent') {
-      hooks.push({ type: 'command', command: captureSessionIdCmd, name: 'vibeyard-sessionid' });
+      hooks.push({ type: 'command', command: captureSessionIdCmd, name: 'ai-yard-sessionid' });
     }
-    hooks.push({ type: 'command', command: captureEventCmd(event, eventTypeMap[event]), name: 'vibeyard-events' });
+    hooks.push({ type: 'command', command: captureEventCmd(event, eventTypeMap[event]), name: 'ai-yard-events' });
     existing.push({ matcher: '', hooks });
     cleaned[event] = existing;
   }
 
   const output = { ...settings, hooks: cleaned };
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(output, null, 2) + '\n');
+  fs.writeFileSync(SETTINGS_PATH, `${JSON.stringify(output, null, 2)}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +153,7 @@ export function validateGeminiHooks(): SettingsValidationResult {
     hooks = 'partial';
   }
 
-  return { statusLine: 'vibeyard', hooks, hookDetails };
+  return { statusLine: 'aiyard', hooks, hookDetails };
 }
 
 // ---------------------------------------------------------------------------
@@ -173,5 +173,5 @@ export function cleanupGeminiHooks(): void {
     (settings as Record<string, unknown>).hooks = cleaned;
   }
 
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2) + '\n');
+  fs.writeFileSync(SETTINGS_PATH, `${JSON.stringify(settings, null, 2)}\n`);
 }

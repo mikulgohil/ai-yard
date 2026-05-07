@@ -2,15 +2,15 @@
 // AppState, and the terminal/remote-terminal panes.
 
 import type { ShareMode } from '../../shared/sharing-types.js';
-import { startShare, stopShare, broadcastData, broadcastResize, isSharing, type ShareHandle } from './peer-host.js';
-import { joinShare, type JoinHandle, type InitData } from './peer-guest.js';
-import { appState } from '../state.js';
 import {
   createRemoteTerminalPane,
-  writeRemoteData,
-  showRemoteEndOverlay,
   destroyRemoteTerminal,
+  showRemoteEndOverlay,
+  writeRemoteData,
 } from '../components/remote-terminal-pane.js';
+import { appState } from '../state.js';
+import { type InitData, type JoinHandle, joinShare } from './peer-guest.js';
+import { broadcastData, broadcastResize, isSharing, type ShareHandle, startShare, stopShare } from './peer-host.js';
 
 const shareHandles = new Map<string, ShareHandle>();
 const guestHandles = new Map<string, JoinHandle>();

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../board-state.js', () => ({
   moveTask: vi.fn(),
@@ -11,7 +11,8 @@ beforeEach(() => {
   for (const k of Object.keys(docListeners)) delete docListeners[k];
   vi.stubGlobal('document', {
     addEventListener: (type: string, fn: Listener) => {
-      (docListeners[type] ??= new Set()).add(fn);
+      docListeners[type] ??= new Set();
+      docListeners[type].add(fn);
     },
     removeEventListener: (type: string, fn: Listener) => {
       docListeners[type]?.delete(fn);
@@ -59,8 +60,8 @@ describe('board-dnd: initBoardDnd idempotency', () => {
     initBoardDnd();
     initBoardDnd();
 
-    expect(docListeners['pointerdown']?.size).toBe(1);
-    expect(docListeners['pointermove']?.size).toBe(1);
-    expect(docListeners['pointerup']?.size).toBe(1);
+    expect(docListeners.pointerdown?.size).toBe(1);
+    expect(docListeners.pointermove?.size).toBe(1);
+    expect(docListeners.pointerup?.size).toBe(1);
   });
 });

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('window', {
-  vibeyard: { store: { load: vi.fn(), save: vi.fn() } },
+  aiyard: { store: { load: vi.fn(), save: vi.fn() } },
 });
 
 let uuidCounter = 0;
@@ -14,8 +14,8 @@ vi.mock('../../session-cost.js', () => ({
   getCost: (...args: unknown[]) => mockGetCost(...args),
   restoreCost: vi.fn(),
   formatTokens: (n: number) => {
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'm';
-    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}m`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
     return String(n);
   },
 }));
@@ -47,9 +47,9 @@ type StubEl = {
   draggable: boolean;
   dataset: Record<string, string>;
   children: StubEl[];
-  _listeners: Record<string, Function[]>;
+  _listeners: Record<string, ((...args: unknown[]) => unknown)[]>;
   appendChild(child: StubEl): StubEl;
-  addEventListener(event: string, cb: Function): void;
+  addEventListener(event: string, cb: (...args: unknown[]) => unknown): void;
   querySelector(): null;
 };
 
@@ -79,14 +79,14 @@ vi.stubGlobal('document', {
   createTextNode: (text: string) => ({ textContent: text, nodeType: 3 }),
 });
 
-import { appState, _resetForTesting } from '../../state';
+import type { ContextWindowInfo, CostInfo } from '../../../shared/types.js';
 import { addTask } from '../../board-state';
+import { hasMultipleAvailableProviders } from '../../provider-availability.js';
+import { _resetForTesting, appState } from '../../state';
 import {
   createCardElement,
   updateMetricsRow,
 } from './board-card';
-import { hasMultipleAvailableProviders } from '../../provider-availability.js';
-import type { CostInfo, ContextWindowInfo } from '../../../shared/types.js';
 
 beforeEach(() => {
   vi.clearAllMocks();

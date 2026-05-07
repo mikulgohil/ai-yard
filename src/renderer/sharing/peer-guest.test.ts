@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock helper modules so we don't exercise real crypto/webrtc utils
 const sentMessages: Array<{ dc: unknown; msg: unknown }> = [];
@@ -17,7 +17,7 @@ vi.mock('./share-crypto.js', () => ({
   computeChallengeResponse: vi.fn(async () => 'response-hex'),
 }));
 
-import { joinShare, _resetForTesting } from './peer-guest.js';
+import { _resetForTesting, joinShare } from './peer-guest.js';
 
 // ---- RTCPeerConnection / RTCDataChannel stubs ----
 interface FakeDataChannel {

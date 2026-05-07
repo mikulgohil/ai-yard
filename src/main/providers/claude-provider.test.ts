@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { isWin } from '../platform';
 
 vi.mock('fs', () => ({
@@ -20,7 +20,7 @@ vi.mock('../pty-manager', () => ({
 }));
 
 vi.mock('../hook-status', () => ({
-  getStatusLineScriptPath: vi.fn(() => '/tmp/vibeyard/statusline.sh'),
+  getStatusLineScriptPath: vi.fn(() => '/tmp/ai-yard/statusline.sh'),
   installStatusLineScript: vi.fn(),
   cleanupAll: vi.fn(),
 }));
@@ -30,9 +30,9 @@ vi.mock('../claude-cli', () => ({
   getClaudeConfig: vi.fn(),
 }));
 
-import * as fs from 'fs';
 import { execSync } from 'child_process';
-import { ClaudeProvider, _resetCachedPath } from './claude-provider';
+import * as fs from 'fs';
+import { _resetCachedPath, ClaudeProvider } from './claude-provider';
 
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockStatSync = vi.mocked(fs.statSync);

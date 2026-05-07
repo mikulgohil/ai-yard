@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const sentMessages: Array<{ msg: unknown }> = [];
 
@@ -46,14 +46,14 @@ vi.mock('@xterm/addon-serialize', () => ({
 }));
 
 import {
-  startShare,
-  stopShare,
+  _resetForTesting,
   broadcastData,
   broadcastResize,
-  isSharing,
-  isConnected,
   getShareMode,
-  _resetForTesting,
+  isConnected,
+  isSharing,
+  startShare,
+  stopShare,
 } from './peer-host.js';
 
 interface FakeDC {
@@ -86,7 +86,7 @@ beforeEach(() => {
   sentMessages.length = 0;
 
   ptyWrite.mockReset();
-  vi.stubGlobal('window', { vibeyard: { pty: { write: ptyWrite } } });
+  vi.stubGlobal('window', { aiyard: { pty: { write: ptyWrite } } });
 
   class FakeRTCPeerConnection {
     iceConnectionState: RTCIceConnectionState = 'new';
@@ -160,7 +160,7 @@ describe('startShare', () => {
 
   it('chunks scrollback when it exceeds CHUNK_SIZE', async () => {
     serializeReturn.value = 'x'.repeat(64 * 1024 + 10);
-    const handle = startShare('s1', 'readonly', '1234');
+    const _handle = startShare('s1', 'readonly', '1234');
     lastDc!.onopen?.();
     deliver({ type: 'auth-response', response: 'expected-response' });
     await new Promise((r) => setTimeout(r, 0));

@@ -102,7 +102,7 @@ describe('project-terminal Ctrl+Shift+C clipboard copy', () => {
 
     vi.stubGlobal('document', makeFakeDocument());
     vi.stubGlobal('window', {
-      vibeyard: {
+      aiyard: {
         pty: { write: mockPtyWrite, kill: vi.fn(), resize: vi.fn(), createShell: vi.fn() },
       },
     });
@@ -122,7 +122,7 @@ describe('project-terminal Ctrl+Shift+C clipboard copy', () => {
     initProjectTerminal();
 
     // Trigger state-loaded → showPanel → createShell
-    stateHandlers['state-loaded']?.forEach(cb => cb());
+    stateHandlers['state-loaded']?.forEach(cb => { cb(); });
 
     const sessionId = getActiveShellSessionId();
     return sessionId ? getShellTerminalInstance(sessionId) : undefined;
@@ -183,7 +183,7 @@ describe('applyThemeToAllShells()', () => {
 
     vi.stubGlobal('document', makeFakeDocument());
     vi.stubGlobal('window', {
-      vibeyard: {
+      aiyard: {
         pty: { write: mockPtyWrite, kill: vi.fn(), resize: vi.fn(), createShell: vi.fn() },
       },
     });
@@ -202,7 +202,7 @@ describe('applyThemeToAllShells()', () => {
     (appState as any).projects = [project];
 
     initProjectTerminal();
-    stateHandlers['state-loaded']?.forEach(cb => cb());
+    stateHandlers['state-loaded']?.forEach(cb => { cb(); });
 
     const sessionId = getActiveShellSessionId()!;
     const instance = getShellTerminalInstance(sessionId)!;
@@ -225,7 +225,7 @@ describe('applyThemeToAllShells()', () => {
     (appState as any).preferences.theme = 'light';
 
     initProjectTerminal();
-    stateHandlers['state-loaded']?.forEach(cb => cb());
+    stateHandlers['state-loaded']?.forEach(cb => { cb(); });
 
     const sessionId = getActiveShellSessionId()!;
     const instance = getShellTerminalInstance(sessionId)!;

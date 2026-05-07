@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { TeamMember } from '../../../shared/types.js';
 import { filterMembers } from './predefined-filter';
 

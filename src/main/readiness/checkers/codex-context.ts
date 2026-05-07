@@ -1,4 +1,4 @@
-import type { ReadinessCheckProducer, TaggedCheck, AnalysisContext } from '../types';
+import type { AnalysisContext, ReadinessCheckProducer, TaggedCheck } from '../types';
 import { checkNotBloated } from './instruction-file-checks';
 
 export const codexContextProducer: ReadinessCheckProducer = {

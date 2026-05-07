@@ -212,7 +212,7 @@ function getElementMetadata(el: Element) {
     tagName: el.tagName.toLowerCase(),
     id: el.id || '',
     classes: Array.from(el.classList),
-    textContent: text.length > 150 ? text.slice(0, 150) + '\u2026' : text,
+    textContent: text.length > 150 ? `${text.slice(0, 150)}\u2026` : text,
     selectors: buildAllSelectors(el),
     pageUrl: window.location.href,
   };

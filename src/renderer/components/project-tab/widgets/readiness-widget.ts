@@ -1,10 +1,10 @@
-import { appState } from '../../../state.js';
+import type { ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ReadinessEffort, ReadinessResult } from '../../../../shared/types.js';
 import { esc, scoreColor } from '../../../dom-utils.js';
-import { loadProviderAvailability, getAvailableProviderMetas, getProviderAvailabilitySnapshot, getProviderDisplayName } from '../../../provider-availability.js';
-import { setPendingPrompt } from '../../terminal-pane.js';
-import { promptNewSession } from '../../tab-bar.js';
+import { getAvailableProviderMetas, getProviderAvailabilitySnapshot, getProviderDisplayName, loadProviderAvailability } from '../../../provider-availability.js';
+import { appState } from '../../../state.js';
 import { attachHoverCard, hideHoverCard } from '../../hover-card.js';
-import type { ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ReadinessResult, ReadinessEffort } from '../../../../shared/types.js';
+import { promptNewSession } from '../../tab-bar.js';
+import { setPendingPrompt } from '../../terminal-pane.js';
 import type { WidgetFactory, WidgetHost, WidgetInstance } from './widget-host.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -523,7 +523,7 @@ export const createReadinessWidget: WidgetFactory = (host: WidgetHost): WidgetIn
 
     try {
       const excluded = appState.preferences.readinessExcludedProviders ?? [];
-      const result = await window.vibeyard.readiness.analyze(project.path, excluded.length > 0 ? excluded : undefined);
+      const result = await window.aiyard.readiness.analyze(project.path, excluded.length > 0 ? excluded : undefined);
       appState.setProjectReadiness(project.id, result);
     } catch (err) {
       console.warn('Readiness scan failed:', err);

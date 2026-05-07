@@ -40,8 +40,8 @@ waiting
 
 ## How It Works End-to-End
 
-1. **Hook installation** (`claude-cli.ts`) — Each hook is a shell command that writes a `.status` file to `/tmp/vibeyard/{sessionId}.status`
-2. **File watching** (`hook-status.ts`) — Main process watches `/tmp/vibeyard/` via `fs.watch()` + 2s polling fallback
+1. **Hook installation** (`claude-cli.ts`) — Each hook is a shell command that writes a `.status` file to `/tmp/ai-yard/{sessionId}.status`
+2. **File watching** (`hook-status.ts`) — Main process watches `/tmp/ai-yard/` via `fs.watch()` + 2s polling fallback
 3. **IPC broadcast** — Main sends `session:hookStatus` to renderer
 4. **State update** (`session-activity.ts`) — Renderer applies the transition rules above
 
