@@ -97,6 +97,14 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  // macOS-only: override the dock icon at runtime. In dev mode the dock
+  // otherwise shows Electron's default lavender icon because BrowserWindow's
+  // `icon` prop is ignored on macOS. Production builds package the icon via
+  // electron-builder so this is redundant but harmless there.
+  if (isMac && app.dock) {
+    app.dock.setIcon(path.join(__dirname, '..', '..', '..', 'build', 'icon.png'));
+  }
+
   initProviders();
 
   const providers = getAllProviders();
