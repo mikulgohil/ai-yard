@@ -10,6 +10,13 @@ describe('app identity (regression)', () => {
     expect(source).toContain("title: 'AI-yard'");
   });
 
+  it("main.ts forces app.name via app.setName('AI-yard')", () => {
+    // Without this, dev launches inherit Electron's default app name
+    // ("Electron") in the macOS menu bar and dock.
+    const source = fs.readFileSync(path.join(REPO_ROOT, 'src', 'main', 'main.ts'), 'utf-8');
+    expect(source).toContain("app.setName('AI-yard')");
+  });
+
   it('package.json identity fields match AI-yard branding', () => {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8'),

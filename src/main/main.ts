@@ -14,6 +14,19 @@ import { initSentry } from './sentry';
 import { flushState, loadState, saveState } from './store';
 import { initTelemetry, track } from './telemetry';
 
+// Force the user-visible app name regardless of how Electron was launched.
+// In dev (`npm run dev`) Electron derives `app.name` from package.json's
+// `name` field, which is the scoped npm name `@mikulgohil/ai-yard` and
+// frequently falls back to "Electron" in menu bars and the dock.
+// `createAppMenu` reads `app.name` for the macOS app menu, so this must
+// run before the menu is built.
+app.setName('AI-yard');
+app.setAboutPanelOptions({
+  applicationName: 'AI-yard',
+  applicationVersion: app.getVersion(),
+  copyright: 'MIT — fork of Vibeyard by Eliran Tutia',
+});
+
 let mainWindow: BrowserWindow | null = null;
 
 function requestConfirmClose(): void {
