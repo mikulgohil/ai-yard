@@ -68,27 +68,41 @@ function applyDrawStyles(ctx: CanvasRenderingContext2D): void {
 function ensureDrawCanvas(): HTMLCanvasElement {
   if (!drawCanvas) {
     drawCanvas = document.createElement('canvas');
-    // edit_pen icon with thick white outline for visibility on any background
-    const penSvg =
+    // Set each style individually — cssText is parsed as a single block and a
+    // parse error in the cursor url() can silently drop all subsequent styles.
+    const s = drawCanvas.style;
+    s.position = 'fixed';
+    s.top = '0';
+    s.left = '0';
+    s.width = '100vw';
+    s.height = '100vh';
+    s.zIndex = '2147483646';
+    s.pointerEvents = 'auto';
+    s.background = 'transparent';
+    s.display = 'block';
+    // URL-encode the SVG so it's safe inside a CSS url() value
+    const penSvgRaw =
       "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 -960 960 960'>" +
       "<path fill='black' stroke='white' stroke-width='90' stroke-linejoin='round' paint-order='stroke' " +
       "d='M180.18-144q-15.18 0-25.68-10.3-10.5-10.29-10.5-25.52v-86.85q0-14.33 5-27.33 5-13 16-24l477-477q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L318-165q-11 11-23.95 16t-27.24 5h-86.63ZM693-642l51-51-51-51-51 51 51 51Z'/>" +
       "</svg>";
-    drawCanvas.style.cssText =
-      'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
-      'z-index:2147483646;pointer-events:auto;' +
-      `cursor:url("data:image/svg+xml;utf8,${penSvg}") 5 24, crosshair;` +
-      'background:transparent;';
+    try {
+      s.cursor = `url("data:image/svg+xml,${encodeURIComponent(penSvgRaw)}") 5 24, crosshair`;
+    } catch {
+      s.cursor = 'crosshair';
+    }
     drawCanvas.width = window.innerWidth;
     drawCanvas.height = window.innerHeight;
     document.documentElement.appendChild(drawCanvas);
     drawCtx = drawCanvas.getContext('2d');
     if (drawCtx) applyDrawStyles(drawCtx);
+    console.log('[DRAW] canvas created', drawCanvas.width, 'x', drawCanvas.height, 'pointerEvents:', s.pointerEvents);
   }
   return drawCanvas;
 }
 
 function onDrawPointerDown(e: PointerEvent): void {
+  console.log('[DRAW] pointerdown', e.clientX, e.clientY, 'drawMode:', drawMode, 'ctx:', !!drawCtx);
   if (!drawMode || !drawCtx) return;
   e.preventDefault();
   e.stopPropagation();
@@ -130,6 +144,7 @@ function onDrawResize(): void {
 }
 
 function enterDrawMode(): void {
+  console.log('[DRAW] enterDrawMode called');
   drawMode = true;
   strokeCompleted = false;
   const canvas = ensureDrawCanvas();
@@ -139,6 +154,7 @@ function enterDrawMode(): void {
   canvas.addEventListener('pointerup', onDrawPointerUp, true);
   canvas.addEventListener('pointercancel', onDrawPointerUp, true);
   window.addEventListener('resize', onDrawResize);
+  console.log('[DRAW] draw mode active, canvas in DOM:', document.documentElement.contains(canvas));
 }
 
 function exitDrawMode(): void {
@@ -258,7 +274,7 @@ function buildAllSelectors(el: Element): SelectorOption[] {
   const ariaLabel = el.getAttribute('aria-label') || el.getAttribute('aria-labelledby')
     ? el.getAttribute('aria-label') ?? undefined
     : undefined;
-  const ariaName = ariaLabel ?? (el.textContent || '').trim().slice(0, 60) || undefined;
+  const ariaName = ariaLabel ?? ((el.textContent || '').trim().slice(0, 60) || undefined);
   if (ariaName) {
     options.push({
       type: 'aria',

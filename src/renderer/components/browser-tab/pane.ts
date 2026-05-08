@@ -737,6 +737,11 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     newTabPage.style.display = 'none';
     appState.updateSessionBrowserTabUrl(sessionId, navUrl);
     if (instance.flowMode) recordNavigationStep(navUrl);
+    // Re-inject active modes — full navigation re-runs the preload from scratch,
+    // resetting all module-level state (drawMode, inspectMode, flowMode → false).
+    if (instance.drawMode) instance.view.send('enter-draw-mode');
+    if (instance.inspectMode) instance.view.send('enter-inspect-mode');
+    if (instance.flowMode) instance.view.send('enter-flow-mode');
   });
   view.onDidNavigateInPage((navUrl) => {
     urlInput.value = navUrl;
