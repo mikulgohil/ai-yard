@@ -51,6 +51,18 @@
   --bookmark: #E8A317;
   --color-warning: var(--status-warn);
 
+  /* ── Tag palette (theme-agnostic hues; derive bg/fg via color-mix
+   *    against --text-primary, so the same hue reads correctly on
+   *    midnight, paper, and slate). */
+  --tag-blue:   #2563EB;
+  --tag-green:  #22C55E;
+  --tag-amber:  #F59E0B;
+  --tag-red:    #EF4444;
+  --tag-purple: #A855F7;
+  --tag-cyan:   #06B6D4;
+  --tag-pink:   #EC4899;
+  --tag-gray:   #6B7280;
+
   /* ── Type scale (comfortable density) ─────────────────────── */
   --text-xs: 12px;
   --text-sm: 13px;
