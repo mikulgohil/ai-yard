@@ -49,6 +49,7 @@
 
   /* ── Misc ─────────────────────────────────────────────────── */
   --bookmark: #E8A317;
+  --bookmark-fg: #1A1A1A;
   --color-warning: var(--status-warn);
 
   /* ── Tag palette (theme-agnostic hues; derive bg/fg via color-mix
