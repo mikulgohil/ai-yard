@@ -18,6 +18,15 @@ import {
   showCostDashboardPane,
 } from './cost-dashboard/pane.js';
 import {
+  attachDevServerToContainer,
+  createDevServerPane,
+  destroyDevServerPane,
+  fitAllVisibleDevServerPanes,
+  getDevServerInstance,
+  hideAllDevServerPanes,
+  showDevServerPane,
+} from './dev-server/pane.js';
+import {
   attachFileReaderToContainer,
   createFileReaderPane,
   destroyFileReaderPane,
@@ -114,7 +123,10 @@ export function initSplitLayout(): void {
 
   // Refit on window resize
   window.addEventListener('resize', () => {
-    requestAnimationFrame(fitAllVisible);
+    requestAnimationFrame(() => {
+      fitAllVisible();
+      fitAllVisibleDevServerPanes();
+    });
   });
 
   // Click delegation for swarm mode: clicking a dimmed pane makes it active
@@ -164,6 +176,9 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'cost-dashboard') {
     createCostDashboardPane(session.id, projectId);
     renderLayout();
+  } else if (session.type === 'dev-server') {
+    createDevServerPane(session.id, projectId, session.devServerCommand ?? '');
+    renderLayout();
   } else {
     // Create and spawn immediately
     createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude', project.id);
@@ -206,6 +221,8 @@ function onSessionRemoved(data: unknown): void {
     destroyTeamPane(sessionId);
   } else if (getCostDashboardInstance(sessionId)) {
     destroyCostDashboardPane(sessionId);
+  } else if (getDevServerInstance(sessionId)) {
+    destroyDevServerPane(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -226,6 +243,7 @@ export function renderLayout(): void {
     hideAllKanbanPanes();
     hideAllTeamPanes();
     hideAllCostDashboardPanes();
+    hideAllDevServerPanes();
     setContainerClass('');
     showEmptyState(project);
     return;
@@ -275,6 +293,10 @@ export function renderLayout(): void {
       if (!getCostDashboardInstance(session.id)) {
         createCostDashboardPane(session.id, project.id);
       }
+    } else if (session.type === 'dev-server') {
+      if (!getDevServerInstance(session.id)) {
+        createDevServerPane(session.id, project.id, session.devServerCommand ?? '');
+      }
     } else {
       if (!getTerminalInstance(session.id)) {
         createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude', project.id);
@@ -292,6 +314,7 @@ export function renderLayout(): void {
   hideAllKanbanPanes();
   hideAllTeamPanes();
   hideAllCostDashboardPanes();
+  hideAllDevServerPanes();
 
   if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
     renderSwarmMode(project);
@@ -301,7 +324,10 @@ export function renderLayout(): void {
     renderTabMode(project);
   }
 
-  requestAnimationFrame(fitAllVisible);
+  requestAnimationFrame(() => {
+    fitAllVisible();
+    fitAllVisibleDevServerPanes();
+  });
 }
 
 /** Attach and show a non-CLI session pane. */
@@ -336,6 +362,9 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'cost-dashboard') {
     attachCostDashboardToContainer(session.id, target);
     showCostDashboardPane(session.id, inSplit);
+  } else if (session.type === 'dev-server') {
+    attachDevServerToContainer(session.id, target);
+    showDevServerPane(session.id, inSplit);
   }
 }
 

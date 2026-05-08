@@ -1,0 +1,59 @@
+/* Dev server tab — terminal-pane variant without the status bar / cost row.
+   Mirrors .terminal-pane positioning so split + swarm layouts behave identically. */
+
+.dev-server-pane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid var(--pane-unfocus);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dev-server-pane.split {
+  position: relative;
+}
+
+.dev-server-pane.hidden {
+  display: none;
+}
+
+.dev-server-pane .xterm-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dev-server-pane .xterm {
+  height: 100%;
+  padding: 4px;
+}
+
+.tab-dev-server-badge {
+  font-size: var(--text-xs);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  vertical-align: middle;
+  margin-right: var(--space-1);
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* Sidebar Run button — adopts .project-action-btn but with a subtle accent
+   when a runCommand is saved, matching the readiness indicator pattern. */
+.project-action-btn.has-run-saved::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}

@@ -48,7 +48,7 @@
     "copy-vite-public": "node scripts/copy-vite-public.js",
     "gen-build-config": "node scripts/gen-build-config.js",
     "start": "npm run build && electron .",
-    "dev": "npm run gen-build-config && npm run copy-vite-public && concurrently -k -n main,preload,renderer,electron \"tsc -p tsconfig.main.json --watch --preserveWatchOutput\" \"tsc -p tsconfig.preload.json --watch --preserveWatchOutput\" \"vite --config vite.renderer.config.ts\" \"wait-on http://localhost:5173 file:dist/main/main/main.js file:dist/preload/preload/preload.js && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "dev": "npm run gen-build-config && npm run copy-vite-public && node scripts/clean-dev-sentinels.js && concurrently -k -n main,preload,renderer,electron \"tsc -p tsconfig.main.json --watch --preserveWatchOutput\" \"tsc -p tsconfig.preload.json --watch --preserveWatchOutput\" \"vite --config vite.renderer.config.ts\" \"wait-on http://localhost:5173 file:dist/main/main/main.js file:dist/preload/preload/preload.js && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
     "dev:legacy": "npm run build:legacy && electron .",
     "postinstall": "node -e \"try{require('electron-builder/package.json');require('child_process').execSync('electron-builder install-app-deps',{stdio:'inherit'})}catch{}\"",
     "pack": "npm run build && electron-builder --dir",

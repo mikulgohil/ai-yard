@@ -79,6 +79,7 @@ Tiered by impact + effort. Pick a tier and execute; don't try to span multiple t
 - [ ] Add **custom slash commands** for your daily flows (already have `~/.claude/commands/`; the AI-yard agent files mirror those).
 - [ ] Drop unused providers from prerequisites checks (Copilot, Gemini) if you only use Claude — see `src/main/providers/registry.ts`.
 - [ ] **Custom Overview widget**: if there's a recurring view you want (e.g. "AI-kit product status", "Sitecore work tracker"), author one in `src/renderer/components/project-tab/widgets/`. Pattern is documented in `CLAUDE.md` lines 76–80.
+- [x] **One-click "Run dev server" for projects** — sidebar Run button auto-detects from `package.json` (priority: dev > start > serve), falls back to `npx http-server` for static HTML, remembers the chosen command per project. New `dev-server` SessionType wraps a generic shell PTY so it shares xterm rendering with the rest of the app. *(Done 2026-05-08)*
 
 ### Tier 4 — Code health & rebrand cleanup (~1–2 hours)
 - [x] **Add a regression test** that asserts the window title and `appId` — guards against future name drift. *(Done 2026-05-07: `src/main/identity.test.ts`)*

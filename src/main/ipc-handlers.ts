@@ -1,5 +1,6 @@
 import { registerAppIpcHandlers } from './ipc/app';
 import { registerBrowserViewIpcHandlers } from './ipc/browser-view';
+import { registerDevRunnerIpcHandlers } from './ipc/dev-runner';
 import { registerFsIpcHandlers } from './ipc/fs';
 import { registerGitIpcHandlers } from './ipc/git';
 import { registerGithubIpcHandlers } from './ipc/github';
@@ -30,5 +31,6 @@ export function registerIpcHandlers(): void {
   registerGitIpcHandlers();
   registerGithubIpcHandlers();
   registerBrowserViewIpcHandlers();
+  registerDevRunnerIpcHandlers();
   registerMcpHandlers();
 }

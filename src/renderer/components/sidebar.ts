@@ -7,6 +7,7 @@ import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unrea
 import { appState, MAX_PROJECT_NAME_LENGTH, type ProjectRecord } from '../state.js';
 import { clearProjectState as clearFileTreeState, closeFileTree, renderFileTree } from './file-tree.js';
 import { attachHoverCard } from './hover-card.js';
+import { showRunConfirmationModal } from './dev-server/confirmation-modal.js';
 import { closeModal, setModalError, showConfirmDialog, showModal } from './modal.js';
 import { showPreferencesModal } from './preferences-modal.js';
 import {
@@ -43,6 +44,7 @@ const ICON_FILES = svgIcon('<path d="M1.5 3.5a1 1 0 0 1 1-1h3l1.5 1.5h4.5a1 1 0 
 const ICON_OVERVIEW = '<svg viewBox="160 -800 640 640" width="14" height="14" fill="currentColor"><path d="M224.62-160q-26.85 0-45.74-18.88Q160-197.77 160-224.62v-510.76q0-26.85 18.88-45.74Q197.77-800 224.62-800h510.76q26.85 0 45.74 18.88Q800-762.23 800-735.38v510.76q0 26.85-18.88 45.74Q762.23-160 735.38-160H224.62ZM420-200v-260H200v235.38q0 10.77 6.92 17.7 6.93 6.92 17.7 6.92H420Zm40 0h275.38q10.77 0 17.7-6.92 6.92-6.93 6.92-17.7V-460H460v260ZM200-500h560v-235.38q0-10.77-6.92-17.7-6.93-6.92-17.7-6.92H224.62q-10.77 0-17.7 6.92-6.92 6.93-6.92 17.7V-500Z"/></svg>';
 const ICON_DISCUSSIONS = '<svg viewBox="0 -960 960 960" width="14" height="14" fill="currentColor"><path d="m240-240-92 92q-19 19-43.5 8.5T80-177v-623q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240Zm-34-80h594v-480H160v525l46-45Zm-46 0v-480 480Zm120-80h240q17 0 28.5-11.5T560-440q0-17-11.5-28.5T520-480H280q-17 0-28.5 11.5T240-440q0 17 11.5 28.5T280-400Zm0-120h400q17 0 28.5-11.5T720-560q0-17-11.5-28.5T680-600H280q-17 0-28.5 11.5T240-560q0 17 11.5 28.5T280-520Zm0-120h400q17 0 28.5-11.5T720-680q0-17-11.5-28.5T680-720H280q-17 0-28.5 11.5T240-680q0 17 11.5 28.5T280-640Z"/></svg>';
 const ICON_COST = svgIcon('<path d="M7 1v12M10 4.5C10 3.4 8.7 2.5 7 2.5S4 3.4 4 4.5s1.3 2 3 2 3 .9 3 2-1.3 2-3 2-3-.9-3-2"/>');
+const ICON_RUN = '<svg viewBox="0 0 14 14" width="14" height="14" fill="currentColor"><path d="M3.5 2.5v9l8-4.5z"/></svg>';
 
 export function toggleSidebar(): void {
   appState.toggleSidebar();
@@ -91,6 +93,7 @@ export function initSidebar(): void {
   appState.on('session-removed', render);
   appState.on('layout-changed', render);
   appState.on('readiness-changed', render);
+  appState.on('project-meta-changed', render);
 
 
   onCostChange(() => {
@@ -152,6 +155,10 @@ function render(): void {
       e.preventDefault();
       showProjectContextMenu(e.clientX, e.clientY, project);
     });
+
+    if (isActive) {
+      wrapper.appendChild(buildProjectRunBar(project));
+    }
 
     wrapper.appendChild(el);
 
@@ -242,6 +249,38 @@ function buildProjectActions(
   }
 
   return actions;
+}
+
+function buildProjectRunBar(project: ProjectRecord): HTMLElement {
+  const bar = document.createElement('div');
+  bar.className = 'project-run-bar';
+
+  const hint = project.runCommand
+    ? `Run dev server (${project.runCommand}) — right-click to edit`
+    : 'Run dev server — auto-detects from package.json';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'project-run-btn';
+  if (project.runCommand) btn.classList.add('has-run-saved');
+  btn.setAttribute('aria-label', hint);
+  btn.innerHTML =
+    `<span class="action-icon" aria-hidden="true">${ICON_RUN}</span>` +
+    `<span class="project-run-label">Run${project.runCommand ? ` <span class="project-run-cmd">${esc(project.runCommand)}</span>` : ''}</span>`;
+  attachHoverCard(btn, hint);
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    void handleRunClick(project);
+  });
+  btn.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showRunButtonContextMenu(e.clientX, e.clientY, project);
+  });
+
+  bar.appendChild(btn);
+  return bar;
 }
 
 function makeActionButton(label: string, iconSvg: string, active: boolean, hint?: string): HTMLButtonElement {
@@ -570,6 +609,73 @@ function hideProjectContextMenu(): void {
     activeProjectContextMenu.remove();
     activeProjectContextMenu = null;
   }
+}
+
+/**
+ * One-click flow: if a runCommand is saved, spawn straight into a Dev Server tab.
+ * Otherwise call detect → show the confirmation modal → spawn on confirm.
+ */
+async function handleRunClick(project: ProjectRecord): Promise<void> {
+  if (project.runCommand) {
+    appState.openDevServerTab(project.id, project.runCommand);
+    return;
+  }
+  await openRunConfirmation(project, project.runCommand);
+}
+
+async function openRunConfirmation(project: ProjectRecord, currentCommand: string | undefined): Promise<void> {
+  const candidate = await window.aiyard.devRunner.detect(project.path);
+
+  // If detection found a command but the user already has a saved override,
+  // surface the saved one so editing replaces it rather than the detected one.
+  const seeded = currentCommand
+    ? { ...candidate, command: currentCommand }
+    : candidate;
+
+  showRunConfirmationModal(seeded, /* defaultSave */ true, ({ command, save }) => {
+    if (save) {
+      appState.setProjectRunCommand(project.id, command);
+    }
+    appState.openDevServerTab(project.id, command);
+  });
+}
+
+function showRunButtonContextMenu(x: number, y: number, project: ProjectRecord): void {
+  hideProjectContextMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'tab-context-menu';
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+
+  const editItem = document.createElement('div');
+  editItem.className = 'tab-context-menu-item';
+  editItem.textContent = project.runCommand ? 'Edit run command…' : 'Configure run command…';
+  editItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideProjectContextMenu();
+    void openRunConfirmation(project, project.runCommand);
+  });
+  menu.appendChild(editItem);
+
+  if (project.runCommand) {
+    const clearItem = document.createElement('div');
+    clearItem.className = 'tab-context-menu-item';
+    clearItem.textContent = 'Clear saved command';
+    clearItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideProjectContextMenu();
+      appState.setProjectRunCommand(project.id, undefined);
+    });
+    menu.appendChild(clearItem);
+  }
+
+  document.body.appendChild(menu);
+  activeProjectContextMenu = menu;
+
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth) menu.style.left = `${window.innerWidth - rect.width - 4}px`;
+  if (rect.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - rect.height - 4}px`;
 }
 
 let lastDiscussionsCount = -1;

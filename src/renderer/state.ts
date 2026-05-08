@@ -24,6 +24,7 @@ import {
   buildBrowserTabSession,
   buildCliSession,
   buildCostDashboardSession,
+  buildDevServerSession,
   buildDiffViewerSession,
   buildFileReaderSession,
   buildKanbanSession,
@@ -94,6 +95,7 @@ type EventType =
   | 'team-changed'
   | 'overview-layout-changed'
   | 'github-unread-changed'
+  | 'project-meta-changed'
   | 'state-loaded';
 
 type EventCallback = (data?: unknown) => void;
@@ -475,6 +477,39 @@ class AppState {
     return session;
   }
 
+  /**
+   * Open (or focus) the dev-server tab for a project. If a tab already exists,
+   * we focus it rather than spawning a second PTY — restarting the server is a
+   * "close tab + run again" gesture, intentionally explicit.
+   */
+  openDevServerTab(projectId: string, command: string): SessionRecord | undefined {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return undefined;
+
+    if (this.state.activeProjectId !== projectId) this.setActiveProject(projectId);
+
+    const existing = findExistingTabByType(project, 'dev-server');
+    if (existing) return this.activateExistingSession(project, existing);
+
+    const session = buildDevServerSession({ projectName: project.name, command });
+    attachSessionToProject(project, session);
+    this.commitNewSession(projectId, session);
+    return session;
+  }
+
+  /** Persist (or clear, when `command` is empty) the saved run command for a project. */
+  setProjectRunCommand(projectId: string, command: string | undefined): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    if (command && command.trim().length > 0) {
+      project.runCommand = command.trim();
+    } else {
+      delete project.runCommand;
+    }
+    this.persist();
+    this.emit('project-meta-changed', projectId);
+  }
+
   get team(): TeamData {
     if (!this.state.team) this.state.team = { members: [] };
     return this.state.team;
@@ -808,7 +843,7 @@ class AppState {
     if (!project) return;
     const session = project.sessions.find((s) => s.id === sessionId);
     if (!session) return;
-    if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'cost-dashboard') return;
+    if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'cost-dashboard' || session.type === 'dev-server') return;
     session.name = name.slice(0, MAX_SESSION_NAME_LENGTH);
     if (userRenamed) session.userRenamed = true;
     // Keep history entry in sync if this session was resumed from history

@@ -109,7 +109,7 @@ export function initTabBar(): void {
 }
 
 function startRename(tab: HTMLElement, project: ProjectRecord, session: SessionRecord): void {
-  if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'team' || session.type === 'cost-dashboard') return;
+  if (session.type === 'kanban' || session.type === 'project-tab' || session.type === 'team' || session.type === 'cost-dashboard' || session.type === 'dev-server') return;
   const nameSpan = tab.querySelector('.tab-name') as HTMLElement;
   if (nameSpan.querySelector('input')) return;
 
@@ -156,7 +156,7 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   menu.style.left = `${x}px`;
   menu.style.top = `${y}px`;
 
-  const renamable = session.type !== 'kanban' && session.type !== 'project-tab' && session.type !== 'team' && session.type !== 'cost-dashboard';
+  const renamable = session.type !== 'kanban' && session.type !== 'project-tab' && session.type !== 'team' && session.type !== 'cost-dashboard' && session.type !== 'dev-server';
   const renameItem = document.createElement('div');
   renameItem.className = `tab-context-menu-item${renamable ? '' : ' disabled'}`;
   renameItem.textContent = 'Rename';
@@ -400,16 +400,17 @@ function render(): void {
     const isKanban = session.type === 'kanban';
     const isTeam = session.type === 'team';
     const isCostDashboard = session.type === 'cost-dashboard';
-    const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam || isCostDashboard;
+    const isDevServer = session.type === 'dev-server';
+    const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam || isCostDashboard || isDevServer;
     const sharing = isSharing(session.id);
-    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : isCostDashboard ? `${project.name} - Cost` : session.name;
+    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : isCostDashboard ? `${project.name} - Cost` : isDevServer ? `${project.name} - Dev Server` : session.name;
     tab.className = `tab-item${isActive ? ' active' : ''}${unread ? ' unread' : ''}${sharing ? ' tab-sharing' : ''}${isRemoteTab ? ' tab-remote' : ''}`;
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : isCostDashboard ? 'Cost dashboard' : buildTooltip(getStatus(session.id), session.cliSessionId);
+    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : isCostDashboard ? 'Cost dashboard' : isDevServer ? `Dev server: ${session.devServerCommand || ''}` : buildTooltip(getStatus(session.id), session.cliSessionId);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
-    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? '<span class="tab-project-badge">&#x2699;</span> ' : isKanban ? '<span class="tab-kanban-badge">&#x25A6;</span> ' : isTeam ? '<span class="tab-team-badge">TEAM</span> ' : isCostDashboard ? '<span class="tab-cost-badge">$</span> ' : !isSpecial ? providerIcon : '';
+    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? '<span class="tab-project-badge">&#x2699;</span> ' : isKanban ? '<span class="tab-kanban-badge">&#x25A6;</span> ' : isTeam ? '<span class="tab-team-badge">TEAM</span> ' : isCostDashboard ? '<span class="tab-cost-badge">$</span> ' : isDevServer ? '<span class="tab-dev-server-badge">&#x25B6;</span> ' : !isSpecial ? providerIcon : '';
     const shareIndicator = sharing ? '<span class="tab-share-indicator" title="Sharing"></span>' : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `

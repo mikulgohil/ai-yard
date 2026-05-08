@@ -47,7 +47,7 @@ export function findExistingFileReader(project: ProjectRecord, filePath: string)
 
 export function findExistingTabByType(
   project: ProjectRecord,
-  type: 'project-tab' | 'kanban' | 'team',
+  type: 'project-tab' | 'kanban' | 'team' | 'cost-dashboard' | 'dev-server',
 ): SessionRecord | undefined {
   return project.sessions.find((s) => s.type === type);
 }

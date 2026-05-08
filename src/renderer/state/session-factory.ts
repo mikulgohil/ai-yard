@@ -100,6 +100,18 @@ export function buildCostDashboardSession(opts: BaseOpts & { projectName: string
   };
 }
 
+export function buildDevServerSession(opts: BaseOpts & { projectName: string; command: string }): SessionRecord {
+  const { projectName, command, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
+  return {
+    id,
+    name: `${projectName} - Dev Server`,
+    type: 'dev-server',
+    devServerCommand: command,
+    cliSessionId: null,
+    createdAt,
+  };
+}
+
 export function buildFileReaderSession(opts: BaseOpts & { name: string; filePath: string; lineNumber?: number }): SessionRecord {
   const { name, filePath, lineNumber, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {

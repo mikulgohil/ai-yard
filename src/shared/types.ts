@@ -84,7 +84,27 @@ export type SessionType =
   | 'project-tab'
   | 'kanban'
   | 'team'
-  | 'cost-dashboard';
+  | 'cost-dashboard'
+  | 'dev-server';
+
+export type PackageManager = 'pnpm' | 'yarn' | 'npm';
+
+/**
+ * Result of detecting how to run a project's dev server. Returned by
+ * `dev-runner:detect` IPC. The renderer surfaces this in the run-confirmation
+ * modal so the user can override the chosen script before spawn.
+ */
+export interface RunCandidate {
+  source: 'package.json' | 'http-server' | 'none';
+  /** The exact shell command to spawn (e.g. "pnpm dev", "npx http-server -p 0"). */
+  command: string;
+  /** Which script in package.json was picked, if source === 'package.json'. */
+  script?: string;
+  /** Inferred from lockfile presence. */
+  packageManager?: PackageManager;
+  /** Every script defined in package.json — used to populate the override dropdown. */
+  allScripts?: string[];
+}
 
 export interface SessionRecord {
   id: string;
@@ -106,6 +126,8 @@ export interface SessionRecord {
   remoteHostName?: string;
   shareMode?: 'readonly' | 'readwrite';
   browserTabUrl?: string;
+  /** For dev-server sessions: the resolved command line to spawn (e.g. "pnpm dev"). */
+  devServerCommand?: string;
   /** Persisted: identifies which TeamMember spawned this session, if any. */
   teamMemberId?: string;
   /** Transient: initial prompt to inject on first spawn. Not persisted. */
@@ -262,6 +284,8 @@ export interface ProjectRecord {
   readinessHistory?: ReadinessSnapshot[];
   overviewLayout?: OverviewLayout;
   githubLastSeen?: Record<string, string>;
+  /** Saved dev-server command. One-click run skips the confirmation modal once set. */
+  runCommand?: string;
 }
 
 // --- Overview Widgets ---

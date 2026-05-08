@@ -10,7 +10,7 @@ import {
   type ViewId,
   type ViewRect,
 } from '../shared/browser-view-contract';
-import type { CliProviderMeta, CostData, DeepSearchResult, GithubFetchResult, GithubRepo, InspectorEvent, ProviderConfig, ProviderId, ReadFileResult, ReadinessResult, SettingsValidationResult, SettingsWarningData, StatsCache, StatusLineConflictData, ToolFailureData } from '../shared/types';
+import type { CliProviderMeta, CostData, DeepSearchResult, GithubFetchResult, GithubRepo, InspectorEvent, ProviderConfig, ProviderId, ReadFileResult, ReadinessResult, RunCandidate, SettingsValidationResult, SettingsWarningData, StatsCache, StatusLineConflictData, ToolFailureData } from '../shared/types';
 import { ZOOM_MAX, ZOOM_MIN } from '../shared/types';
 
 export type { CostData } from '../shared/types';
@@ -150,6 +150,9 @@ export interface AIYardApi {
     detectRepo(projectPath: string): Promise<GithubRepo | null>;
     listPRs(repo: string, state: 'open' | 'closed' | 'all', max: number): Promise<GithubFetchResult>;
     listIssues(repo: string, state: 'open' | 'closed' | 'all', max: number): Promise<GithubFetchResult>;
+  };
+  devRunner: {
+    detect(cwd: string): Promise<RunCandidate>;
   };
   stats: {
     getCache(): Promise<StatsCache | null>;
@@ -348,6 +351,9 @@ const api: AIYardApi = {
     detectRepo: (projectPath: string) => ipcRenderer.invoke('github:detectRepo', projectPath),
     listPRs: (repo: string, state: 'open' | 'closed' | 'all', max: number) => ipcRenderer.invoke('github:listPRs', repo, state, max),
     listIssues: (repo: string, state: 'open' | 'closed' | 'all', max: number) => ipcRenderer.invoke('github:listIssues', repo, state, max),
+  },
+  devRunner: {
+    detect: (cwd: string) => ipcRenderer.invoke('dev-runner:detect', cwd),
   },
   stats: {
     getCache: () => ipcRenderer.invoke('stats:getCache'),
