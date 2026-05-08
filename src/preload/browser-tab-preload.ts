@@ -1,7 +1,27 @@
 /**
- * Preload script injected into browser-tab <webview> guests.
+ * Preload script injected into the browser-tab guest webContents.
+ *
  * Provides DOM element inspection: hover highlight, click to select,
- * and sends element metadata back to the host renderer via ipcRenderer.sendToHost().
+ * draw mode, and flow recording. Bubbles guest-side events back to the
+ * host renderer via {@link bubbleHostMessage}.
+ *
+ * A5 Phase 4: this preload runs unchanged in both the legacy `<webview>`
+ * adapter and the `WebContentsView` adapter. The two paths differ in how
+ * preload → host messages are routed:
+ *   - `<webview>`: `ipcRenderer.sendToHost(channel, payload)` triggers an
+ *     `ipc-message` DOM event on the `<webview>` element in the host
+ *     renderer, which `createWebviewAdapter` listens for.
+ *   - `WebContentsView`: `ipcRenderer.send(channel, payload)` reaches the
+ *     main process, where `wc.on('ipc-message', ...)` in
+ *     `src/main/ipc/browser-view.ts` rebroadcasts it as a
+ *     `BrowserViewEvent` with `kind: 'ipc-message'` for
+ *     `createWebContentsViewAdapter` to dispatch.
+ *
+ * `sendToHost` outside of a `<webview>` context is a silent no-op (its
+ * internal `ipc-message-host` channel has no receiver), and a stray
+ * `ipcRenderer.send` under the `<webview>` path lands in main where no
+ * handler is registered for these channels. So dual-emitting is safe in
+ * both directions and saves us from runtime context detection.
  */
 import { ipcRenderer } from 'electron';
 
@@ -12,6 +32,13 @@ interface SelectorOption {
 }
 
 const QA_ATTRS = ['data-testid', 'data-qa', 'data-cy', 'data-test', 'data-automation', 'qaTag'];
+
+function bubbleHostMessage(channel: string, payload: unknown): void {
+  // Legacy <webview>: routes to host renderer's ipc-message DOM event.
+  ipcRenderer.sendToHost(channel, payload);
+  // WebContentsView: routes to main, which broadcasts back to the renderer.
+  ipcRenderer.send(channel, payload);
+}
 
 let inspectMode = false;
 let flowMode = false;
@@ -79,7 +106,7 @@ function onDrawPointerUp(e: PointerEvent): void {
   e.preventDefault();
   drawing = false;
   strokeCompleted = true;
-  ipcRenderer.sendToHost('draw-stroke-end', { x: e.clientX, y: e.clientY });
+  bubbleHostMessage('draw-stroke-end', { x: e.clientX, y: e.clientY });
 }
 
 function onDrawResize(): void {
@@ -238,7 +265,7 @@ function onClick(e: MouseEvent): void {
   const target = e.target as Element;
   if (target === highlightOverlay) return;
   const metadata = getElementMetadata(target);
-  ipcRenderer.sendToHost('element-selected', { metadata, x: e.clientX, y: e.clientY });
+  bubbleHostMessage('element-selected', { metadata, x: e.clientX, y: e.clientY });
 }
 
 function onFlowClick(e: MouseEvent): void {
@@ -252,7 +279,7 @@ function onFlowClick(e: MouseEvent): void {
   e.preventDefault();
   e.stopPropagation();
   e.stopImmediatePropagation();
-  ipcRenderer.sendToHost('flow-element-picked', {
+  bubbleHostMessage('flow-element-picked', {
     metadata: getElementMetadata(target),
     x: e.clientX,
     y: e.clientY,

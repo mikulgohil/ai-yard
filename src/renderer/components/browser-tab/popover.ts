@@ -11,10 +11,10 @@ export function positionPopover(
   x: number,
   y: number,
 ): void {
-  const webviewRect = (instance.webview as unknown as HTMLElement).getBoundingClientRect();
+  const viewRect = instance.view.getBoundingClientRect();
   const paneRect = instance.element.getBoundingClientRect();
-  let left = webviewRect.left - paneRect.left + x;
-  let top = webviewRect.top - paneRect.top + y;
+  let left = viewRect.left - paneRect.left + x;
+  let top = viewRect.top - paneRect.top + y;
 
   const paneWidth = paneRect.width;
   const paneHeight = paneRect.height;

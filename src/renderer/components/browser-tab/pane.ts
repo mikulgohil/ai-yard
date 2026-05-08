@@ -34,6 +34,7 @@ import {
   VIEWPORT_PRESETS,
   type WebviewElement,
 } from './types.js';
+import { createWebContentsViewAdapter, createWebviewAdapter, type ViewAdapter } from './view-adapter.js';
 import { applyViewport, closeViewportDropdown, openViewportDropdown } from './viewport.js';
 
 export function createBrowserTabPane(sessionId: string, url?: string): void {
@@ -192,11 +193,27 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
 
   viewportContainer.appendChild(newTabPage);
 
-  const webview = document.createElement('webview') as unknown as WebviewElement;
-  webview.className = 'browser-webview';
-  webview.setAttribute('allowpopups', '');
-  webview.setAttribute('webpreferences', 'backgroundThrottling=false');
-  viewportContainer.appendChild(webview);
+  // A5 Phase 2 feature flag. Default `false` so behavior is unchanged for all
+  // existing tabs; Phase 5 will flip this once the WebContentsView path has
+  // parity with the <webview> path.
+  const useWebContentsView = false;
+
+  const view: ViewAdapter = useWebContentsView
+    ? createWebContentsViewAdapter({
+        tabId: sessionId,
+        // The adapter awaits this internally and queues any operations made
+        // before it resolves, so we don't have to defer pane construction.
+        preloadPath: getPreloadPath(),
+        url,
+      })
+    : (() => {
+        const webview = document.createElement('webview') as unknown as WebviewElement;
+        webview.className = 'browser-webview';
+        webview.setAttribute('allowpopups', '');
+        webview.setAttribute('webpreferences', 'backgroundThrottling=false');
+        return createWebviewAdapter(webview);
+      })();
+  viewportContainer.appendChild(view.element);
   el.appendChild(viewportContainer);
 
   const inspectPanel = document.createElement('div');
@@ -415,7 +432,8 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   const instance: BrowserTabInstance = {
     sessionId,
     element: el,
-    webview,
+    view,
+    useWebContentsView,
     viewportContainer,
     newTabPage,
     urlInput,
@@ -456,28 +474,32 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   };
   instances.set(sessionId, instance);
 
-  webview.addEventListener('before-input-event', ((e: CustomEvent & { preventDefault(): void; input: { type: string; key: string; shift: boolean; control: boolean; alt: boolean; meta: boolean } }) => {
-    if (e.input.type !== 'keyDown') return;
+  view.onBeforeInput((input, preventDefault) => {
+    if (input.type !== 'keyDown') return;
     const synthetic = {
-      key: e.input.key,
-      ctrlKey: e.input.control,
-      metaKey: e.input.meta,
-      shiftKey: e.input.shift,
-      altKey: e.input.alt,
-      preventDefault: () => e.preventDefault(),
+      key: input.key,
+      ctrlKey: input.control,
+      metaKey: input.meta,
+      shiftKey: input.shift,
+      altKey: input.alt,
+      preventDefault,
     } as KeyboardEvent;
     shortcutManager.matchEvent(synthetic);
-  }) as EventListener);
-
-  // Preload must be set before src to ensure the inspect script is injected
-  getPreloadPath().then((p) => {
-    webview.setAttribute('preload', `file://${p}`);
-    if (url) webview.src = url;
   });
 
-  backBtn.addEventListener('click', () => webview.goBack());
-  fwdBtn.addEventListener('click', () => webview.goForward());
-  reloadBtn.addEventListener('click', () => webview.reload());
+  // Preload must be set before src to ensure the inspect script is injected.
+  // For the WebContentsView path the adapter handles preload + initial URL at
+  // create time, so this block is a no-op in that branch.
+  if (!useWebContentsView) {
+    getPreloadPath().then((p) => {
+      view.setPreload(p);
+      if (url) view.setSrc(url);
+    });
+  }
+
+  backBtn.addEventListener('click', () => view.goBack());
+  fwdBtn.addEventListener('click', () => view.goForward());
+  reloadBtn.addEventListener('click', () => view.reload());
 
   goBtn.addEventListener('click', () => navigateTo(instance, urlInput.value));
   urlInput.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -558,7 +580,7 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     const metadata = instance.flowPickerPending;
     dismissFlowPicker(instance);
     if (action === 'click' || action === 'click-and-record') {
-      instance.webview.send('flow-do-click', metadata.selectors[0]?.value ?? '');
+      instance.view.send('flow-do-click', metadata.selectors[0]?.value ?? '');
     }
     if (action === 'record' || action === 'click-and-record') {
       addFlowStep(instance, {
@@ -601,31 +623,31 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     addFlowStep(instance, { type: 'navigate', url });
   }
 
-  webview.addEventListener('did-navigate', ((e: CustomEvent) => {
-    urlInput.value = e.url;
+  view.onDidNavigate((navUrl) => {
+    urlInput.value = navUrl;
     newTabPage.style.display = 'none';
-    appState.updateSessionBrowserTabUrl(sessionId, e.url);
-    if (instance.flowMode) recordNavigationStep(e.url);
-  }) as EventListener);
-  webview.addEventListener('did-navigate-in-page', ((e: CustomEvent) => {
-    urlInput.value = e.url;
-    appState.updateSessionBrowserTabUrl(sessionId, e.url);
-    if (instance.flowMode) recordNavigationStep(e.url);
-  }) as EventListener);
+    appState.updateSessionBrowserTabUrl(sessionId, navUrl);
+    if (instance.flowMode) recordNavigationStep(navUrl);
+  });
+  view.onDidNavigateInPage((navUrl) => {
+    urlInput.value = navUrl;
+    appState.updateSessionBrowserTabUrl(sessionId, navUrl);
+    if (instance.flowMode) recordNavigationStep(navUrl);
+  });
 
-  webview.addEventListener('ipc-message', ((e: CustomEvent) => {
-    if (e.channel === 'element-selected') {
-      const { metadata, x, y } = e.args[0] as { metadata: Omit<ElementInfo, 'activeSelector'>; x: number; y: number };
+  view.onIpcMessage((channel, args) => {
+    if (channel === 'element-selected') {
+      const { metadata, x, y } = args[0] as { metadata: Omit<ElementInfo, 'activeSelector'>; x: number; y: number };
       const info: ElementInfo = { ...metadata, activeSelector: metadata.selectors[0] };
       showElementInfo(instance, info, x, y);
-    } else if (e.channel === 'flow-element-picked') {
-      const { metadata, x, y } = e.args[0] as { metadata: FlowPickerMetadata; x: number; y: number };
+    } else if (channel === 'flow-element-picked') {
+      const { metadata, x, y } = args[0] as { metadata: FlowPickerMetadata; x: number; y: number };
       showFlowPicker(instance, metadata, x, y);
-    } else if (e.channel === 'draw-stroke-end') {
-      const { x, y } = e.args[0] as { x: number; y: number };
+    } else if (channel === 'draw-stroke-end') {
+      const { x, y } = args[0] as { x: number; y: number };
       positionDrawPopover(instance, x, y);
     }
-  }) as EventListener);
+  });
 
 }
 
@@ -661,11 +683,12 @@ export function destroyBrowserTabPane(sessionId: string): void {
 
   // <webview> calls throw if it isn't attached + dom-ready yet. Guard each
   // one individually so a failure can't skip instance.element.remove() below.
-  try { if (instance.inspectMode) instance.webview.send('exit-inspect-mode'); } catch {}
-  try { if (instance.flowMode) instance.webview.send('exit-flow-mode'); } catch {}
-  try { if (instance.drawMode) instance.webview.send('exit-draw-mode'); } catch {}
-  try { instance.webview.stop(); } catch {}
-  try { instance.webview.src = 'about:blank'; } catch {}
+  try { if (instance.inspectMode) instance.view.send('exit-inspect-mode'); } catch {}
+  try { if (instance.flowMode) instance.view.send('exit-flow-mode'); } catch {}
+  try { if (instance.drawMode) instance.view.send('exit-draw-mode'); } catch {}
+  try { instance.view.stop(); } catch {}
+  try { instance.view.setSrc('about:blank'); } catch {}
+  try { instance.view.destroy(); } catch {}
 
   instance.element.remove();
 }

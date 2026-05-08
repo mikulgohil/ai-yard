@@ -12,11 +12,11 @@ export function toggleDrawMode(instance: BrowserTabInstance): void {
   instance.inspectBtn.disabled = instance.drawMode;
   instance.recordBtn.disabled = instance.drawMode;
   if (instance.drawMode) {
-    instance.webview.send('enter-draw-mode');
+    instance.view.send('enter-draw-mode');
     instance.drawInstructionInput.value = '';
     instance.drawInstructionInput.dispatchEvent(new Event('input'));
   } else {
-    instance.webview.send('exit-draw-mode');
+    instance.view.send('exit-draw-mode');
     instance.drawPanel.style.display = 'none';
   }
 }
@@ -29,7 +29,7 @@ export function positionDrawPopover(instance: BrowserTabInstance, x: number, y: 
 }
 
 export function clearDrawing(instance: BrowserTabInstance): void {
-  instance.webview.send('draw-clear');
+  instance.view.send('draw-clear');
   instance.drawPanel.style.display = 'none';
 }
 
@@ -56,7 +56,7 @@ export function showDrawError(instance: BrowserTabInstance, message: string): vo
 /** @internal Exported for testing */
 export async function captureScreenshotPath(instance: BrowserTabInstance): Promise<string | null> {
   try {
-    const image = await instance.webview.capturePage();
+    const image = await instance.view.capturePage();
     return await window.aiyard.browser.saveScreenshot(instance.sessionId, image.toDataURL());
   } catch (err) {
     console.error('Failed to capture browser screenshot', err);

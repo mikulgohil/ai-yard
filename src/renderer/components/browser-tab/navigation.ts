@@ -15,7 +15,7 @@ export function navigateTo(instance: BrowserTabInstance, url: string): void {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) return;
   instance.urlInput.value = normalizedUrl;
-  instance.webview.src = normalizedUrl;
+  instance.view.setSrc(normalizedUrl);
   instance.newTabPage.style.display = 'none';
   trackInteraction('browser-tab', 'navigate');
 }

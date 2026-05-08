@@ -7,17 +7,12 @@ export function applyViewport(instance: BrowserTabInstance, preset: ViewportPres
   instance.viewportBtn.textContent = label;
   instance.viewportBtn.classList.toggle('active', preset.width !== null);
 
-  const webviewEl = instance.webview as unknown as HTMLElement;
-  if (preset.width !== null) {
+  if (preset.width !== null && preset.height !== null) {
     instance.viewportContainer.classList.remove('responsive');
-    webviewEl.style.width = `${preset.width}px`;
-    webviewEl.style.height = `${preset.height}px`;
-    webviewEl.style.flex = 'none';
+    instance.view.setExplicitSize(preset.width, preset.height);
   } else {
     instance.viewportContainer.classList.add('responsive');
-    webviewEl.style.width = '';
-    webviewEl.style.height = '';
-    webviewEl.style.flex = '';
+    instance.view.clearExplicitSize();
   }
 }
 
@@ -35,8 +30,7 @@ export function getViewportContext(instance: BrowserTabInstance, include: boolea
   if (vp.width !== null) {
     return ` [viewport: ${vp.width}×${vp.height} – ${vp.label}]`;
   }
-  const el = instance.webview as unknown as HTMLElement;
-  const rect = el.getBoundingClientRect();
+  const rect = instance.view.getBoundingClientRect();
   const w = Math.round(rect.width);
   const h = Math.round(rect.height);
   if (!w || !h) return '';

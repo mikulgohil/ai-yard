@@ -1,3 +1,5 @@
+import type { ViewAdapter } from './view-adapter.js';
+
 export interface SelectorOption {
   type: 'qa' | 'attr' | 'id' | 'css';
   label: string;
@@ -66,7 +68,14 @@ export interface WebviewElement extends HTMLElement {
 export interface BrowserTabInstance {
   sessionId: string;
   element: HTMLDivElement;
-  webview: WebviewElement;
+  view: ViewAdapter;
+  /**
+   * A5 Phase 2 feature flag. When true, the view is a main-process
+   * `WebContentsView` driven through IPC. When false (default), the legacy
+   * `<webview>` element is used. Phase 5 will flip the default and delete
+   * the legacy path.
+   */
+  useWebContentsView: boolean;
   viewportContainer: HTMLDivElement;
   newTabPage: HTMLDivElement;
   urlInput: HTMLInputElement;

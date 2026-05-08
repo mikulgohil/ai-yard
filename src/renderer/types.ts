@@ -1,5 +1,13 @@
 export type { Agent, ClaudeConfig, CliProviderCapabilities, CliProviderMeta, Command, CostData, GitFileEntry, GitWorktree, McpResult, McpServer, ProviderConfig, ProviderId, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ReadinessResult, Skill, StatsCache } from '../shared/types.js';
 
+import type {
+  BrowserViewCapturePageOutput,
+  BrowserViewCreateInput,
+  BrowserViewCreateOutput,
+  BrowserViewEvent,
+  ViewId,
+  ViewRect,
+} from '../shared/browser-view-contract.js';
 import type { CliProviderMeta, CostData, GitWorktree, McpResult, ProviderConfig, ProviderId, ReadinessResult, StatsCache } from '../shared/types.js';
 
 export interface AIYardApi {
@@ -69,6 +77,20 @@ export interface AIYardApi {
     getVersion(): Promise<string>;
     openExternal(url: string): Promise<void>;
     onQuitting(callback: () => void): () => void;
+  };
+  browserView: {
+    create(input: BrowserViewCreateInput): Promise<BrowserViewCreateOutput>;
+    destroy(viewId: ViewId): Promise<void>;
+    setBounds(viewId: ViewId, rect: ViewRect): Promise<void>;
+    navigate(viewId: ViewId, url: string): Promise<void>;
+    goBack(viewId: ViewId): Promise<void>;
+    goForward(viewId: ViewId): Promise<void>;
+    reload(viewId: ViewId): Promise<void>;
+    stop(viewId: ViewId): Promise<void>;
+    send(viewId: ViewId, channel: string, args: unknown[]): Promise<void>;
+    capturePage(viewId: ViewId): Promise<BrowserViewCapturePageOutput>;
+    setPreload(viewId: ViewId, preloadPath: string): Promise<void>;
+    onEvent(viewId: ViewId, callback: (event: BrowserViewEvent) => void): () => void;
   };
   mcp: {
     connect(id: string, url: string): Promise<McpResult>;

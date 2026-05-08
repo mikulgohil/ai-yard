@@ -1,6 +1,15 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron';
 import * as os from 'os';
 import * as path from 'path';
+import {
+  BROWSER_VIEW_CHANNELS,
+  type BrowserViewCapturePageOutput,
+  type BrowserViewCreateInput,
+  type BrowserViewCreateOutput,
+  type BrowserViewEvent,
+  type ViewId,
+  type ViewRect,
+} from '../shared/browser-view-contract';
 import type { CliProviderMeta, CostData, DeepSearchResult, GithubFetchResult, GithubRepo, InspectorEvent, ProviderConfig, ProviderId, ReadFileResult, ReadinessResult, SettingsValidationResult, SettingsWarningData, StatsCache, StatusLineConflictData, ToolFailureData } from '../shared/types';
 import { ZOOM_MAX, ZOOM_MIN } from '../shared/types';
 
@@ -99,6 +108,27 @@ export interface AIYardApi {
   };
   browser: {
     saveScreenshot(sessionId: string, dataUrl: string): Promise<string>;
+  };
+  /**
+   * WebContentsView-backed browser tab path (A5 Phase 2). Dormant unless the
+   * `BrowserTabInstance.useWebContentsView` flag is set; the flag defaults to
+   * `false` until Phase 5. Channel + payload contract lives in
+   * `src/shared/browser-view-contract.ts`.
+   */
+  browserView: {
+    create(input: BrowserViewCreateInput): Promise<BrowserViewCreateOutput>;
+    destroy(viewId: ViewId): Promise<void>;
+    setBounds(viewId: ViewId, rect: ViewRect): Promise<void>;
+    navigate(viewId: ViewId, url: string): Promise<void>;
+    goBack(viewId: ViewId): Promise<void>;
+    goForward(viewId: ViewId): Promise<void>;
+    reload(viewId: ViewId): Promise<void>;
+    stop(viewId: ViewId): Promise<void>;
+    send(viewId: ViewId, channel: string, args: unknown[]): Promise<void>;
+    capturePage(viewId: ViewId): Promise<BrowserViewCapturePageOutput>;
+    setPreload(viewId: ViewId, preloadPath: string): Promise<void>;
+    /** Subscribe to a single view's broadcast events. Returns an unsubscribe fn. */
+    onEvent(viewId: ViewId, callback: (event: BrowserViewEvent) => void): () => void;
   };
   mcp: {
     connect(id: string, url: string): Promise<{ success: boolean; data?: unknown; error?: string }>;
@@ -276,6 +306,27 @@ const api: AIYardApi = {
   browser: {
     saveScreenshot: (sessionId: string, dataUrl: string) =>
       ipcRenderer.invoke('browser:saveScreenshot', sessionId, dataUrl),
+  },
+  browserView: {
+    create: (input) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.create, input),
+    destroy: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.destroy, { viewId }),
+    setBounds: (viewId, rect) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.setBounds, { viewId, rect }),
+    navigate: (viewId, url) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.navigate, { viewId, url }),
+    goBack: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.goBack, { viewId }),
+    goForward: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.goForward, { viewId }),
+    reload: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.reload, { viewId }),
+    stop: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.stop, { viewId }),
+    send: (viewId, channel, args) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.send, { viewId, channel, args }),
+    capturePage: (viewId) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.capturePage, { viewId }),
+    setPreload: (viewId, preloadPath) => ipcRenderer.invoke(BROWSER_VIEW_CHANNELS.setPreload, { viewId, preloadPath }),
+    onEvent: (viewId, callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => {
+        const event = payload as BrowserViewEvent;
+        if (event && event.viewId === viewId) callback(event);
+      };
+      ipcRenderer.on(BROWSER_VIEW_CHANNELS.event, listener);
+      return () => ipcRenderer.removeListener(BROWSER_VIEW_CHANNELS.event, listener);
+    },
   },
   mcp: {
     connect: (id: string, url: string) => ipcRenderer.invoke('mcp:connect', id, url),
