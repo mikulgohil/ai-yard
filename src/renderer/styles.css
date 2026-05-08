@@ -1,4 +1,5 @@
 @import url('./styles/base.css');
+@import url('./styles/primitives.css');
 @import url('./styles/sidebar.css');
 @import url('./styles/file-tree.css');
 @import url('./styles/tabs.css');

@@ -79,34 +79,7 @@
   font-weight: 600;
 }
 
-.modal-field input {
-  padding: 8px 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 13px;
-  outline: none;
-}
-
-.modal-field input:focus,
-.modal-field textarea:focus {
-  border-color: var(--accent);
-}
-
-.modal-field textarea {
-  padding: 8px 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  resize: vertical;
-  width: 100%;
-  box-sizing: border-box;
-}
+/* .modal-field input / textarea — see primitives.css (.input / .textarea) */
 
 /* Custom select dropdown */
 .custom-select {
@@ -313,29 +286,7 @@
   margin-top: 16px;
 }
 
-.modal-btn {
-  padding: 6px 16px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.modal-btn:hover {
-  background: var(--bg-hover);
-}
-
-.modal-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.modal-btn.primary:hover {
-  background: var(--accent-dim);
-}
+/* .modal-btn / .modal-btn.primary — see primitives.css (.btn / .btn-primary) */
 
 /* Config sections */
 #config-sections {
