@@ -39,7 +39,7 @@ Personal fork of Vibeyard ([elirantutia/vibeyard](https://github.com/elirantutia
 - Runtime: app launches, state persists to `~/.ai-yard/state.json`, hooks dir at `~/.ai-yard/run/`
 
 ### Known accepted debt
-1. App icons (`build/icon.png`, `build/icon.icns`) and `build/ai-yard-black.png` still display **Vibeyard branding** — only filenames were renamed.
+1. ~~App icons display **Vibeyard branding**~~ — *Resolved 2026-05-08 (commit `8982658`): new AY monogram mark in terracotta on midnight. `ai-yard-black.png` is orphaned but kept on disk to keep the change small.*
 2. `mikulgohil/ai-yard` GitHub repo doesn't exist yet (URLs in `package.json` are 404).
 3. `bin/ai-yard.js` launcher is **inert** without a release pipeline (no `electron-builder` publish target).
 4. `.github/workflows/*.yml` not audited for vibeyard-specific behaviors.
@@ -62,8 +62,8 @@ The original Tier 4 entry "Remove the default `localhost:3000` browser tab seed 
 Tiered by impact + effort. Pick a tier and execute; don't try to span multiple tiers in one session.
 
 ### Tier 1 — Identity / branding (~1–2 hours)
-- [ ] **Generate new icon set** — `build/icon.icns` (mac), `build/icon.png` (linux/win), various sizes. Should fit the AI-kit / AI-yard brand family.
-- [ ] **Replace `build/ai-yard-black.png`** with a new logo image — README and About dialog reference it.
+- [x] **Generate new icon set** — AY monogram ligature in terracotta on midnight. Master at `build/icon.svg`; `scripts/generate-icons.js` regenerates `icon.png` (1024), `icon.ico` (multi-res Win), `icon.icns` (mac retina). *(Done 2026-05-08, commit `8982658`)*
+- [x] **Replace `build/ai-yard-black.png`** — README hero image now points at `build/icon.png` (the new branded mark). The legacy `build/ai-yard-black.png` is orphaned with no remaining references; leave in place or delete in a future cleanup pass. *(Done 2026-05-08)*
 - [ ] **Visual smoke test**: open every dialog (About, Preferences, Help, Star prompt, What's New, Update banner) — confirm zero "Vibeyard" strings remain in UI.
 - [ ] Decide whether to keep the Vibeyard demo GIFs (`assets/vibyard_720.gif`, `assets/web-ui-short.gif`, `assets/kanban.gif`) in README or remove until you record AI-yard equivalents.
 

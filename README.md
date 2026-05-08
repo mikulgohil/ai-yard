@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="build/ai-yard-black.png" alt="AI-yard" width="128" />
+  <img src="build/icon.png" alt="AI-yard" width="128" />
 </p>
 
 <h1 align="center">AI-yard</h1>

@@ -26,6 +26,8 @@ Requires Node v24 (see `.nvmrc`).
 
 Cross-platform: builds and runs on macOS, Linux, and Windows. Release artifacts (via electron-builder) include `.dmg`/`.zip` (mac), `.deb`/`.AppImage` (linux), and NSIS installer + portable `.exe` (win). CI covers all three platforms.
 
+**Brand assets**: `build/icon.svg` is the master source for the AI-yard mark (AY monogram ligature, terracotta on midnight). Run `node scripts/generate-icons.js` after editing it to regenerate `build/icon.png` (1024 PNG), `build/icon.ico` (multi-res Windows), and `build/icon.icns` (macOS retina iconset via `iconutil`). The generator is one-shot — not wired into the build pipeline. `scripts/copy-vite-public.js` then propagates `icon.png` through to `dist/renderer/` on the next build. `package.json` electron-builder config: `mac.icon` → `.icns`, `win.icon` → `.ico`, `linux.icon` and root `icon` → `.png`.
+
 ## Testing
 
 ```bash
