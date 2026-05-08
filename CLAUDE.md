@@ -11,13 +11,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run
 
 ```bash
-npm run build    # Compile all three targets (main, preload, renderer) + copy assets
-npm start        # Build then launch Electron app (alias: npm run dev)
+npm run dev          # HMR dev mode (Vite renderer + tsc watches for main/preload + Electron)
+npm run dev:legacy   # Old behavior — full build + launch (no HMR)
+npm run build        # Production build via Vite (default since B9)
+npm run build:legacy # Production build via esbuild (rollback path; emits IIFE)
+npm start            # Build (Vite) then launch Electron
 ```
 
-No hot reload — changes require rebuild + app restart.
+**HMR (added 2026-05-07, B9)**: `npm run dev` runs Vite's dev server for the renderer (HMR <1s on file change) alongside `tsc --watch` for main/preload and Electron loading from `http://localhost:5173`. Renderer changes hot-reload without restart. Main/preload changes still require a manual Electron restart.
 
-Requires Node v24 (see `.nvmrc`). No lint tooling is configured.
+The renderer Vite config lives at `vite.renderer.config.ts` (renamed from the default `vite.config.ts` so vitest's auto-config-load doesn't pick it up; the build/dev scripts pass `--config vite.renderer.config.ts` explicitly). Static assets (`xterm.css`, `vendor/gridstack.min.css`, `icon.png`, `CHANGELOG.md`, `assets/providers/`) are staged into `src/renderer/.vite-public/` (gitignored, populated by `scripts/copy-vite-public.js`) which Vite serves at root in dev and copies into `dist/renderer/` at build time. The legacy `scripts/copy-assets.js` (used only by `build:renderer:legacy`) rewrites the HTML's `<script type="module" src="./index.ts">` back to the IIFE form `<script src="index.js">`.
+
+Requires Node v24 (see `.nvmrc`).
 
 Cross-platform: builds and runs on macOS, Linux, and Windows. Release artifacts (via electron-builder) include `.dmg`/`.zip` (mac), `.deb`/`.AppImage` (linux), and NSIS installer + portable `.exe` (win). CI covers all three platforms.
 
@@ -39,8 +44,8 @@ Three renderer modules (`session-cost.ts`, `session-activity.ts`, `session-conte
 
 Three-process Electron architecture with strict context isolation:
 
-- **Main process** (`src/main/`) — Node.js side: window creation, PTY lifecycle via `node-pty`, filesystem access, persistent state (`~/.ai-yard/state.json`). IPC handlers in `ipc-handlers.ts` dispatch to `pty-manager.ts` and `store.ts`. CLI tool behavior is abstracted via the provider system (`src/main/providers/`).
-- **Preload** (`src/preload/preload.ts`) — Secure bridge exposing `window.aiyard` API via `contextBridge` with namespaces: `pty`, `session`, `store`, `fs`, `provider`, `menu`, `telemetry` (fire-and-forget; no-op unless prefs + env vars enable it — see `src/main/telemetry.ts` and `docs/PRIVACY.md`).
+- **Main process** (`src/main/`) — Node.js side: window creation, PTY lifecycle via `node-pty`, filesystem access, persistent state (`~/.ai-yard/state.json`). IPC handlers in `ipc-handlers.ts` are a barrel that delegates to per-domain modules in `src/main/ipc/`: `app.ts`, `browser-view.ts` (A5 Phases 2+3; dormant `WebContentsView` owner — `Map<viewId, {view, window, cleanups}>`; positioning driven from the renderer-side ResizeObserver in `view-adapter.ts`), `fs.ts`, `git.ts`, `github.ts`, `provider.ts`, `pty.ts`, `session.ts`, `store.ts`. CLI tool behavior is abstracted via the provider system (`src/main/providers/`).
+- **Preload** (`src/preload/preload.ts`) — Secure bridge exposing `window.aiyard` API via `contextBridge` with namespaces: `pty`, `session`, `store`, `fs`, `provider`, `menu`, `telemetry` (fire-and-forget; no-op unless prefs + env vars enable it — see `src/main/telemetry.ts` and `docs/PRIVACY.md`), `browserView` (dormant Phase 2 path for the WebContentsView migration; no-op until `BrowserTabInstance.useWebContentsView` is set — see `docs/MIGRATION_WEBVIEW.md` and `src/shared/browser-view-contract.ts`).
 - **Renderer** (`src/renderer/`) — Vanilla TypeScript DOM UI (no framework). `AppState` singleton in `state.ts` uses an event emitter pattern; components in `components/` subscribe to state changes.
 
 ### Data Flow
@@ -68,7 +73,7 @@ CLI-specific behavior is encapsulated behind a `CliProvider` interface (`src/mai
 - `split-layout.ts` — Manages tab mode (single terminal) vs split mode (side-by-side)
 - `session-activity.ts` — Tracks working/waiting/idle status with debounced transitions
 - `session-cost.ts` — Structured cost tracking via Claude CLI status line (`statusLine` setting), with regex fallback for older CLI versions. Provides per-session and aggregate cost data (USD, tokens, cache, duration)
-- `browser-tab/` — Browser tab pane split into focused modules: `types.ts`, `instance.ts` (registry + preload path), `navigation.ts`, `viewport.ts`, `selector-ui.ts`, `inspect-mode.ts`, `flow-recording.ts`, `flow-picker.ts`, `session-integration.ts`, and `pane.ts` (DOM build + event wiring). `browser-tab-pane.ts` is a re-export shim for backward compatibility.
+- `browser-tab/` — Browser tab pane split into focused modules: `types.ts`, `instance.ts` (registry + preload path), `navigation.ts`, `viewport.ts`, `selector-ui.ts`, `inspect-mode.ts`, `flow-recording.ts`, `flow-picker.ts`, `session-integration.ts`, `view-adapter.ts` (the `ViewAdapter` interface + `createWebviewAdapter` and dormant `createWebContentsViewAdapter`; the WCV adapter owns a `ResizeObserver` + `window.resize` listener that rAF-debounces `setBounds` pushes through `browser-view:setBounds`, with hidden panes collapsing to `{0,0,0,0}` via `placeholder.offsetParent === null`; see A5 below), and `pane.ts` (DOM build + event wiring; branches between the two adapters behind `BrowserTabInstance.useWebContentsView`, default `false`). `browser-tab-pane.ts` is a re-export shim for backward compatibility. **A5 migration in progress** — Phases 1 + 2 + 3 + 4 of `<webview>` → `WebContentsView` are done (see `docs/MIGRATION_WEBVIEW.md`); the new path is dormant until Phase 5 flips the flag default. Phase 4 added: a `bubbleHostMessage(channel, payload)` helper in `src/preload/browser-tab-preload.ts` that dual-emits `sendToHost` + `send` (no runtime context detection — the wrong emit is a silent no-op in each path), and synchronous main-side `event.preventDefault()` inside `before-input-event` for keystrokes matching `isAppAccelerator(input)` (mirrors the static `SHORTCUT_DEFAULTS`, skips universal text-editing combos like Cmd/Ctrl+S/Z/C/V/X/A so embedded pages keep them). User-customized keybindings aren't synced to main today — documented gap. Phase 5 (cutover) is the next slice.
 - `board-state.ts` — Kanban board CRUD: tasks, columns, tags, reorder. Mutates `appState.activeProject.board` in place, calls `appState.notifyBoardChanged()`.
 - `board-filter.ts` — Module-level search query and tag filter state for the board. Observer pattern via `onFilterChange()`.
 - `board-session-sync.ts` — Listens to session lifecycle events and auto-moves board tasks (e.g. to Done on session complete).
