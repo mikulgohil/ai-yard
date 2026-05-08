@@ -10,11 +10,13 @@
 #tab-bar {
   display: flex;
   align-items: center;
-  background: var(--tab-inactive);
-  border-bottom: 1px solid var(--border);
-  height: 36px;
-  min-height: 36px;
+  background: var(--bg-chrome);
+  box-shadow: inset 0 -1px 0 var(--border-subtle);
+  height: 38px;
+  min-height: 38px;
   user-select: none;
+  gap: 12px;
+  padding-right: 4px;
 }
 
 #tab-list {
@@ -23,6 +25,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   height: 100%;
+  min-width: 0;
 }
 
 #tab-list::-webkit-scrollbar {
@@ -36,37 +39,54 @@
 .tab-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 0 14px;
   height: 100%;
+  min-width: 120px;
+  max-width: 220px;
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   white-space: nowrap;
-  border-right: 1px solid var(--border);
   position: relative;
+  transition: background var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out);
+}
+
+.tab-item + .tab-item {
+  box-shadow: inset 1px 0 0 var(--border-subtle);
+}
+
+.tab-item .tab-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-item:hover {
   background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .tab-item.active {
-  background: var(--tab-active);
+  background: var(--bg-canvas);
   color: var(--text-primary);
 }
 
 .tab-item.unread .tab-name {
-  color: var(--accent);
+  color: var(--status-info);
+  font-weight: 600;
 }
 
-.tab-item.active::after {
+.tab-item.active::before {
   content: '';
   position: absolute;
-  bottom: 0;
+  top: 6px;
+  bottom: 6px;
   left: 0;
-  right: 0;
-  height: 2px;
+  width: 2px;
+  border-radius: 2px;
   background: var(--accent);
 }
 
@@ -76,28 +96,33 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--bg-chrome);
+}
+
+.tab-item.active .tab-status {
+  box-shadow: 0 0 0 2px var(--bg-canvas);
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.35; }
 }
 
 .tab-status.working {
-  background: var(--accent);
+  background: var(--status-info);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .tab-status.waiting {
-  background: #f4b400;
+  background: var(--status-warn);
 }
 
 .tab-status.completed {
-  background: #34a853;
+  background: var(--status-success);
 }
 
 .tab-status.input {
-  background: #e67e22;
+  background: var(--status-input);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
@@ -118,9 +143,10 @@
 }
 
 .tab-cost {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .tab-cost:empty {
@@ -133,27 +159,47 @@
   opacity: 0;
   cursor: pointer;
   color: var(--text-muted);
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out),
+              background var(--motion-fast) var(--ease-out);
 }
 
-.tab-item:hover .tab-close {
-  opacity: 1;
+.tab-item:hover .tab-close,
+.tab-item.active .tab-close {
+  opacity: 0.85;
 }
 
 .tab-close:hover {
-  color: var(--accent);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  opacity: 1 !important;
 }
 
 /* Git status indicator */
 #git-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  font-size: 11px;
+  gap: 8px;
+  padding: 4px 10px;
+  font-size: var(--text-xs);
   white-space: nowrap;
   user-select: none;
   flex-shrink: 0;
   cursor: pointer;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+#git-status:hover {
+  border-color: var(--border);
 }
 
 #git-status:empty {
@@ -162,18 +208,20 @@
 
 #git-status .git-branch {
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 #git-status .git-ahead-behind {
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 #git-status .git-staged {
-  color: #34a853;
+  color: var(--status-success);
 }
 
 #git-status .git-modified {
-  color: #f4b400;
+  color: var(--status-warn);
 }
 
 #git-status .git-untracked {
@@ -181,14 +229,15 @@
 }
 
 #git-status .git-conflicted {
-  color: var(--accent);
+  color: var(--status-danger);
 }
 
 #tab-actions {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 0 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-subtle);
 }
 
 .icon-btn {
@@ -197,18 +246,25 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 16px;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  transition: background var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out),
+              border-color var(--motion-fast) var(--ease-out);
 }
 
 .icon-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-  border-color: var(--border);
+}
+
+.icon-btn:active {
+  background: var(--bg-elevated-hover);
+  transform: translateY(0.5px);
 }
 
 .toolbar-icon {

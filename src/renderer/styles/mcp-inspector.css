@@ -79,11 +79,11 @@
 }
 
 .mcp-status.connected {
-  background: #34a853;
+  background: var(--status-success);
 }
 
 .mcp-status.connecting {
-  background: #f4b400;
+  background: var(--status-warn);
   animation: pulse 1s ease-in-out infinite;
 }
 

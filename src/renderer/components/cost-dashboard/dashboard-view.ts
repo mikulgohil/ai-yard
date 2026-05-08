@@ -225,24 +225,30 @@ function buildChartCard(buckets: CostBucket[]): HTMLElement {
     return card;
   }
 
-  card.appendChild(buildBarChart(buckets));
+  const wrap = document.createElement('div');
+  wrap.className = 'cost-dashboard-chart-wrap';
+  wrap.appendChild(buildBarChart(buckets));
+  card.appendChild(wrap);
   return card;
 }
 
 const CHART_HEIGHT = 160;
 const CHART_PAD_BOTTOM = 24;
 const CHART_PAD_TOP = 16;
+const SLOT_WIDTH = 60;
 
 function buildBarChart(buckets: CostBucket[]): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('cost-dashboard-chart');
-  svg.setAttribute('viewBox', `0 0 ${buckets.length * 60 || 60} ${CHART_HEIGHT}`);
-  svg.setAttribute('preserveAspectRatio', 'none');
+  const chartWidth = buckets.length * SLOT_WIDTH || SLOT_WIDTH;
+  svg.setAttribute('width', String(chartWidth));
+  svg.setAttribute('height', String(CHART_HEIGHT));
+  svg.setAttribute('viewBox', `0 0 ${chartWidth} ${CHART_HEIGHT}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `Spend over time, ${buckets.length} buckets`);
 
   const max = Math.max(...buckets.map((b) => b.totalCostUsd), 0.01);
-  const slotWidth = 60;
+  const slotWidth = SLOT_WIDTH;
   const barWidth = 36;
 
   for (let i = 0; i < buckets.length; i++) {

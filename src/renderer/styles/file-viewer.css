@@ -41,10 +41,10 @@
   flex-shrink: 0;
 }
 
-.file-viewer-area-badge.staged { background: rgba(52, 168, 83, 0.15); color: #34a853; }
-.file-viewer-area-badge.working { background: rgba(244, 180, 0, 0.15); color: #f4b400; }
-.file-viewer-area-badge.untracked { background: rgba(96, 96, 112, 0.15); color: var(--text-muted); }
-.file-viewer-area-badge.conflicted { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+.file-viewer-area-badge.staged { background: color-mix(in srgb, var(--status-success) 15%, transparent); color: var(--status-success); }
+.file-viewer-area-badge.working { background: color-mix(in srgb, var(--status-warn) 15%, transparent); color: var(--status-warn); }
+.file-viewer-area-badge.untracked { background: color-mix(in srgb, var(--text-muted) 15%, transparent); color: var(--text-muted); }
+.file-viewer-area-badge.conflicted { background: color-mix(in srgb, var(--status-input) 15%, transparent); color: var(--status-input); }
 
 .file-viewer-close {
   background: none;
@@ -92,13 +92,13 @@
 }
 
 .diff-line.added {
-  background: rgba(52, 168, 83, 0.15);
-  color: #34a853;
+  background: color-mix(in srgb, var(--status-success) 15%, transparent);
+  color: var(--status-success);
 }
 
 .diff-line.removed {
-  background: rgba(233, 69, 96, 0.15);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--status-danger) 15%, transparent);
+  color: var(--status-danger);
 }
 
 .diff-line.hunk {
@@ -154,10 +154,10 @@
   flex-shrink: 0;
 }
 
-.file-viewer-area-badge.staged { background: rgba(52, 168, 83, 0.15); color: #34a853; }
-.file-viewer-area-badge.working { background: rgba(244, 180, 0, 0.15); color: #f4b400; }
-.file-viewer-area-badge.untracked { background: rgba(96, 96, 112, 0.15); color: var(--text-muted); }
-.file-viewer-area-badge.conflicted { background: rgba(233, 69, 96, 0.15); color: var(--accent); }
+.file-viewer-area-badge.staged { background: color-mix(in srgb, var(--status-success) 15%, transparent); color: var(--status-success); }
+.file-viewer-area-badge.working { background: color-mix(in srgb, var(--status-warn) 15%, transparent); color: var(--status-warn); }
+.file-viewer-area-badge.untracked { background: color-mix(in srgb, var(--text-muted) 15%, transparent); color: var(--text-muted); }
+.file-viewer-area-badge.conflicted { background: color-mix(in srgb, var(--status-danger) 15%, transparent); color: var(--status-danger); }
 
 .file-viewer-body {
   flex: 1;
@@ -178,13 +178,13 @@
 }
 
 .diff-line.added {
-  background: rgba(52, 168, 83, 0.12);
-  color: #5fba7d;
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
 }
 
 .diff-line.removed {
-  background: rgba(233, 69, 96, 0.12);
-  color: #e8788a;
+  background: color-mix(in srgb, var(--status-danger) 12%, transparent);
+  color: var(--status-danger);
 }
 
 .diff-line.hunk {
@@ -204,8 +204,8 @@
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
-  background: rgba(244, 180, 0, 0.2);
-  color: #f4b400;
+  background: color-mix(in srgb, var(--status-warn) 20%, transparent);
+  color: var(--status-warn);
   vertical-align: middle;
 }
 

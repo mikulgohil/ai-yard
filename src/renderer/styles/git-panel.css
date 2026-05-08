@@ -54,12 +54,12 @@
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
 }
 
-.git-file-badge.added { color: #34a853; }
-.git-file-badge.modified { color: #f4b400; }
-.git-file-badge.deleted { color: var(--accent); }
-.git-file-badge.renamed { color: #4a90d9; }
+.git-file-badge.added { color: var(--status-success); }
+.git-file-badge.modified { color: var(--status-warn); }
+.git-file-badge.deleted { color: var(--status-danger); }
+.git-file-badge.renamed { color: var(--status-info); }
 .git-file-badge.untracked { color: var(--text-muted); }
-.git-file-badge.conflicted { color: #e67e22; }
+.git-file-badge.conflicted { color: var(--status-input); }
 
 .git-item-actions {
   display: flex;

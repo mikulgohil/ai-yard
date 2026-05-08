@@ -5,11 +5,19 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(8, 8, 10, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 300;
+  animation: modal-overlay-in var(--motion-base) var(--ease-out);
+}
+
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 #modal-overlay.hidden, .modal-overlay.hidden {
@@ -17,19 +25,32 @@
 }
 
 #modal, .modal-box {
-  background: var(--bg-secondary);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-lg);
+  padding: 22px;
   min-width: 380px;
   max-width: 500px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-3);
+  animation: modal-in var(--motion-base) var(--ease-out);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 #modal-title, .modal-title {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   margin-bottom: 16px;
+  letter-spacing: -0.01em;
 }
 
 #modal-body, .modal-body {
@@ -51,10 +72,11 @@
 }
 
 .modal-field label {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: var(--tracking-label);
+  font-weight: 600;
 }
 
 .modal-field input {
