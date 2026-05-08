@@ -6,6 +6,7 @@ import { Terminal } from '@xterm/xterm';
 import type { ShareMode } from '../../shared/sharing-types.js';
 import { appState } from '../state.js';
 import { getTerminalTheme } from '../terminal-theme.js';
+import type { ThemeName } from '../theme.js';
 import { attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
 
 interface RemoteTerminalInstance {
@@ -57,7 +58,7 @@ export function createRemoteTerminalPane(
   element.appendChild(statusBar);
 
   const terminal = new Terminal({
-    theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
+    theme: getTerminalTheme(appState.preferences.theme),
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
     cursorBlink: mode === 'readwrite',
@@ -168,7 +169,7 @@ export function showRemoteEndOverlay(sessionId: string): void {
   instance.element.appendChild(overlay);
 }
 
-export function applyThemeToAllRemoteTerminals(theme: 'dark' | 'light'): void {
+export function applyThemeToAllRemoteTerminals(theme: ThemeName): void {
   const termTheme = getTerminalTheme(theme);
   for (const instance of instances.values()) {
     instance.terminal.options.theme = termTheme;

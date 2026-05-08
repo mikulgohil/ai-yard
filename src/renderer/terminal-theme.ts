@@ -1,4 +1,5 @@
 import type { ITheme } from '@xterm/xterm';
+import { isDarkTheme, type ThemeName, resolveTheme } from './theme.js';
 
 export const darkTerminalTheme: ITheme = {
   background: '#000000',
@@ -46,6 +47,7 @@ export const lightTerminalTheme: ITheme = {
   brightWhite: '#2c2c2c',
 };
 
-export function getTerminalTheme(theme: 'dark' | 'light'): ITheme {
-  return theme === 'light' ? lightTerminalTheme : darkTerminalTheme;
+export function getTerminalTheme(theme: ThemeName | string | undefined | null): ITheme {
+  const resolved = resolveTheme(theme);
+  return isDarkTheme(resolved) ? darkTerminalTheme : lightTerminalTheme;
 }

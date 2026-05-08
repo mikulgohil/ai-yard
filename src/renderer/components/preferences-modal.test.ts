@@ -261,13 +261,33 @@ describe('showPreferencesModal theme preference', () => {
   });
 
   it('uses the persisted theme value for the theme select', async () => {
+    mockState.preferences.theme = 'paper';
+    const { showPreferencesModal } = await import('./preferences-modal.js');
+
+    showPreferencesModal();
+    selectPreferencesSection('appearance');
+
+    expect(selectState.instances.get('pref-theme')?.getValue()).toBe('paper');
+  });
+
+  it('aliases the legacy "dark" persisted theme to "midnight"', async () => {
+    mockState.preferences.theme = 'dark';
+    const { showPreferencesModal } = await import('./preferences-modal.js');
+
+    showPreferencesModal();
+    selectPreferencesSection('appearance');
+
+    expect(selectState.instances.get('pref-theme')?.getValue()).toBe('midnight');
+  });
+
+  it('aliases the legacy "light" persisted theme to "paper"', async () => {
     mockState.preferences.theme = 'light';
     const { showPreferencesModal } = await import('./preferences-modal.js');
 
     showPreferencesModal();
     selectPreferencesSection('appearance');
 
-    expect(selectState.instances.get('pref-theme')?.getValue()).toBe('light');
+    expect(selectState.instances.get('pref-theme')?.getValue()).toBe('paper');
   });
 
   it('previews and saves the selected theme', async () => {
@@ -277,28 +297,28 @@ describe('showPreferencesModal theme preference', () => {
     selectPreferencesSection('appearance');
 
     const themeSelect = selectState.instances.get('pref-theme')!;
-    themeSelect.setValue('light');
+    themeSelect.setValue('slate');
 
-    expect((document as any).documentElement.dataset.theme).toBe('light');
+    expect((document as any).documentElement.dataset.theme).toBe('slate');
 
     click(getElement('preferences-confirm'));
 
-    expect(mockState.setPreference).toHaveBeenCalledWith('theme', 'light');
+    expect(mockState.setPreference).toHaveBeenCalledWith('theme', 'slate');
   });
 
   it('restores the original theme on cancel', async () => {
     const { showPreferencesModal } = await import('./preferences-modal.js');
 
-    (document as any).documentElement.dataset.theme = 'dark';
+    (document as any).documentElement.dataset.theme = 'midnight';
     showPreferencesModal();
     selectPreferencesSection('appearance');
 
     const themeSelect = selectState.instances.get('pref-theme')!;
-    themeSelect.setValue('light');
+    themeSelect.setValue('paper');
     click(getElement('preferences-cancel'));
 
-    expect((document as any).documentElement.dataset.theme).toBe('dark');
-    expect(mockState.setPreference).not.toHaveBeenCalledWith('theme', 'light');
+    expect((document as any).documentElement.dataset.theme).toBe('midnight');
+    expect(mockState.setPreference).not.toHaveBeenCalledWith('theme', 'paper');
   });
 
   it('destroys each select once during cleanup', async () => {

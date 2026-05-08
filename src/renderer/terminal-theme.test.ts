@@ -28,12 +28,30 @@ describe('lightTerminalTheme', () => {
 });
 
 describe('getTerminalTheme()', () => {
-  it('returns darkTerminalTheme for "dark"', () => {
+  it('returns darkTerminalTheme for "midnight"', () => {
+    expect(getTerminalTheme('midnight')).toBe(darkTerminalTheme);
+  });
+
+  it('returns lightTerminalTheme for "paper"', () => {
+    expect(getTerminalTheme('paper')).toBe(lightTerminalTheme);
+  });
+
+  it('returns lightTerminalTheme for "slate"', () => {
+    expect(getTerminalTheme('slate')).toBe(lightTerminalTheme);
+  });
+
+  it('aliases legacy "dark" to the dark xterm theme', () => {
     expect(getTerminalTheme('dark')).toBe(darkTerminalTheme);
   });
 
-  it('returns lightTerminalTheme for "light"', () => {
+  it('aliases legacy "light" to the light xterm theme', () => {
     expect(getTerminalTheme('light')).toBe(lightTerminalTheme);
+  });
+
+  it('falls back to dark for undefined/unknown input', () => {
+    expect(getTerminalTheme(undefined)).toBe(darkTerminalTheme);
+    expect(getTerminalTheme(null)).toBe(darkTerminalTheme);
+    expect(getTerminalTheme('mystery')).toBe(darkTerminalTheme);
   });
 });
 

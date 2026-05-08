@@ -5,6 +5,7 @@ import { esc } from '../dom-utils.js';
 import { displayKeys, shortcutManager } from '../shortcuts.js';
 import { appState } from '../state.js';
 import { getTerminalTheme } from '../terminal-theme.js';
+import type { ThemeName } from '../theme.js';
 import { destroySearchBar, hideSearchBar } from './search-bar.js';
 import { fitAllVisible } from './terminal-pane.js';
 import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
@@ -68,7 +69,7 @@ function createShell(projectId: string): ShellTerminalInstance {
   element.style.position = 'relative';
 
   const terminal = new Terminal({
-    theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
+    theme: getTerminalTheme(appState.preferences.theme),
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
     cursorBlink: true,
@@ -465,7 +466,7 @@ export function getActiveShellSessionId(): string | null {
 
 export { isShellSessionId };
 
-export function applyThemeToAllShells(theme: 'dark' | 'light'): void {
+export function applyThemeToAllShells(theme: ThemeName): void {
   const termTheme = getTerminalTheme(theme);
   for (const list of shells.values()) {
     for (const instance of list) {

@@ -106,7 +106,7 @@ describe('applyThemeToAllRemoteTerminals()', () => {
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(darkTerminalTheme);
 
-    applyThemeToAllRemoteTerminals('light');
+    applyThemeToAllRemoteTerminals('paper');
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(lightTerminalTheme);
   });
@@ -116,7 +116,7 @@ describe('applyThemeToAllRemoteTerminals()', () => {
     const { appState } = await import('../state.js');
     const { createRemoteTerminalPane, getRemoteTerminalInstance, _resetForTesting } = await import('./remote-terminal-pane.js');
 
-    appState.preferences.theme = 'light';
+    appState.preferences.theme = 'paper';
 
     _resetForTesting();
     createRemoteTerminalPane('remote-2', 'readonly', 80, 24, () => {});

@@ -256,7 +256,7 @@ describe('applyThemeToAllTerminals()', () => {
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(darkTerminalTheme);
 
-    applyThemeToAllTerminals('light');
+    applyThemeToAllTerminals('paper');
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(lightTerminalTheme);
   });
@@ -266,7 +266,7 @@ describe('applyThemeToAllTerminals()', () => {
     const { createTerminalPane, getTerminalInstance } = await import('./terminal-pane.js');
     const { lightTerminalTheme } = await import('../terminal-theme.js');
 
-    appState.preferences.theme = 'light';
+    appState.preferences.theme = 'paper';
 
     createTerminalPane('claude-theme-2', '/project', null, false, '', 'claude');
     const instance = getTerminalInstance('claude-theme-2')!;

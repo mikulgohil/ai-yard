@@ -10,6 +10,7 @@ import { type CostInfo, formatTokens, removeSession as removeCostSession } from 
 import { markFreshSession } from '../session-insights.js';
 import { appState } from '../state.js';
 import { getTerminalTheme } from '../terminal-theme.js';
+import type { ThemeName } from '../theme.js';
 import type { ProviderId } from '../types.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
 import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback, wrapBracketedPaste } from './terminal-utils.js';
@@ -75,7 +76,7 @@ export function createTerminalPane(
   element.appendChild(statusBar);
 
   const terminal = new Terminal({
-    theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
+    theme: getTerminalTheme(appState.preferences.theme),
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
     cursorBlink: true,
@@ -195,7 +196,7 @@ export function getAllInstances(): Map<string, TerminalInstance> {
   return instances;
 }
 
-export function applyThemeToAllTerminals(theme: 'dark' | 'light'): void {
+export function applyThemeToAllTerminals(theme: ThemeName): void {
   const termTheme = getTerminalTheme(theme);
   for (const instance of instances.values()) {
     instance.terminal.options.theme = termTheme;

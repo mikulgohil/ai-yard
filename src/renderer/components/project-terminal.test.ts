@@ -209,7 +209,7 @@ describe('applyThemeToAllShells()', () => {
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(darkTerminalTheme);
 
-    applyThemeToAllShells('light');
+    applyThemeToAllShells('paper');
 
     expect((instance.terminal as unknown as FakeTerminal).options.theme).toBe(lightTerminalTheme);
   });
@@ -222,7 +222,7 @@ describe('applyThemeToAllShells()', () => {
     const project = { id: 'proj1', path: '/project', terminalPanelOpen: true, terminalPanelHeight: 200, sessions: [] };
     (appState as any).activeProject = project;
     (appState as any).projects = [project];
-    (appState as any).preferences.theme = 'light';
+    (appState as any).preferences.theme = 'paper';
 
     initProjectTerminal();
     stateHandlers['state-loaded']?.forEach(cb => { cb(); });

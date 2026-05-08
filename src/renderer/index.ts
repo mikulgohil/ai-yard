@@ -40,6 +40,7 @@ import { init as initSessionUnread } from './session-unread.js';
 import { isSharing } from './sharing/peer-host.js';
 import { cleanupAllShares, endShare, forwardPtyData, initShareManager } from './sharing/share-manager.js';
 import { appState } from './state.js';
+import { resolveTheme } from './theme.js';
 import { initLargeFileDetector } from './tools/large-file-detector.js';
 import { initToolDetector } from './tools/missing-tool-detector.js';
 import { getZoomFactor } from './zoom.js';
@@ -219,13 +220,13 @@ async function main(): Promise<void> {
     stateDir: window.aiyard.app.envPaths.state,
   });
 
-  // Apply theme from loaded preferences
-  const initialTheme = appState.preferences.theme ?? 'dark';
+  // Apply theme from loaded preferences (legacy 'dark'/'light' aliased to midnight/paper)
+  const initialTheme = resolveTheme(appState.preferences.theme);
   document.documentElement.dataset.theme = initialTheme;
 
   // Re-apply theme (and re-theme terminals) whenever preferences change
   appState.on('preferences-changed', () => {
-    const theme = appState.preferences.theme ?? 'dark';
+    const theme = resolveTheme(appState.preferences.theme);
     document.documentElement.dataset.theme = theme;
     applyThemeToAllTerminals(theme);
     applyThemeToAllShells(theme);

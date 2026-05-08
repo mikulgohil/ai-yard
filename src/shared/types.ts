@@ -339,7 +339,10 @@ export interface Preferences {
   statusLineConsentCommand?: string | null;
   copyOnSelect?: boolean;
   keybindings?: Record<string, string>;
-  theme?: 'dark' | 'light';
+  /** 'dark' and 'light' are deprecated aliases kept for backward-compatible
+   * persisted state — resolveTheme() in the renderer maps them to
+   * 'midnight' and 'paper' respectively. */
+  theme?: 'midnight' | 'paper' | 'slate' | 'dark' | 'light';
   readinessExcludedProviders?: ProviderId[];
   sidebarViews?: {
     gitPanel: boolean;

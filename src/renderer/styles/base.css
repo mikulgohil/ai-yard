@@ -1,69 +1,85 @@
-:root {
-  /* ── Surfaces (legacy names, kept for back-compat) ───────── */
-  --bg-primary: #0d0d10;
-  --bg-secondary: #08080a;
-  --bg-tertiary: #15151a;
-  --bg-hover: #1e1e24;
+/*
+ * Theme tokens — midnight (default) / paper / slate.
+ *
+ * :root carries midnight values so an unset [data-theme] still renders correctly.
+ * dark/light are kept as deprecated aliases so users with persisted state from
+ * the old two-theme world still get a sensible look without state migration.
+ */
 
-  /* ── Surfaces (new semantic naming) ──────────────────────── */
-  --bg-canvas: #0d0d10;     /* primary content surface */
-  --bg-chrome: #08080a;     /* sidebar, tab bar, toolbars — sits behind content */
-  --bg-elevated: #15151a;   /* widgets, cards, dropdowns */
-  --bg-elevated-hover: #1e1e24;
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --bg-canvas: #15110F;
+  --bg-chrome: #100D0B;
+  --bg-elevated: #1F1A17;
+  --bg-elevated-hover: #2A2420;
+
+  /* Legacy surface aliases (kept for components that still reference them) */
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-chrome);
+  --bg-tertiary: var(--bg-elevated);
+  --bg-hover: var(--bg-elevated-hover);
 
   /* ── Text ─────────────────────────────────────────────────── */
-  --text-primary: #e8e8ea;
-  --text-secondary: #a0a0b0;
-  --text-muted: #6a6a78;
+  --text-primary: #F0EBE6;
+  --text-secondary: #A89F95;
+  --text-muted: #6E6760;
 
   /* ── Brand ────────────────────────────────────────────────── */
-  --accent: #e94560;
-  --accent-dim: #c73e55;
-  --accent-fg: #ffffff;
+  --accent: #D97757;
+  --accent-dim: #C2643F;
+  --accent-fg: #FFFFFF;
 
-  /* ── Semantic status (new) ────────────────────────────────── */
-  --status-info: #7aa2f7;       /* working, links, focus rings */
-  --status-success: #9ece6a;    /* completed, ready */
-  --status-warn: #e0af68;       /* waiting for input */
-  --status-danger: #e94560;     /* errors, destructive */
-  --status-input: #e67e22;      /* needs user input */
+  /* ── Semantic status ──────────────────────────────────────── */
+  --status-info: #7AA2F7;
+  --status-success: #9ECE6A;
+  --status-warn: #E0AF68;
+  --status-danger: #E5484D;
+  --status-input: #E67E22;
 
   /* ── Borders ──────────────────────────────────────────────── */
-  --border: #2a2a30;
-  --border-subtle: #1a1a1f;     /* near-invisible internal divisions */
-  --border-strong: #3a3a44;     /* explicit edges, focused panes */
+  --border: #2D2722;
+  --border-subtle: #1E1916;
+  --border-strong: #3D352F;
 
-  /* ── Tab states (legacy) ──────────────────────────────────── */
-  --tab-active: #0d0d10;
-  --tab-inactive: #08080a;
-  --pane-focus: #3a3a44;
-  --pane-unfocus: #2a2a30;
+  /* ── Tab states (legacy aliases for tabs.css) ─────────────── */
+  --tab-active: var(--bg-canvas);
+  --tab-inactive: var(--bg-chrome);
+  --pane-focus: var(--border-strong);
+  --pane-unfocus: var(--border);
 
   /* ── Misc ─────────────────────────────────────────────────── */
-  --bookmark: #e8a317;
-  --color-warning: #e0af68;
+  --bookmark: #E8A317;
+  --color-warning: var(--status-warn);
 
-  /* ── Type scale ───────────────────────────────────────────── */
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-base: 13px;
-  --text-md: 14px;
-  --text-lg: 16px;
-  --leading-xs: 16px;
-  --leading-sm: 18px;
-  --leading-base: 20px;
-  --leading-md: 22px;
+  /* ── Type scale (comfortable density) ─────────────────────── */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 17px;
+  --leading-xs: 18px;
+  --leading-sm: 20px;
+  --leading-base: 22px;
+  --leading-md: 24px;
 
-  /* ── Spacing & radius ─────────────────────────────────────── */
+  /* ── Spacing scale ────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ── Radius ───────────────────────────────────────────────── */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-pill: 999px;
 
-  /* ── Letter-spacing for label/uppercase treatments ───────── */
+  /* ── Letter-spacing for label/uppercase treatments ────────── */
   --tracking-label: 0.06em;
 
-  /* ── Shadows (used for cards / hover lift / modals) ──────── */
+  /* ── Shadows (used for cards / hover lift / modals) ───────── */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -77,72 +93,111 @@
   --debug-panel-height: 300px;
 }
 
+/* dark/light selectors are co-listed with their canonical theme so legacy
+   persisted state still resolves to the right tokens if anything bypasses
+   resolveTheme() in the renderer. */
+[data-theme="midnight"],
 [data-theme="dark"] {
-  --bg-primary: #0d0d10;
-  --bg-secondary: #08080a;
-  --bg-tertiary: #15151a;
-  --bg-hover: #1e1e24;
-  --bg-canvas: #0d0d10;
-  --bg-chrome: #08080a;
-  --bg-elevated: #15151a;
-  --bg-elevated-hover: #1e1e24;
-  --text-primary: #e8e8ea;
-  --text-secondary: #a0a0b0;
-  --text-muted: #6a6a78;
-  --accent: #e94560;
-  --accent-dim: #c73e55;
-  --accent-fg: #ffffff;
-  --status-info: #7aa2f7;
-  --status-success: #9ece6a;
-  --status-warn: #e0af68;
-  --status-danger: #e94560;
-  --status-input: #e67e22;
-  --border: #2a2a30;
-  --border-subtle: #1a1a1f;
-  --border-strong: #3a3a44;
-  --tab-active: #0d0d10;
-  --tab-inactive: #08080a;
-  --pane-focus: #3a3a44;
-  --pane-unfocus: #2a2a30;
-  --bookmark: #e8a317;
-  --color-warning: #e0af68;
+  --bg-canvas: #15110F;
+  --bg-chrome: #100D0B;
+  --bg-elevated: #1F1A17;
+  --bg-elevated-hover: #2A2420;
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-chrome);
+  --bg-tertiary: var(--bg-elevated);
+  --bg-hover: var(--bg-elevated-hover);
+  --text-primary: #F0EBE6;
+  --text-secondary: #A89F95;
+  --text-muted: #6E6760;
+  --accent: #D97757;
+  --accent-dim: #C2643F;
+  --accent-fg: #FFFFFF;
+  --status-info: #7AA2F7;
+  --status-success: #9ECE6A;
+  --status-warn: #E0AF68;
+  --status-danger: #E5484D;
+  --status-input: #E67E22;
+  --border: #2D2722;
+  --border-subtle: #1E1916;
+  --border-strong: #3D352F;
+  --tab-active: var(--bg-canvas);
+  --tab-inactive: var(--bg-chrome);
+  --pane-focus: var(--border-strong);
+  --pane-unfocus: var(--border);
+  --bookmark: #E8A317;
+  --color-warning: var(--status-warn);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
+[data-theme="paper"],
 [data-theme="light"] {
-  --bg-primary: #fafaf8;
-  --bg-secondary: #f0efe9;
-  --bg-tertiary: #e4e3dd;
-  --bg-hover: #d8d7d1;
-  --bg-canvas: #fafaf8;
-  --bg-chrome: #f0efe9;
-  --bg-elevated: #ffffff;
-  --bg-elevated-hover: #f4f3ed;
-  --text-primary: #1f1f1f;
-  --text-secondary: #4a4a45;   /* AAA on light bg */
-  --text-muted: #6a6a62;        /* AAA on light bg (was #a0a098 — barely AA) */
-  --accent: #d63a55;
-  --accent-dim: #b53148;
-  --accent-fg: #ffffff;
-  --status-info: #2864c7;
-  --status-success: #2c7a3f;
-  --status-warn: #a16207;
-  --status-danger: #d63a55;
-  --status-input: #c2580f;
-  --border: #cdcbc4;
-  --border-subtle: #e4e3dd;
-  --border-strong: #b8b5ad;
-  --tab-active: #fafaf8;
-  --tab-inactive: #f0efe9;
-  --pane-focus: #b8b5ad;
-  --pane-unfocus: #d8d6d0;
-  --bookmark: #b8830f;
-  --color-warning: #a16207;
+  --bg-canvas: #FBF8F3;
+  --bg-chrome: #F4EFE7;
+  --bg-elevated: #FFFFFF;
+  --bg-elevated-hover: #F0EAE0;
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-chrome);
+  --bg-tertiary: var(--bg-elevated);
+  --bg-hover: var(--bg-elevated-hover);
+  --text-primary: #1F1A15;
+  --text-secondary: #4D453C;
+  --text-muted: #807668;
+  --accent: #C2643F;
+  --accent-dim: #A5512F;
+  --accent-fg: #FFFFFF;
+  --status-info: #2864C7;
+  --status-success: #2C7A3F;
+  --status-warn: #A16207;
+  --status-danger: #C8333A;
+  --status-input: #B05015;
+  --border: #DCD3C5;
+  --border-subtle: #ECE6DA;
+  --border-strong: #B8AC9A;
+  --tab-active: var(--bg-canvas);
+  --tab-inactive: var(--bg-chrome);
+  --pane-focus: var(--border-strong);
+  --pane-unfocus: var(--border);
+  --bookmark: #B8830F;
+  --color-warning: var(--status-warn);
   --shadow-1: 0 1px 2px rgba(40, 40, 40, 0.08);
   --shadow-2: 0 4px 12px rgba(40, 40, 40, 0.1);
   --shadow-3: 0 16px 40px rgba(40, 40, 40, 0.12);
+}
+
+[data-theme="slate"] {
+  --bg-canvas: #F7F8FA;
+  --bg-chrome: #EEF1F5;
+  --bg-elevated: #FFFFFF;
+  --bg-elevated-hover: #E5E9EF;
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-chrome);
+  --bg-tertiary: var(--bg-elevated);
+  --bg-hover: var(--bg-elevated-hover);
+  --text-primary: #1A1D23;
+  --text-secondary: #4A5160;
+  --text-muted: #768091;
+  --accent: #C2643F;
+  --accent-dim: #A5512F;
+  --accent-fg: #FFFFFF;
+  --status-info: #2864C7;
+  --status-success: #2C7A3F;
+  --status-warn: #A16207;
+  --status-danger: #C8333A;
+  --status-input: #B05015;
+  --border: #D2D7DF;
+  --border-subtle: #E5E9EF;
+  --border-strong: #A8B0BE;
+  --tab-active: var(--bg-canvas);
+  --tab-inactive: var(--bg-chrome);
+  --pane-focus: var(--border-strong);
+  --pane-unfocus: var(--border);
+  --bookmark: #B8830F;
+  --color-warning: var(--status-warn);
+  --shadow-1: 0 1px 2px rgba(20, 25, 35, 0.06);
+  --shadow-2: 0 4px 12px rgba(20, 25, 35, 0.08);
+  --shadow-3: 0 16px 40px rgba(20, 25, 35, 0.1);
 }
 
 * {
@@ -170,6 +225,18 @@ body.debug-panel-open #app {
   height: calc(100vh - var(--debug-panel-height));
 }
 
+/* Reduced-motion: disable transitions/animations app-wide. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Empty state — icon + title + hint + optional CTA */
 .empty-state {
   display: flex;
@@ -178,8 +245,8 @@ body.debug-panel-open #app {
   justify-content: center;
   height: 100%;
   color: var(--text-muted);
-  gap: 8px;
-  padding: 32px 24px;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
   text-align: center;
 }
 
@@ -188,7 +255,7 @@ body.debug-panel-open #app {
   height: 36px;
   color: var(--text-muted);
   opacity: 0.7;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .empty-state .empty-title {
@@ -205,8 +272,8 @@ body.debug-panel-open #app {
 }
 
 .empty-state .empty-cta {
-  margin-top: 12px;
-  padding: 6px 14px;
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-3);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

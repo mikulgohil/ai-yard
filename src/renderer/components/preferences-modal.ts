@@ -2,6 +2,7 @@ import type { CliProviderMeta, ProviderId, } from '../../shared/types.js';
 import { getProviderAvailabilitySnapshot, loadProviderAvailability } from '../provider-availability.js';
 import { displayKeys, eventToAccelerator, shortcutManager } from '../shortcuts.js';
 import { appState } from '../state.js';
+import { resolveTheme, THEME_OPTIONS, type ThemeName } from '../theme.js';
 import { applyZoom, getZoomFactor, ZOOM_STEPS } from '../zoom.js';
 import { type CustomSelectInstance, createCustomSelect } from './custom-select.js';
 import { createModalButton, createModalShell } from './modal-shell.js';
@@ -84,7 +85,7 @@ export function showPreferencesModal(): void {
   let telemetryCheckbox: HTMLInputElement | null = null;
   let costDashboardCheckbox: HTMLInputElement | null = null;
   let activeRecorder: { cleanup: () => void } | null = null;
-  const originalTheme = appState.preferences.theme ?? 'dark';
+  const originalTheme: ThemeName = resolveTheme(appState.preferences.theme);
 
   function cleanupRecorder() {
     if (activeRecorder) {
@@ -260,7 +261,7 @@ export function showPreferencesModal(): void {
 
       themeSelect = createCustomSelect(
         'pref-theme',
-        [{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }],
+        THEME_OPTIONS.map(({ value, label }) => ({ value, label })),
         originalTheme,
         (value) => { document.documentElement.dataset.theme = value; },
       );
@@ -843,7 +844,7 @@ export function showPreferencesModal(): void {
       appState.setPreference('defaultProvider', defaultProviderSelect.getValue() as ProviderId);
     }
     if (themeSelect) {
-      appState.setPreference('theme', themeSelect.getValue() as 'dark' | 'light');
+      appState.setPreference('theme', themeSelect.getValue() as ThemeName);
     }
     if (debugModeCheckbox && debugModeCheckbox.checked !== appState.preferences.debugMode) {
       appState.setPreference('debugMode', debugModeCheckbox.checked);
