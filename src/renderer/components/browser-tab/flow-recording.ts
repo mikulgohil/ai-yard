@@ -215,7 +215,7 @@ export function addFlowSuggestions(instance: BrowserTabInstance, suggestions: Ar
 export function toggleFlowMode(instance: BrowserTabInstance): void {
   instance.flowMode = !instance.flowMode;
   instance.recordBtn.classList.toggle('active', instance.flowMode);
-  instance.recordBtn.textContent = instance.flowMode ? '■ Stop' : '● Record';
+  instance.recordBtn.setAttribute('data-label', instance.flowMode ? 'Stop Recording' : 'Record Flow');
 
   instance.inspectBtn.disabled = instance.flowMode;
   instance.drawBtn.disabled = instance.flowMode;

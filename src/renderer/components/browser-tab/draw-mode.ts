@@ -15,6 +15,15 @@ export function toggleDrawMode(instance: BrowserTabInstance): void {
     instance.view.send('enter-draw-mode');
     instance.drawInstructionInput.value = '';
     instance.drawInstructionInput.dispatchEvent(new Event('input'));
+    // Show panel immediately at bottom-right so the user knows draw mode is
+    // active and can type their instruction before or after drawing.
+    // positionDrawPopover will reposition it near the cursor after stroke end.
+    instance.drawPanel.style.right = '8px';
+    instance.drawPanel.style.bottom = '8px';
+    instance.drawPanel.style.left = '';
+    instance.drawPanel.style.top = '';
+    instance.drawPanel.style.display = 'flex';
+    instance.drawInstructionInput.focus();
   } else {
     instance.view.send('exit-draw-mode');
     instance.drawPanel.style.display = 'none';
@@ -23,6 +32,10 @@ export function toggleDrawMode(instance: BrowserTabInstance): void {
 
 export function positionDrawPopover(instance: BrowserTabInstance, x: number, y: number): void {
   const wasHidden = instance.drawPanel.style.display === 'none';
+  // Clear corner anchoring set by toggleDrawMode so positionPopover's
+  // left/top coordinates take full effect.
+  instance.drawPanel.style.right = '';
+  instance.drawPanel.style.bottom = '';
   instance.drawPanel.style.display = 'flex';
   positionPopover(instance, instance.drawPanel, x, y);
   if (wasHidden) instance.drawInstructionInput.focus();

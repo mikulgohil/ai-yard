@@ -751,9 +751,17 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
       const { metadata, x, y } = args[0] as { metadata: Omit<ElementInfo, 'activeSelector'>; x: number; y: number };
       const info: ElementInfo = { ...metadata, activeSelector: metadata.selectors[0] };
       showElementInfo(instance, info, x, y);
-    } else if (channel === 'flow-element-picked') {
-      const { metadata, x, y } = args[0] as { metadata: FlowPickerMetadata; x: number; y: number };
-      showFlowPicker(instance, metadata, x, y);
+    } else if (channel === 'flow-click-recorded') {
+      const { metadata } = args[0] as { metadata: FlowPickerMetadata & { rect?: unknown; computedStyles?: unknown; domPath?: string }; x: number; y: number };
+      addFlowStep(instance, {
+        type: 'click',
+        tagName: metadata.tagName,
+        textContent: metadata.textContent,
+        selectors: metadata.selectors,
+        activeSelector: metadata.selectors[0],
+        pageUrl: metadata.pageUrl,
+      });
+      syncSaveBtn();
     } else if (channel === 'flow-input-filled') {
       const { metadata, value } = args[0] as { metadata: FlowPickerMetadata & { rect?: unknown; computedStyles?: unknown; domPath?: string }; value: string };
       addFlowStep(instance, {

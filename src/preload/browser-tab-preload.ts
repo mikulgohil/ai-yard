@@ -329,10 +329,10 @@ function onFlowClick(e: MouseEvent): void {
   }
   const target = e.target as Element;
   if (target === highlightOverlay) return;
-  e.preventDefault();
-  e.stopPropagation();
-  e.stopImmediatePropagation();
-  bubbleHostMessage('flow-element-picked', {
+  // Let the click go through naturally so the page interaction completes.
+  // Record the step directly — the old picker approach used a host-renderer
+  // popup that rendered behind the <webview> compositor layer.
+  bubbleHostMessage('flow-click-recorded', {
     metadata: getElementMetadata(target),
     x: e.clientX,
     y: e.clientY,
