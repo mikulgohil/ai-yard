@@ -30,7 +30,15 @@ const dist = path.join(root, 'dist', 'renderer');
 
 mkdirp(dist);
 
-copyFile(path.join(root, 'src', 'renderer', 'index.html'), path.join(dist, 'index.html'));
+// Legacy esbuild build emits dist/renderer/index.js (IIFE). The source HTML now references
+// ./index.ts (Vite's contract), so rewrite the script tag back to the legacy form when copying.
+const htmlSrc = fs.readFileSync(path.join(root, 'src', 'renderer', 'index.html'), 'utf8');
+const htmlLegacy = htmlSrc.replace(
+  /<script type="module" src="\.\/index\.ts"><\/script>/,
+  '<script src="index.js"></script>'
+);
+mkdirp(dist);
+fs.writeFileSync(path.join(dist, 'index.html'), htmlLegacy);
 copyFile(path.join(root, 'src', 'renderer', 'styles.css'), path.join(dist, 'styles.css'));
 
 // Remove old styles dir and copy fresh

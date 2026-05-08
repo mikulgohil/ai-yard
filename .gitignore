@@ -36,6 +36,10 @@ src/main/build-config.ts
 # Claude Code local state
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+.claude/worktrees/
 
 # Playwright transient state
 test-results/
+
+# Vite dev server publicDir (populated by scripts/copy-vite-public.js)
+src/renderer/.vite-public/

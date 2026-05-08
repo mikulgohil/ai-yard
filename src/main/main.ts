@@ -44,7 +44,13 @@ function createWindow(): void {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'));
+  // Dev: load from Vite dev server (HMR). Prod: load file from packaged renderer dir.
+  // VITE_DEV_SERVER_URL is set by the `dev` npm script via cross-env.
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'));
+  }
 
   // Open external links in default browser instead of inside the app
   const isHttpUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://');
