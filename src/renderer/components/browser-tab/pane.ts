@@ -12,8 +12,8 @@ import {
   toggleDrawMode,
 } from './draw-mode.js';
 import { dismissFlowPicker, showFlowPicker } from './flow-picker.js';
-import { addFlowStep, clearFlow, toggleFlowMode } from './flow-recording.js';
-import { dismissInspect, showElementInfo, toggleInspectMode } from './inspect-mode.js';
+import { addFlowStep, addFlowSuggestions, buildPlaywrightCode, clearFlow, replayFlow, renderFlowSteps, toggleFlowMode } from './flow-recording.js';
+import { createTaskFromInspect, dismissInspect, showElementInfo, toggleInspectMode } from './inspect-mode.js';
 import { getPreloadPath, instances } from './instance.js';
 import { navigateTo } from './navigation.js';
 import { dismissSendMenu, showSendMenu } from './send-menu.js';
@@ -134,19 +134,25 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   viewportWrapper.appendChild(viewportBtn);
   viewportWrapper.appendChild(viewportDropdown);
 
+  // Contextual tool buttons \u2014 live in the floating HUD (right-edge of viewport)
   const inspectBtn = document.createElement('button');
-  inspectBtn.className = 'browser-inspect-btn';
-  inspectBtn.textContent = 'Inspect Element';
+  inspectBtn.className = 'browser-inspect-btn hud-btn';
+  inspectBtn.setAttribute('data-label', 'Inspect Element');
+  inspectBtn.title = 'Inspect Element';
+  // Cursor arrow + dotted selection box — universally recognised as "element picker"
+  inspectBtn.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M2 1.5l.45 10.5 2.05-2.8 1.8 3.8 1.5-.7-1.8-3.8 2.9-.15z"/><rect x="9" y="1.5" width="5.5" height="4.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 1.2"/></svg>';
 
   const recordBtn = document.createElement('button');
-  recordBtn.className = 'browser-record-btn';
-  recordBtn.textContent = '\u25CF Record';
+  recordBtn.className = 'browser-record-btn hud-btn';
+  recordBtn.setAttribute('data-label', 'Record Flow');
   recordBtn.title = 'Record browser flow';
+  recordBtn.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><circle cx="8" cy="8" r="5.5"/></svg>';
 
   const drawBtn = document.createElement('button');
-  drawBtn.className = 'browser-draw-btn';
-  drawBtn.textContent = 'Draw';
+  drawBtn.className = 'browser-draw-btn hud-btn';
+  drawBtn.setAttribute('data-label', 'Draw & Annotate');
   drawBtn.title = 'Draw on page and send annotated screenshot to AI';
+  drawBtn.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14l2-2 8-8-2-2-8 8z"/><path d="M10 4l2 2"/></svg>';
 
   toolbar.appendChild(backBtn);
   toolbar.appendChild(fwdBtn);
@@ -154,9 +160,6 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   toolbar.appendChild(urlInput);
   toolbar.appendChild(goBtn);
   toolbar.appendChild(viewportWrapper);
-  toolbar.appendChild(inspectBtn);
-  toolbar.appendChild(recordBtn);
-  toolbar.appendChild(drawBtn);
   el.appendChild(toolbar);
 
   const viewportContainer = document.createElement('div');
@@ -214,11 +217,39 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
         return createWebviewAdapter(webview);
       })();
   viewportContainer.appendChild(view.element);
+
+  // Floating pill toolbar lives inside the viewport container so it overlays the webview
+  viewportContainer.appendChild(toolbar);
+
+  // Floating tool HUD — right-edge contextual tools
+  const toolHud = document.createElement('div');
+  toolHud.className = 'browser-tool-hud';
+  toolHud.appendChild(inspectBtn);
+  toolHud.appendChild(recordBtn);
+  toolHud.appendChild(drawBtn);
+  viewportContainer.appendChild(toolHud);
+
   el.appendChild(viewportContainer);
 
   const inspectPanel = document.createElement('div');
   inspectPanel.className = 'browser-inspect-panel';
   inspectPanel.style.display = 'none';
+
+  const inspectPanelHeader = document.createElement('div');
+  inspectPanelHeader.className = 'inspect-panel-header';
+
+  const inspectHeaderTitle = document.createElement('span');
+  inspectHeaderTitle.className = 'inspect-panel-title';
+  inspectHeaderTitle.textContent = 'Inspect Element';
+
+  const inspectCloseBtn = document.createElement('button');
+  inspectCloseBtn.className = 'inspect-panel-close';
+  inspectCloseBtn.setAttribute('aria-label', 'Dismiss inspect panel');
+  inspectCloseBtn.innerHTML = '<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 1l10 10M11 1L1 11"/></svg>';
+
+  inspectPanelHeader.appendChild(inspectHeaderTitle);
+  inspectPanelHeader.appendChild(inspectCloseBtn);
+  inspectPanel.appendChild(inspectPanelHeader);
 
   const elementInfoEl = document.createElement('div');
   elementInfoEl.className = 'inspect-element-info';
@@ -265,6 +296,18 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   inspectPanel.appendChild(inspectPlanModeRow);
 
   inspectPanel.appendChild(submitGroup);
+
+  const addToBoardBtn = document.createElement('button');
+  addToBoardBtn.className = 'inspect-board-btn';
+  addToBoardBtn.title = 'Save as a Kanban task to fix later';
+  addToBoardBtn.innerHTML =
+    '<svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+    '<rect x="1" y="1" width="4.5" height="12" rx="1"/>' +
+    '<rect x="7" y="1" width="6" height="7.5" rx="1"/>' +
+    '<rect x="7" y="10" width="6" height="3" rx="1"/>' +
+    '</svg> Add to Board';
+  inspectPanel.appendChild(addToBoardBtn);
+
   el.appendChild(inspectPanel);
 
   const drawPanel = document.createElement('div');
@@ -349,8 +392,33 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   flowClearBtn.className = 'flow-panel-clear-btn';
   flowClearBtn.textContent = 'Clear';
 
+  const flowReplayBtn = document.createElement('button');
+  flowReplayBtn.className = 'flow-panel-action-btn';
+  flowReplayBtn.textContent = '▶ Replay';
+  flowReplayBtn.title = 'Replay all recorded steps in the browser';
+  flowReplayBtn.disabled = true;
+
+  const flowExportBtn = document.createElement('button');
+  flowExportBtn.className = 'flow-panel-action-btn';
+  flowExportBtn.textContent = '↗ Playwright';
+  flowExportBtn.title = 'Copy Playwright test code to clipboard';
+  flowExportBtn.disabled = true;
+
+  const flowSaveBtn = document.createElement('button');
+  flowSaveBtn.className = 'flow-panel-action-btn';
+  flowSaveBtn.textContent = '💾 Save';
+  flowSaveBtn.title = 'Save flow to project for later reuse';
+  flowSaveBtn.disabled = true;
+
+  const flowHeaderActions = document.createElement('div');
+  flowHeaderActions.className = 'flow-panel-header-actions';
+  flowHeaderActions.appendChild(flowReplayBtn);
+  flowHeaderActions.appendChild(flowExportBtn);
+  flowHeaderActions.appendChild(flowSaveBtn);
+  flowHeaderActions.appendChild(flowClearBtn);
+
   flowHeader.appendChild(flowLabel);
-  flowHeader.appendChild(flowClearBtn);
+  flowHeader.appendChild(flowHeaderActions);
   flowPanel.appendChild(flowHeader);
 
   const flowStepsList = document.createElement('div');
@@ -462,6 +530,9 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     flowPickerOverlay,
     flowPickerMenu,
     flowPickerPending: null,
+    replayBtn: flowReplayBtn,
+    exportBtn: flowExportBtn,
+    replayIndex: -1,
     drawBtn,
     drawPanel,
     drawInstructionInput,
@@ -492,6 +563,8 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   // create time, so this block is a no-op in that branch.
   if (!useWebContentsView) {
     getPreloadPath().then((p) => {
+      // DEBUG: temporary instrumentation for inspect-element regression.
+      console.log('[INSPECT] host setPreload', p, 'url:', url);
       view.setPreload(p);
       if (url) view.setSrc(url);
     });
@@ -546,6 +619,8 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   wireSubmitDisabled(flowInstructionInput, flowSubmitBtn, flowCustomBtn);
 
   inspectBtn.addEventListener('click', () => toggleInspectMode(instance));
+  inspectCloseBtn.addEventListener('click', () => dismissInspect(instance));
+  addToBoardBtn.addEventListener('click', () => createTaskFromInspect(instance));
   recordBtn.addEventListener('click', () => toggleFlowMode(instance));
   drawBtn.addEventListener('click', () => toggleDrawMode(instance));
   drawClearBtn.addEventListener('click', () => clearDrawing(instance));
@@ -563,7 +638,40 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
       void sendDrawToNewSession(instance);
     } else if (e.key === 'Escape') { dismissDraw(instance); }
   });
-  flowClearBtn.addEventListener('click', () => clearFlow(instance));
+  // Keep save button in sync with whether there are steps (renderFlowSteps owns replay+export)
+  function syncSaveBtn(): void {
+    flowSaveBtn.disabled = instance.flowSteps.length === 0;
+  }
+
+  flowClearBtn.addEventListener('click', () => { clearFlow(instance); syncSaveBtn(); });
+  flowReplayBtn.addEventListener('click', () => { void replayFlow(instance); });
+  flowSaveBtn.addEventListener('click', () => {
+    const project = appState.activeProject;
+    if (!project || instance.flowSteps.length === 0) return;
+    const instruction = instance.flowInstructionInput.value.trim();
+    const name = instruction.slice(0, 40) || `Flow ${new Date().toLocaleTimeString()}`;
+    const steps = instance.flowSteps.map((s) => ({
+      type: s.type,
+      tagName: s.tagName,
+      textContent: s.textContent,
+      selectorValue: s.activeSelector?.value,
+      pageUrl: s.pageUrl,
+      url: s.url,
+      value: s.value,
+      selectedText: s.selectedText,
+      key: s.key,
+      modifiers: s.modifiers,
+    }));
+    appState.saveFlow(project.id, name, steps);
+    flowSaveBtn.textContent = '✓ Saved';
+    setTimeout(() => { flowSaveBtn.textContent = '💾 Save'; }, 1800);
+  });
+  flowExportBtn.addEventListener('click', async () => {
+    const code = buildPlaywrightCode(instance.flowSteps);
+    await navigator.clipboard.writeText(code);
+    flowExportBtn.textContent = '✓ Copied!';
+    setTimeout(() => { flowExportBtn.textContent = '↗ Playwright'; }, 1800);
+  });
   flowSubmitBtn.addEventListener('click', () => sendFlowToNewSession(instance));
   flowCustomBtn.addEventListener('click', () => {
     showSendMenu(instance, flowCustomBtn, {
@@ -591,6 +699,7 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
         activeSelector: metadata.selectors[0],
         pageUrl: metadata.pageUrl,
       });
+      syncSaveBtn();
     }
   });
 
@@ -636,6 +745,8 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
   });
 
   view.onIpcMessage((channel, args) => {
+    // DEBUG: temporary instrumentation for inspect-element regression.
+    console.log('[INSPECT] host onIpcMessage', channel, args);
     if (channel === 'element-selected') {
       const { metadata, x, y } = args[0] as { metadata: Omit<ElementInfo, 'activeSelector'>; x: number; y: number };
       const info: ElementInfo = { ...metadata, activeSelector: metadata.selectors[0] };
@@ -643,11 +754,68 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     } else if (channel === 'flow-element-picked') {
       const { metadata, x, y } = args[0] as { metadata: FlowPickerMetadata; x: number; y: number };
       showFlowPicker(instance, metadata, x, y);
+    } else if (channel === 'flow-input-filled') {
+      const { metadata, value } = args[0] as { metadata: FlowPickerMetadata & { rect?: unknown; computedStyles?: unknown; domPath?: string }; value: string };
+      addFlowStep(instance, {
+        type: 'fill',
+        tagName: metadata.tagName,
+        textContent: metadata.textContent,
+        selectors: metadata.selectors,
+        activeSelector: metadata.selectors[0],
+        pageUrl: metadata.pageUrl,
+        value,
+      });
+      syncSaveBtn();
+    } else if (channel === 'flow-select-changed') {
+      const { metadata, value, selectedText } = args[0] as { metadata: FlowPickerMetadata & { rect?: unknown; computedStyles?: unknown; domPath?: string }; value: string; selectedText: string };
+      addFlowStep(instance, {
+        type: 'select',
+        tagName: 'select',
+        textContent: metadata.textContent,
+        selectors: metadata.selectors,
+        activeSelector: metadata.selectors[0],
+        pageUrl: metadata.pageUrl,
+        value,
+        selectedText,
+      });
+      syncSaveBtn();
+    } else if (channel === 'flow-key-pressed') {
+      const { key, modifiers } = args[0] as { key: string; modifiers: { shift?: boolean; ctrl?: boolean; meta?: boolean; alt?: boolean } };
+      addFlowStep(instance, { type: 'press', key, modifiers });
+      syncSaveBtn();
+    } else if (channel === 'flow-assertion-suggestions') {
+      const { suggestions } = args[0] as { suggestions: Array<{ tagName: string; id: string; classes: string[]; textContent: string; selectors: Array<{ type: string; label: string; value: string }>; pageUrl: string }> };
+      addFlowSuggestions(instance, suggestions);
+      syncSaveBtn();
     } else if (channel === 'draw-stroke-end') {
       const { x, y } = args[0] as { x: number; y: number };
       positionDrawPopover(instance, x, y);
     }
   });
+
+  // DEBUG: forward webview-side console + load errors to host DevTools so the
+  // preload's logs show up in a single place. Only wires for the <webview> path.
+  if (!useWebContentsView) {
+    const wv = view.element as unknown as {
+      addEventListener: (type: string, listener: (e: Event) => void) => void;
+      openDevTools?: () => void;
+    };
+    wv.addEventListener('console-message', (e: Event) => {
+      const ev = e as Event & { message: string; level: number; line: number; sourceId: string };
+      console.log('[INSPECT][webview console]', ev.message, '@', ev.sourceId, ':', ev.line);
+    });
+    wv.addEventListener('did-fail-load', (e: Event) => {
+      const ev = e as Event & { errorCode: number; errorDescription: string; validatedURL: string };
+      console.warn('[INSPECT] webview did-fail-load', ev.errorCode, ev.errorDescription, ev.validatedURL);
+    });
+    wv.addEventListener('preload-error', (e: Event) => {
+      const ev = e as Event & { preloadPath?: string; error?: { message?: string } };
+      console.error('[INSPECT] webview preload-error', ev.preloadPath, ev.error?.message);
+    });
+    wv.addEventListener('dom-ready', () => {
+      console.log('[INSPECT] webview dom-ready');
+    });
+  }
 
 }
 

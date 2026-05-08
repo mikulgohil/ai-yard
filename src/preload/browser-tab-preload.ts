@@ -25,8 +25,13 @@
  */
 import { ipcRenderer } from 'electron';
 
+// DEBUG: temporary instrumentation for inspect-element regression. Visible
+// from the host renderer DevTools because pane.ts forwards the webview's
+// console-message event into the host console.
+console.log('[INSPECT] preload script loaded');
+
 interface SelectorOption {
-  type: 'qa' | 'attr' | 'id' | 'css';
+  type: 'qa' | 'attr' | 'id' | 'css' | 'aria';
   label: string;
   value: string;
 }
@@ -45,6 +50,8 @@ let flowMode = false;
 let drawMode = false;
 let suppressNextFlowClick = false;
 let highlightOverlay: HTMLDivElement | null = null;
+let flowMutationObserver: MutationObserver | null = null;
+let flowMutationTimeout: ReturnType<typeof setTimeout> | null = null;
 
 let drawCanvas: HTMLCanvasElement | null = null;
 let drawCtx: CanvasRenderingContext2D | null = null;
@@ -210,6 +217,24 @@ function buildCssPath(el: Element): string {
   return parts.join(' > ');
 }
 
+function buildDomPath(el: Element): string {
+  const parts: string[] = [];
+  let current: Element | null = el;
+  let depth = 0;
+  while (current && depth < 4 && current !== document.body && current !== document.documentElement) {
+    let part = current.tagName.toLowerCase();
+    if (current.id) {
+      part += `#${current.id}`;
+    } else if (current.classList.length) {
+      part += `.${current.classList[0]}`;
+    }
+    parts.unshift(part);
+    current = current.parentElement;
+    depth++;
+  }
+  return parts.join(' › ');
+}
+
 function buildAllSelectors(el: Element): SelectorOption[] {
   const options: SelectorOption[] = [];
 
@@ -228,6 +253,20 @@ function buildAllSelectors(el: Element): SelectorOption[] {
 
   if (el.id) options.push({ type: 'id', label: 'id', value: `#${el.id}` });
 
+  // ARIA role + accessible name — more resilient than CSS positional selectors
+  const role = el.getAttribute('role') || el.tagName.toLowerCase();
+  const ariaLabel = el.getAttribute('aria-label') || el.getAttribute('aria-labelledby')
+    ? el.getAttribute('aria-label') ?? undefined
+    : undefined;
+  const ariaName = ariaLabel ?? (el.textContent || '').trim().slice(0, 60) || undefined;
+  if (ariaName) {
+    options.push({
+      type: 'aria',
+      label: 'aria',
+      value: `[role="${role}"][aria-label="${ariaName}"]`,
+    });
+  }
+
   options.push({ type: 'css', label: 'css', value: buildCssPath(el) });
 
   return options;
@@ -235,6 +274,8 @@ function buildAllSelectors(el: Element): SelectorOption[] {
 
 function getElementMetadata(el: Element) {
   const text = (el.textContent || '').trim();
+  const domRect = el.getBoundingClientRect();
+  const cs = window.getComputedStyle(el);
   return {
     tagName: el.tagName.toLowerCase(),
     id: el.id || '',
@@ -242,6 +283,15 @@ function getElementMetadata(el: Element) {
     textContent: text.length > 150 ? `${text.slice(0, 150)}\u2026` : text,
     selectors: buildAllSelectors(el),
     pageUrl: window.location.href,
+    rect: { width: Math.round(domRect.width), height: Math.round(domRect.height) },
+    computedStyles: {
+      display: cs.display,
+      position: cs.position,
+      color: cs.color,
+      backgroundColor: cs.backgroundColor,
+      fontSize: cs.fontSize,
+    },
+    domPath: buildDomPath(el),
   };
 }
 
@@ -258,6 +308,8 @@ function onMouseOut(_e: MouseEvent): void {
 }
 
 function onClick(e: MouseEvent): void {
+  // DEBUG: temporary instrumentation for inspect-element regression.
+  console.log('[INSPECT] preload onClick fired, inspectMode=', inspectMode, 'target=', (e.target as Element)?.tagName);
   if (!inspectMode) return;
   e.preventDefault();
   e.stopPropagation();
@@ -265,6 +317,7 @@ function onClick(e: MouseEvent): void {
   const target = e.target as Element;
   if (target === highlightOverlay) return;
   const metadata = getElementMetadata(target);
+  console.log('[INSPECT] preload bubbling element-selected');
   bubbleHostMessage('element-selected', { metadata, x: e.clientX, y: e.clientY });
 }
 
@@ -284,6 +337,74 @@ function onFlowClick(e: MouseEvent): void {
     x: e.clientX,
     y: e.clientY,
   });
+  // Watch the DOM for a second after each click to suggest assertion steps
+  watchForAssertionSuggestions();
+}
+
+function onFlowInputChange(e: Event): void {
+  if (!flowMode) return;
+  const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+  if (target.tagName === 'SELECT') {
+    const sel = target as HTMLSelectElement;
+    bubbleHostMessage('flow-select-changed', {
+      metadata: getElementMetadata(target),
+      value: sel.value,
+      selectedText: sel.options[sel.selectedIndex]?.text ?? '',
+      x: 0, y: 0,
+    });
+  } else {
+    bubbleHostMessage('flow-input-filled', {
+      metadata: getElementMetadata(target),
+      value: (target as HTMLInputElement | HTMLTextAreaElement).value,
+      x: 0, y: 0,
+    });
+  }
+}
+
+const FLOW_NOTABLE_KEYS = ['Enter', 'Tab', 'Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', ' '];
+
+function onFlowKeyDown(e: KeyboardEvent): void {
+  if (!flowMode) return;
+  if (!FLOW_NOTABLE_KEYS.includes(e.key)) return;
+  // Skip pure Tab presses on non-interactive elements to avoid noise
+  if (e.key === 'Tab' && !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement || document.activeElement instanceof HTMLSelectElement || document.activeElement instanceof HTMLButtonElement)) return;
+  bubbleHostMessage('flow-key-pressed', {
+    key: e.key,
+    modifiers: { shift: e.shiftKey, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
+  });
+}
+
+function watchForAssertionSuggestions(): void {
+  if (flowMutationTimeout) { clearTimeout(flowMutationTimeout); flowMutationTimeout = null; }
+  if (flowMutationObserver) { flowMutationObserver.disconnect(); flowMutationObserver = null; }
+
+  const suggestions: Array<ReturnType<typeof getElementMetadata>> = [];
+
+  flowMutationObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof Element)) continue;
+        const el = node as Element;
+        // Only suggest visible, non-overlay elements with meaningful content
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        const text = (el.textContent || '').trim();
+        if (!text && !el.querySelector('img, svg')) continue;
+        if (suggestions.length < 3) suggestions.push(getElementMetadata(el));
+      }
+    }
+  });
+
+  flowMutationObserver.observe(document.body, { childList: true, subtree: true });
+
+  // Stop watching after 1 second and emit suggestions
+  flowMutationTimeout = setTimeout(() => {
+    if (flowMutationObserver) { flowMutationObserver.disconnect(); flowMutationObserver = null; }
+    if (suggestions.length > 0) {
+      bubbleHostMessage('flow-assertion-suggestions', { suggestions });
+    }
+  }, 1000);
 }
 
 function enterFlowMode(): void {
@@ -291,6 +412,8 @@ function enterFlowMode(): void {
   document.addEventListener('mouseover', onMouseOver, true);
   document.addEventListener('mouseout', onMouseOut, true);
   document.addEventListener('click', onFlowClick, true);
+  document.addEventListener('change', onFlowInputChange, true);
+  document.addEventListener('keydown', onFlowKeyDown, true);
   document.body.style.cursor = 'crosshair';
 }
 
@@ -299,6 +422,10 @@ function exitFlowMode(): void {
   document.removeEventListener('mouseover', onMouseOver, true);
   document.removeEventListener('mouseout', onMouseOut, true);
   document.removeEventListener('click', onFlowClick, true);
+  document.removeEventListener('change', onFlowInputChange, true);
+  document.removeEventListener('keydown', onFlowKeyDown, true);
+  if (flowMutationTimeout) { clearTimeout(flowMutationTimeout); flowMutationTimeout = null; }
+  if (flowMutationObserver) { flowMutationObserver.disconnect(); flowMutationObserver = null; }
   hideOverlay();
   document.body.style.cursor = '';
 }
@@ -309,6 +436,8 @@ function enterInspectMode(): void {
   document.addEventListener('mouseout', onMouseOut, true);
   document.addEventListener('click', onClick, true);
   document.body.style.cursor = 'crosshair';
+  // DEBUG: temporary instrumentation for inspect-element regression.
+  console.log('[INSPECT] preload enterInspectMode — listeners attached, body=', document.body ? 'ok' : 'null');
 }
 
 function exitInspectMode(): void {
@@ -320,8 +449,9 @@ function exitInspectMode(): void {
   document.body.style.cursor = '';
 }
 
-ipcRenderer.on('enter-inspect-mode', () => enterInspectMode());
-ipcRenderer.on('exit-inspect-mode', () => exitInspectMode());
+// DEBUG: temporary instrumentation for inspect-element regression.
+ipcRenderer.on('enter-inspect-mode', () => { console.log('[INSPECT] preload received enter-inspect-mode'); enterInspectMode(); });
+ipcRenderer.on('exit-inspect-mode', () => { console.log('[INSPECT] preload received exit-inspect-mode'); exitInspectMode(); });
 ipcRenderer.on('enter-flow-mode', () => enterFlowMode());
 ipcRenderer.on('exit-flow-mode', () => exitFlowMode());
 ipcRenderer.on('enter-draw-mode', () => enterDrawMode());
@@ -333,4 +463,36 @@ ipcRenderer.on('flow-do-click', (_event, selector: string) => {
     suppressNextFlowClick = true;
     el.click();
   }
+});
+
+ipcRenderer.on('flow-replay-fill', (_event, selector: string, value: string) => {
+  const el = document.querySelector(selector);
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')?.set;
+    nativeInputValueSetter?.call(el, value);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+});
+
+ipcRenderer.on('flow-replay-select', (_event, selector: string, value: string) => {
+  const el = document.querySelector(selector);
+  if (el instanceof HTMLSelectElement) {
+    el.value = value;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+});
+
+ipcRenderer.on('flow-replay-press', (_event, key: string, modifiers: { shift?: boolean; ctrl?: boolean; meta?: boolean; alt?: boolean }) => {
+  const activeEl = document.activeElement ?? document.body;
+  const opts: KeyboardEventInit = {
+    key,
+    bubbles: true,
+    shiftKey: modifiers.shift,
+    ctrlKey: modifiers.ctrl,
+    metaKey: modifiers.meta,
+    altKey: modifiers.alt,
+  };
+  activeEl.dispatchEvent(new KeyboardEvent('keydown', opts));
+  activeEl.dispatchEvent(new KeyboardEvent('keyup', opts));
 });

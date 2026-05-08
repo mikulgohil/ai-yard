@@ -838,6 +838,32 @@ class AppState {
     this.persist();
   }
 
+  saveFlow(projectId: string, name: string, steps: import('../shared/types.js').SavedFlowStep[]): import('../shared/types.js').SavedFlow {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) throw new Error(`Project ${projectId} not found`);
+    if (!project.savedFlows) project.savedFlows = [];
+    const flow: import('../shared/types.js').SavedFlow = {
+      id: `flow-${Date.now()}`,
+      name: name.trim() || `Flow ${project.savedFlows.length + 1}`,
+      createdAt: new Date().toISOString(),
+      steps,
+    };
+    project.savedFlows.push(flow);
+    this.persist();
+    return flow;
+  }
+
+  getSavedFlows(projectId: string): import('../shared/types.js').SavedFlow[] {
+    return this.state.projects.find((p) => p.id === projectId)?.savedFlows ?? [];
+  }
+
+  deleteSavedFlow(projectId: string, flowId: string): void {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project?.savedFlows) return;
+    project.savedFlows = project.savedFlows.filter((f) => f.id !== flowId);
+    this.persist();
+  }
+
   renameSession(projectId: string, sessionId: string, name: string, userRenamed?: boolean): void {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return;

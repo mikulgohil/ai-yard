@@ -286,6 +286,30 @@ export interface ProjectRecord {
   githubLastSeen?: Record<string, string>;
   /** Saved dev-server command. One-click run skips the confirmation modal once set. */
   runCommand?: string;
+  /** Named browser-tab flows saved by the user for reuse. */
+  savedFlows?: SavedFlow[];
+}
+
+/** A serialised browser-tab flow step suitable for persistence. */
+export interface SavedFlowStep {
+  type: string;
+  tagName?: string;
+  textContent?: string;
+  /** The active selector value only (full selector list is not persisted). */
+  selectorValue?: string;
+  pageUrl?: string;
+  url?: string;
+  value?: string;
+  selectedText?: string;
+  key?: string;
+  modifiers?: { shift?: boolean; ctrl?: boolean; meta?: boolean; alt?: boolean };
+}
+
+export interface SavedFlow {
+  id: string;
+  name: string;
+  createdAt: string;
+  steps: SavedFlowStep[];
 }
 
 // --- Overview Widgets ---
