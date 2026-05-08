@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AI-yard brand mark.
+  AY monogram ligature: the A's right leg and the Y's stem are one continuous
+  descending stroke. They meet at the junction (612, 472), where the Y's right
+  diagonal also arrives. The A's left leg + crossbar complete the left letterform.
+
+  Geometry on a 1024 canvas (centered, ~210px margins):
+    A apex            (412, 232)
+    A bottom-left     (212, 792)
+    Junction (shared) (612, 472)   <- A right-leg stub end / Y diagonals meet / stem starts
+    Y top-right       (812, 232)
+    Y stem bottom     (612, 792)
+    A crossbar        (298, 552) -> (612, 552)
+
+  Colors:
+    Background  #1A1F2A  (deep midnight, matches default theme surface)
+    Glyph       #D97757  (terracotta accent)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" rx="224" fill="#1A1F2A"/>
+  <g fill="none" stroke="#D97757" stroke-width="110" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="212,792 412,232 612,472"/>
+    <line x1="612" y1="472" x2="612" y2="792"/>
+    <line x1="812" y1="232" x2="612" y2="472"/>
+    <line x1="298" y1="552" x2="612" y2="552"/>
+  </g>
+</svg>
