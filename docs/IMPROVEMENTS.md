@@ -507,3 +507,53 @@ Pick one of these up *after* Phase 5 lands:
 - `npm run lint` — clean
 - Renderer bundle — **1.16 MB (Vite)** — A5 Phase 2 added ~1 KB (the WCV adapter is dormant; cost is only the dead-code branch)
 - HMR — `npm run dev` (Vite + Electron + tsc watches) — script verified, manual HMR proof on first user `npm run dev`
+
+---
+
+## macOS Sonoma UI Redesign — 2026-05-08
+
+**11-step visual overhaul** bringing a native-feeling macOS Sonoma aesthetic to the renderer. No architecture changes — purely CSS + DOM wiring.
+
+### Design tokens added (`styles/base.css`)
+- `--surface-floating`: vibrancy-simulated surfaces (`backdrop-filter: blur(20px) saturate(180%)`)
+- `--spring`: `cubic-bezier(0.34, 1.56, 0.64, 1)` for spring-bouncy animations
+- `--ease-out`: standard decel curve
+- `--radius-xl`, `--radius-lg`, `--radius-md`, `--radius-sm`: unified border-radius scale
+- `--status-danger`: for active/destructive states
+
+### Steps completed
+
+| Step | What changed | Files |
+|------|---|---|
+| 1 | CSS design-token system (surface, radius, spring) | `styles/base.css` |
+| 2 | Feature rail — vertical glass icon nav, replaces horizontal tab bar visually | `styles/base.css`, `feature-rail.ts` |
+| 3 | Sidebar — recents section, glass header, refined session items | `styles/sidebar.css`, `sidebar.ts` |
+| 4 | Terminal pane — vibrancy status bar, refined scrollbars, spring resize handle | `styles/terminal.css` |
+| 5 | Session header — glass cost / context indicators, spring tooltips | `styles/terminal.css`, `terminal-pane.ts` |
+| 6 | Browser tab — floating pill toolbar (opacity 0→1 on hover), right-edge HUD strip | `styles/browser-tab.css`, `browser-tab/pane.ts` |
+| 7 | Modals as sheets — vibrancy overlay + glass modal, spring slide-in animation | `styles/modals.css`, `styles/dialogs.css` |
+| 8 | Empty state hero — rich hero with AY monogram SVG, tagline, CTA, provider tag | `split-layout.ts`, `styles/base.css` |
+| 9 | Titlebar project picker — glass dropdown, spring animation, `position:fixed` escape | `titlebar.ts` (new), `styles/base.css`, `index.ts`, `index.html` |
+| 10 | Sidebar session tree — live status dot + cost text per session, surgical updates | `sidebar.ts`, `styles/sidebar.css` |
+| 11 | Titlebar breadcrumb — `ProjectName › ● SessionName` with colored status dot | `titlebar.ts`, `styles/base.css`, `index.html` |
+
+### Key decisions
+- **`position: fixed` for picker dropdown** — titlebar has `z-index: 50` which creates a stacking context; fixed + `getBoundingClientRect()` escapes it cleanly.
+- **HUD tooltips use `::before`** (not `::after`) — HUD is right-edge, tooltips point left (`right: calc(100% + 8px)`).
+- **`CLI_TYPES` Set in `feature-rail.ts`** — plain CLI sessions have `type === undefined`, not `'cli'`; the Set `['remote-terminal', 'mcp-inspector']` covers the subset that has explicit types but behaves like CLI. Avoids a `TS2367` comparison-always-false error.
+- **`totalCostUsd` field** — `CostInfo` exposes `totalCostUsd`, not `totalCost`. Session tree cost text uses `.toFixed(3)` with a `$` prefix.
+
+---
+
+## 2026-05-08 15:00
+
+- **Summary**: Redesigned sidebar project action buttons from horizontal wrapping pills to a vertical source-list layout (VS Code / Linear pattern). Also moved the Run bar below the nav items in DOM order.
+- **Files touched**: `src/renderer/styles/sidebar.css`, `src/renderer/components/sidebar.ts`, `docs/IMPROVEMENTS.md`
+- **Decisions**:
+  - Replaced `flex-wrap: wrap` + `flex: 1` pill buttons with `flex-direction: column` full-width rows indented to 28 px (matches session tree indent).
+  - Removed `border: 1px solid var(--border-subtle)` pill style; replaced with `border-left: 2px solid transparent` so the active accent indicator never causes layout shift.
+  - `has-readiness` readiness-score tint now colours the left border only (`border-left-color`) rather than the full pill border — consistent with the new single-side accent approach.
+  - Run bar moved from before the project-item row to after the action buttons. Visual separator (`border-top: 1px solid var(--border-subtle)`) added above it; suppressed in collapsed mode.
+  - Collapsed icon-button mode: added `border-left: none; border-radius: var(--radius-sm)` to restore square pill appearance lost when global `border` was removed.
+- **Follow-ups**: None — collapsed and expanded modes both verified in CSS.
+- **Surgical sidebar re-renders** — `renderSessionTreeStatus()` and `renderSessionTreeCosts()` walk existing `.session-tree-row` DOM elements rather than destroying and rebuilding the tree; both guard via `window.getSelection()` to avoid wiping active text selections.

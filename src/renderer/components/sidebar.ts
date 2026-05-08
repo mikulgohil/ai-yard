@@ -2,7 +2,8 @@ import { basename, lastSeparatorIndex } from '../../shared/platform.js';
 import { deriveProjectName } from '../../shared/project-name.js';
 import { DISCUSSIONS_URL, getNewCount as getDiscussionsNewCount, init as initDiscussionsBadge, markSeen as markDiscussionsSeen, onChange as onDiscussionsChange } from '../discussions-badge.js';
 import { esc, scoreColor } from '../dom-utils.js';
-import { getAggregateCost, onChange as onCostChange } from '../session-cost.js';
+import { getAggregateCost, getCost, onChange as onCostChange } from '../session-cost.js';
+import { getStatus, onChange as onActivityChange } from '../session-activity.js';
 import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
 import { appState, MAX_PROJECT_NAME_LENGTH, type ProjectRecord } from '../state.js';
 import { clearProjectState as clearFileTreeState, closeFileTree, renderFileTree } from './file-tree.js';
@@ -91,6 +92,7 @@ export function initSidebar(): void {
   appState.on('project-changed', render);
   appState.on('session-added', render);
   appState.on('session-removed', render);
+  appState.on('session-changed', renderSessionTreeStatus);
   appState.on('layout-changed', render);
   appState.on('readiness-changed', render);
   appState.on('project-meta-changed', render);
@@ -98,7 +100,10 @@ export function initSidebar(): void {
 
   onCostChange(() => {
     renderCostFooter();
+    renderSessionTreeCosts();
   });
+
+  onActivityChange(renderSessionTreeStatus);
 
   onUnreadChange(render);
   appState.on('preferences-changed', () => {
@@ -132,23 +137,33 @@ function render(): void {
     const el = document.createElement('div');
     el.className = `project-item${isActive ? ' active' : ''}`;
     el.dataset.projectId = project.id;
+
+    const folderIcon = `<svg class="project-icon" viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 3.5a1 1 0 0 1 1-1h3l1.5 1.5h4.5a1 1 0 0 1 1 1V11a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/></svg>`;
+    const sessionPill = project.sessions.length
+      ? `<span class="project-session-count">${project.sessions.length}</span>`
+      : '';
+
     el.innerHTML = `
-      <div style="flex:1;min-width:0">
-        <div class="project-name${hasUnreadInProject(project.id) ? ' unread' : ''}">${esc(project.name)}${project.sessions.length ? ` <span class="project-session-count">(${project.sessions.length})</span>` : ''}</div>
-        <div class="project-path">${esc(project.path)}</div>
-      </div>
-      <span class="project-delete" title="Remove project">&times;</span>
+      ${folderIcon}
+      <div class="project-name${hasUnreadInProject(project.id) ? ' unread' : ''}">${esc(project.name)}</div>
+      ${sessionPill}
+      <div class="project-path">${esc(project.path)}</div>
+      <button class="project-more-btn" type="button" title="Project options" aria-label="Project options">⋯</button>
+      <span class="project-delete" title="Remove project" style="display:none">&times;</span>
     `;
 
     el.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('project-delete')) return;
+      if (target.closest('.project-more-btn')) return;
       if (isActive) return;
       appState.setActiveProject(project.id);
     });
 
-    el.querySelector('.project-delete')!.addEventListener('click', () => {
-      confirmRemoveProject(project);
+    el.querySelector('.project-more-btn')!.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = e.currentTarget as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      showProjectContextMenu(rect.right, rect.bottom, project);
     });
 
     el.addEventListener('contextmenu', (e) => {
@@ -156,16 +171,20 @@ function render(): void {
       showProjectContextMenu(e.clientX, e.clientY, project);
     });
 
-    if (isActive) {
-      wrapper.appendChild(buildProjectRunBar(project));
-    }
-
     wrapper.appendChild(el);
 
     if (isActive) {
       const openPanel = projectPanelOpen.get(project.id) ?? null;
       const actions = buildProjectActions(project, openPanel, { fileTreeEnabled, historyEnabled });
       wrapper.appendChild(actions);
+      wrapper.appendChild(buildProjectRunBar(project));
+
+      // Session tree — CLI sessions as indented rows under the active project
+      const cliSessions = project.sessions.filter(s => !s.type || s.type === 'remote-terminal');
+      if (cliSessions.length > 0) {
+        const treeEl = buildSessionTree(project, cliSessions);
+        wrapper.appendChild(treeEl);
+      }
 
       if (openPanel !== null) {
         const panelContainer = document.createElement('div');
@@ -182,6 +201,70 @@ function render(): void {
     }
 
     projectListEl.appendChild(wrapper);
+  }
+}
+
+function buildSessionTree(project: ProjectRecord, sessions: typeof project.sessions): HTMLElement {
+  const tree = document.createElement('div');
+  tree.className = 'session-tree';
+  tree.dataset.treeProjectId = project.id;
+
+  for (const session of sessions) {
+    const row = document.createElement('div');
+    row.className = `session-tree-row${session.id === project.activeSessionId ? ' active' : ''}`;
+    row.dataset.sessionId = session.id;
+
+    const dot = document.createElement('span');
+    const status = getStatus(session.id);
+    dot.className = `session-tree-dot ${status}`;
+
+    const name = document.createElement('span');
+    name.className = 'session-tree-name';
+    name.textContent = session.name || 'Unnamed';
+
+    const costEl = document.createElement('span');
+    costEl.className = 'session-tree-cost';
+    const cost = getCost(session.id);
+    costEl.textContent = cost ? `$${cost.totalCostUsd.toFixed(3)}` : '';
+
+    row.appendChild(dot);
+    row.appendChild(name);
+    row.appendChild(costEl);
+
+    row.addEventListener('click', () => {
+      appState.setActiveSession(project.id, session.id);
+    });
+
+    tree.appendChild(row);
+  }
+
+  return tree;
+}
+
+function renderSessionTreeStatus(): void {
+  const project = appState.activeProject;
+  if (!project) return;
+  const rows = projectListEl.querySelectorAll<HTMLElement>('.session-tree-row');
+  for (const row of rows) {
+    const sid = row.dataset.sessionId;
+    if (!sid) continue;
+    const dot = row.querySelector('.session-tree-dot');
+    if (dot) {
+      dot.className = `session-tree-dot ${getStatus(sid)}`;
+    }
+    row.classList.toggle('active', sid === project.activeSessionId);
+  }
+}
+
+function renderSessionTreeCosts(): void {
+  const rows = projectListEl.querySelectorAll<HTMLElement>('.session-tree-row');
+  for (const row of rows) {
+    const sid = row.dataset.sessionId;
+    if (!sid) continue;
+    const costEl = row.querySelector('.session-tree-cost');
+    if (!costEl) continue;
+    const cost = getCost(sid);
+    costEl.textContent = cost ? `$${cost.totalCostUsd.toFixed(3)}` : '';
   }
 }
 
