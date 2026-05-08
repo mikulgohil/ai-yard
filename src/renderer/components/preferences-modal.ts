@@ -253,6 +253,21 @@ export function showPreferencesModal(): void {
       content.appendChild(copyOnSelectRow);
 
     } else if (section === 'appearance') {
+      const densityPreview = document.createElement('div');
+      densityPreview.className = 'preferences-density-preview';
+      densityPreview.innerHTML = [
+        '<div class="preferences-density-label">Density preview · Comfortable</div>',
+        '<div class="preferences-density-row">',
+        '  <span class="preferences-density-name">Project name</span>',
+        '  <span class="preferences-density-meta">~/Developer/example</span>',
+        '</div>',
+        '<div class="preferences-density-row preferences-density-actions">',
+        '  <span class="preferences-density-button">Action</span>',
+        '  <span class="tag-pill-accent">label</span>',
+        '</div>',
+      ].join('');
+      content.appendChild(densityPreview);
+
       const themeRow = document.createElement('div');
       themeRow.className = 'modal-toggle-field';
 
