@@ -10,7 +10,6 @@
   <a href="https://github.com/mikulgohil/ai-yard/issues"><img src="https://img.shields.io/github/issues/mikulgohil/ai-yard" alt="Issues" /></a>
   <a href="https://github.com/mikulgohil/ai-yard/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
   <a href="https://star-history.com/#mikulgohil/ai-yard&Date"><img src="https://img.shields.io/github/stars/mikulgohil/ai-yard?style=social" alt="GitHub Stars" /></a>
-  <a href="https://x.com/EliranTutia"><img src="https://img.shields.io/badge/Follow-%40EliranTutia-black?logo=x" alt="Follow on X" /></a>
 </p>
 
 <p align="center">
@@ -115,16 +114,34 @@ PRs welcome! See the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct]
 
 [MIT](LICENSE)
 
+## Credits & Acknowledgements
+
+**AI-yard is a fork of [Vibeyard](https://github.com/elirantutia/vibeyard) by [@elirantutia](https://github.com/elirantutia).** All credit for the original architecture, design, and the bulk of the codebase goes to the upstream project. This fork exists as a personal workspace for Mikul Gohil to experiment with the codebase — extending features, exploring patterns, and learning Electron + headless-CLI integration.
+
+The upstream MIT license is preserved in [LICENSE](LICENSE). If you find this project useful, please **star the upstream repository first**: <https://github.com/elirantutia/vibeyard>.
+
+### Why a fork?
+
+- **Learning playground** — a real, sizable Electron + TypeScript codebase to study and extend rather than building toy projects.
+- **Personal experiments** — features and ideas that may not fit the upstream project's roadmap (tracked in [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md) and [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md)).
+- **Public, not promotional** — published for transparency and to share back any independently-developed improvements. This is not a competing product.
+
+### Sync with upstream
+
+This fork tracks upstream as the `upstream` git remote. To sync:
+
+```bash
+git remote add upstream https://github.com/elirantutia/vibeyard.git  # one-time
+git fetch upstream
+git merge upstream/main
+```
+
 ---
 
 <p align="center">
-  <a href="https://github.com/mikulgohil/ai-yard"><img src="https://img.shields.io/badge/Star%20AI-yard%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
+  <a href="https://github.com/elirantutia/vibeyard"><img src="https://img.shields.io/badge/Star%20Vibeyard%20(upstream)-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star upstream Vibeyard" /></a>
 </p>
 
 <p align="center">
-  If AI-yard helps your workflow, a star helps us grow. Thanks for the support!
-</p>
-
-<p align="center">
-  <sub>AI-yard is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
+  <sub>AI-yard is an independent personal fork of <a href="https://github.com/elirantutia/vibeyard">Vibeyard</a> and is not affiliated with or endorsed by Anthropic, OpenAI, Google, or the upstream Vibeyard maintainers.</sub>
 </p>
