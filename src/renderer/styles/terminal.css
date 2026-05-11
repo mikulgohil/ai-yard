@@ -30,7 +30,7 @@
 
 .swarm-empty-cell {
   position: relative;
-  border: 2px solid var(--pane-unfocus);
+  border: 1px solid var(--pane-unfocus);
   border-radius: 2px;
   display: flex;
   align-items: center;
@@ -79,8 +79,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border: 2px solid var(--pane-unfocus);
-  border-radius: 2px;
+  border: 1px solid var(--pane-unfocus);
+  border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -92,6 +92,74 @@
 
 .terminal-pane.focused {
   border-color: var(--pane-focus);
+}
+
+/* Chrome bar at the top of each terminal pane */
+.terminal-chrome-bar {
+  height: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  gap: var(--space-2);
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.terminal-chrome-name {
+  flex: 1;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+}
+
+.terminal-chrome-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.terminal-chrome-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.terminal-chrome-status-dot.working {
+  background: var(--status-info);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.terminal-chrome-status-dot.waiting {
+  background: var(--status-warn);
+}
+
+.terminal-chrome-status-dot.input {
+  background: var(--status-input);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.terminal-chrome-status-dot.completed {
+  background: var(--status-success);
+}
+
+.terminal-chrome-cost {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 .terminal-pane.swarm-unread {
@@ -107,11 +175,12 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding: 0 6px 4px;
 }
 
 .terminal-pane .xterm {
   height: 100%;
-  padding: 4px;
+  padding: 4px 0;
 }
 
 .terminal-pane.hidden {
@@ -138,19 +207,44 @@
 }
 
 .context-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-.context-indicator:empty {
-  display: none;
+.context-indicator .context-bar {
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-elevated, var(--bg-tertiary, rgba(127, 127, 127, 0.18)));
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.context-indicator.warning {
+.context-indicator .context-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--text-secondary);
+  transition: width 0.2s ease, background-color 0.2s ease;
+  border-radius: 2px;
+}
+
+.context-indicator.warning .context-bar-fill {
+  background: var(--color-warning);
+}
+
+.context-indicator.critical .context-bar-fill {
+  background: var(--accent);
+}
+
+.context-indicator.warning .context-text {
   color: var(--color-warning);
 }
 
-.context-indicator.critical {
+.context-indicator.critical .context-text {
   color: var(--accent);
 }
 
@@ -164,6 +258,103 @@
 
 .context-indicator.hidden {
   display: none;
+}
+
+/* Proactive context-full banner (≥90% usage) */
+.context-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-top: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  font-size: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.context-banner.hidden {
+  display: none;
+}
+
+.context-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg-primary, #fff);
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.context-banner-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-banner-text code {
+  font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace);
+  background: var(--bg-elevated, var(--bg-tertiary, rgba(127, 127, 127, 0.18)));
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.context-banner-action {
+  background: var(--accent);
+  color: var(--bg-primary, #fff);
+  border: none;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.context-banner-action:hover {
+  filter: brightness(1.1);
+}
+
+.context-banner-action:focus-visible,
+.context-banner-dismiss:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.context-banner-dismiss {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.context-banner-dismiss:hover {
+  background: var(--bg-tertiary, rgba(127, 127, 127, 0.15));
+  color: var(--text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .context-indicator .context-bar-fill {
+    transition: none;
+  }
 }
 
 .terminal-exit-overlay {

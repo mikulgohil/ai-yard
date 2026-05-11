@@ -117,6 +117,9 @@ class FakeElement {
   classList = new FakeClassList();
   dataset: Record<string, string> = {};
   textContent = '';
+  attributes: Record<string, string> = {};
+  style: Record<string, string> = {};
+  type = '';
 
   constructor(public tagName: string) {}
 
@@ -133,6 +136,14 @@ class FakeElement {
   }
 
   addEventListener(): void {}
+
+  setAttribute(name: string, value: string): void {
+    this.attributes[name] = value;
+  }
+
+  getAttribute(name: string): string | null {
+    return this.attributes[name] ?? null;
+  }
 
   querySelector(selector: string): FakeElement | null {
     if (selector.startsWith('.')) {

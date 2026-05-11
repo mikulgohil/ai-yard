@@ -51,10 +51,22 @@ export function getContext(sessionId: string): ContextWindowInfo | null {
 
 export type ContextSeverity = '' | 'warning' | 'critical';
 
+export const CONTEXT_BANNER_THRESHOLD = 90;
+
 export function getContextSeverity(usedPercentage: number): ContextSeverity {
   if (usedPercentage >= 90) return 'critical';
   if (usedPercentage >= 70) return 'warning';
   return '';
+}
+
+/**
+ * Decision rule for the proactive "context nearly full" banner.
+ * Returns true when the banner should be visible for the given session state.
+ * Below the threshold the user's prior dismissal is intentionally cleared by
+ * the caller so re-crossing 90% (e.g. after /compact rebuild) re-shows it.
+ */
+export function shouldShowContextBanner(usedPercentage: number, dismissed: boolean): boolean {
+  return usedPercentage >= CONTEXT_BANNER_THRESHOLD && !dismissed;
 }
 
 export function onChange(callback: ContextChangeCallback): () => void {

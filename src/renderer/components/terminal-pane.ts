@@ -5,7 +5,7 @@ import { Terminal } from '@xterm/xterm';
 import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
 import { initSession, removeSession } from '../session-activity.js';
-import { type ContextWindowInfo, getContextSeverity, removeSession as removeContextSession } from '../session-context.js';
+import { CONTEXT_BANNER_THRESHOLD, type ContextWindowInfo, getContextSeverity, removeSession as removeContextSession, shouldShowContextBanner } from '../session-context.js';
 import { type CostInfo, formatTokens, removeSession as removeCostSession } from '../session-cost.js';
 import { markFreshSession } from '../session-insights.js';
 import { appState } from '../state.js';
@@ -32,10 +32,99 @@ interface TerminalInstance {
   pendingPrompt: string | null;
   pendingSystemPrompt: string | null;
   pendingPromptTimer: ReturnType<typeof setTimeout> | null;
+  contextBannerDismissed: boolean;
 }
 
 const instances = new Map<string, TerminalInstance>();
 let focusedSessionId: string | null = null;
+
+function buildContextIndicator(): HTMLDivElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'context-indicator';
+
+  const bar = document.createElement('div');
+  bar.className = 'context-bar';
+  bar.setAttribute('role', 'progressbar');
+  bar.setAttribute('aria-valuemin', '0');
+  bar.setAttribute('aria-valuemax', '100');
+  bar.setAttribute('aria-valuenow', '0');
+  bar.setAttribute('aria-label', 'Context window usage');
+
+  const fill = document.createElement('div');
+  fill.className = 'context-bar-fill';
+  fill.style.width = '0%';
+  bar.appendChild(fill);
+
+  const text = document.createElement('span');
+  text.className = 'context-text';
+
+  wrap.appendChild(bar);
+  wrap.appendChild(text);
+  return wrap;
+}
+
+function buildContextBanner(sessionId: string): HTMLDivElement {
+  const banner = document.createElement('div');
+  banner.className = 'context-banner hidden';
+  banner.setAttribute('role', 'status');
+  banner.setAttribute('aria-live', 'polite');
+
+  const icon = document.createElement('span');
+  icon.className = 'context-banner-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = '!';
+
+  const text = document.createElement('span');
+  text.className = 'context-banner-text';
+
+  const prefix = document.createElement('span');
+  prefix.textContent = 'Context nearly full — type ';
+  const code = document.createElement('code');
+  code.textContent = '/compact';
+  const suffix = document.createElement('span');
+  suffix.textContent = ' to summarize';
+
+  text.appendChild(prefix);
+  text.appendChild(code);
+  text.appendChild(suffix);
+
+  const action = document.createElement('button');
+  action.type = 'button';
+  action.className = 'context-banner-action';
+  action.textContent = 'Run /compact';
+  action.addEventListener('click', () => {
+    window.aiyard.pty.write(sessionId, '/compact\r');
+    const inst = instances.get(sessionId);
+    if (inst) inst.contextBannerDismissed = true;
+    banner.classList.add('hidden');
+  });
+
+  const dismiss = document.createElement('button');
+  dismiss.type = 'button';
+  dismiss.className = 'context-banner-dismiss';
+  dismiss.setAttribute('aria-label', 'Dismiss context warning');
+  dismiss.textContent = '×';
+  dismiss.addEventListener('click', () => {
+    const inst = instances.get(sessionId);
+    if (inst) inst.contextBannerDismissed = true;
+    banner.classList.add('hidden');
+  });
+
+  banner.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      const inst = instances.get(sessionId);
+      if (inst) inst.contextBannerDismissed = true;
+      banner.classList.add('hidden');
+    }
+  });
+
+  banner.appendChild(icon);
+  banner.appendChild(text);
+  banner.appendChild(action);
+  banner.appendChild(dismiss);
+  return banner;
+}
 
 export function createTerminalPane(
   sessionId: string,
@@ -58,10 +147,12 @@ export function createTerminalPane(
   xtermWrap.className = 'xterm-wrap';
   element.appendChild(xtermWrap);
 
+  const banner = buildContextBanner(sessionId);
+  element.appendChild(banner);
+
   const statusBar = document.createElement('div');
   statusBar.className = 'session-status-bar';
-  const contextIndicator = document.createElement('div');
-  contextIndicator.className = 'context-indicator';
+  const contextIndicator = buildContextIndicator();
   const costDisplay = document.createElement('div');
   costDisplay.className = 'cost-display';
   const caps = getProviderCapabilities(providerId);
@@ -71,6 +162,7 @@ export function createTerminalPane(
     costDisplay.classList.add('hidden');
   }
   contextIndicator.classList.toggle('hidden', caps?.contextWindow === false);
+  if (caps?.contextWindow === false) banner.classList.add('hidden');
   statusBar.appendChild(contextIndicator);
   statusBar.appendChild(costDisplay);
   element.appendChild(statusBar);
@@ -78,7 +170,7 @@ export function createTerminalPane(
   const terminal = new Terminal({
     theme: getTerminalTheme(appState.preferences.theme),
     fontSize: 14,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
+    fontFamily: "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', 'Fira Code', 'JetBrains Mono', 'SF Mono', Menlo, monospace",
     cursorBlink: true,
     allowProposedApi: true,
     linkHandler: {
@@ -130,6 +222,7 @@ export function createTerminalPane(
     pendingPrompt: null,
     pendingSystemPrompt: null,
     pendingPromptTimer: null,
+    contextBannerDismissed: false,
   };
 
   instances.set(sessionId, instance);
@@ -427,17 +520,28 @@ export function updateContextDisplay(sessionId: string, info: ContextWindowInfo)
   if (!el) return;
 
   const pct = Math.min(Math.round(info.usedPercentage), 100);
-  const filledCount = Math.round(pct / 10);
-  const emptyCount = 10 - filledCount;
-  const bar = '=' .repeat(filledCount) + '-'.repeat(emptyCount);
   const tokenStr = formatTokens(info.totalTokens);
+  const tooltip = `${info.totalTokens.toLocaleString()} / ${info.contextWindowSize.toLocaleString()} tokens`;
 
-  el.textContent = `[${bar}] ${pct}% ${tokenStr} tokens`;
-  el.title = `${info.totalTokens.toLocaleString()} / ${info.contextWindowSize.toLocaleString()} tokens`;
+  const fill = el.querySelector('.context-bar-fill') as HTMLElement | null;
+  const bar = el.querySelector('.context-bar') as HTMLElement | null;
+  const text = el.querySelector('.context-text') as HTMLElement | null;
+  if (fill) fill.style.width = `${pct}%`;
+  if (bar) bar.setAttribute('aria-valuenow', String(pct));
+  if (text) text.textContent = `${pct}% · ${tokenStr}`;
+  el.title = tooltip;
 
   el.classList.remove('warning', 'critical');
   const severity = getContextSeverity(pct);
   if (severity) el.classList.add(severity);
+
+  const banner = instance.element.querySelector('.context-banner') as HTMLElement | null;
+  if (banner) {
+    if (pct < CONTEXT_BANNER_THRESHOLD) {
+      instance.contextBannerDismissed = false;
+    }
+    banner.classList.toggle('hidden', !shouldShowContextBanner(pct, instance.contextBannerDismissed));
+  }
 
   showStatusBar(instance);
 }

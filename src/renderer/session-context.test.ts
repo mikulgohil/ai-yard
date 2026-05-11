@@ -1,11 +1,13 @@
 import {
   _resetForTesting,
+  CONTEXT_BANNER_THRESHOLD,
   getContext,
   getContextSeverity,
   onChange,
   removeSession,
   restoreContext,
   setContextData,
+  shouldShowContextBanner,
 } from './session-context';
 
 beforeEach(() => {
@@ -166,5 +168,28 @@ describe('getContextSeverity', () => {
   it('returns critical at 90 and above', () => {
     expect(getContextSeverity(90)).toBe('critical');
     expect(getContextSeverity(100)).toBe('critical');
+  });
+});
+
+describe('shouldShowContextBanner', () => {
+  it('exposes the threshold as a constant for callers to share', () => {
+    expect(CONTEXT_BANNER_THRESHOLD).toBe(90);
+  });
+
+  it('hides below the threshold regardless of dismissal state', () => {
+    expect(shouldShowContextBanner(0, false)).toBe(false);
+    expect(shouldShowContextBanner(89, false)).toBe(false);
+    expect(shouldShowContextBanner(89, true)).toBe(false);
+  });
+
+  it('shows at or above the threshold when not dismissed', () => {
+    expect(shouldShowContextBanner(90, false)).toBe(true);
+    expect(shouldShowContextBanner(95, false)).toBe(true);
+    expect(shouldShowContextBanner(100, false)).toBe(true);
+  });
+
+  it('stays hidden when the user has dismissed even if usage rises', () => {
+    expect(shouldShowContextBanner(90, true)).toBe(false);
+    expect(shouldShowContextBanner(99, true)).toBe(false);
   });
 });
