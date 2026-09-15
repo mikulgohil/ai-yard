@@ -1,3 +1,5 @@
+import { getBoard } from '../../board-state.js';
+import { showTaskModal } from '../board/board-task-modal.js';
 import { positionPopover } from './popover.js';
 import { buildSelectorOptions } from './selector-ui.js';
 import type { BrowserTabInstance, ElementInfo } from './types.js';
@@ -84,4 +86,26 @@ export function dismissInspect(instance: BrowserTabInstance): void {
   if (instance.inspectMode) {
     toggleInspectMode(instance);
   }
+}
+
+/** Save the current inspect selection as a Kanban task (Add to Board). */
+export function createTaskFromInspect(instance: BrowserTabInstance): void {
+  if (!getBoard()) return;
+  const info = instance.selectedElement;
+  if (!info) return;
+  const prompt = buildPrompt(instance);
+  const idStr = info.id ? `#${info.id}` : '';
+  const classStr = info.classes.length ? `.${info.classes.slice(0, 2).join('.')}` : '';
+  const title = `Fix <${info.tagName}${idStr}${classStr}>`;
+  const notes = [
+    `URL: ${info.pageUrl}`,
+    `Selector: ${info.activeSelector.value}`,
+    info.textContent ? `Text: ${info.textContent}` : '',
+  ].filter(Boolean).join('\n');
+  showTaskModal('create', undefined, undefined, {
+    title,
+    prompt: prompt ?? undefined,
+    notes,
+    tags: ['browser-inspect'],
+  });
 }

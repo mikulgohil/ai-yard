@@ -53,7 +53,7 @@ function createWindow(): void {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // needed for node-pty IPC
-      webviewTag: true, // needed for browser-tab sessions
+      webviewTag: false, // A5 Phase 5: browser tabs use WebContentsView, not <webview>
     },
   });
 

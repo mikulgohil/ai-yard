@@ -1,10 +1,9 @@
 import type { BrowserViewEvent, ViewId, ViewRect } from '../../../shared/browser-view-contract.js';
-import type { WebviewElement } from './types.js';
 
 /**
  * Normalised key event surfaced through {@link ViewAdapter.onBeforeInput}.
- * Mirrors the shape Electron's `before-input-event` ships on the underlying
- * `<webview>`, but kept separate so consumers don't depend on Electron types.
+ * Mirrors Electron's `before-input-event` shape, kept separate so consumers
+ * don't depend on Electron types.
  */
 export interface BeforeInputEvent {
   type: string;
@@ -26,10 +25,7 @@ export interface CapturedImage {
 
 /**
  * Stable contract the rest of the browser-tab code uses to drive the embedded
- * web view. Phase 1 has a single implementation backed by `<webview>`. Phase 2
- * adds a `WebContentsView`-backed implementation that lives in the main
- * process, driven through IPC; nothing outside this file should need to change
- * when that lands.
+ * web view. A5 Phase 5: only the WebContentsView-backed implementation remains.
  */
 export interface ViewAdapter {
   getSrc(): string;
@@ -46,9 +42,8 @@ export interface ViewAdapter {
   destroy(): void;
 
   /**
-   * The DOM node that renders the view. Today this is the underlying
-   * `<webview>`; Phase 2 will return a renderer-side placeholder element that
-   * the main process positions a native `WebContentsView` on top of.
+   * Renderer-side placeholder the main process positions a native
+   * WebContentsView on top of.
    */
   readonly element: HTMLElement;
   getBoundingClientRect(): DOMRect;
@@ -61,113 +56,13 @@ export interface ViewAdapter {
   onBeforeInput(cb: (event: BeforeInputEvent, preventDefault: () => void) => void): () => void;
 }
 
-interface DidNavigateCustomEvent extends CustomEvent {
-  url: string;
-}
-
-interface IpcMessageCustomEvent extends CustomEvent {
-  channel: string;
-  args: unknown[];
-}
-
-interface BeforeInputCustomEvent extends CustomEvent {
-  preventDefault(): void;
-  input: BeforeInputEvent;
-}
-
-export function createWebviewAdapter(webview: WebviewElement): ViewAdapter {
-  const el = webview as unknown as HTMLElement;
-
-  return {
-    getSrc(): string {
-      return webview.src;
-    },
-    setSrc(url: string): void {
-      webview.src = url;
-    },
-    goBack(): void {
-      webview.goBack();
-    },
-    goForward(): void {
-      webview.goForward();
-    },
-    reload(): void {
-      webview.reload();
-    },
-    stop(): void {
-      webview.stop();
-    },
-
-    send(channel: string, ...args: unknown[]): void {
-      webview.send(channel, ...args);
-    },
-    capturePage(): Promise<CapturedImage> {
-      return webview.capturePage();
-    },
-
-    setPreload(absolutePath: string): void {
-      el.setAttribute('preload', `file://${absolutePath}`);
-    },
-    destroy(): void {
-      // The <webview> path doesn't need explicit teardown — pane.ts already
-      // guards each cleanup call with try/catch, and removing the element
-      // from the DOM tears down the underlying WebContents. Phase 2 will
-      // wire this up to release the main-process WebContentsView handle.
-    },
-
-    get element(): HTMLElement {
-      return el;
-    },
-    getBoundingClientRect(): DOMRect {
-      return el.getBoundingClientRect();
-    },
-    setExplicitSize(width: number, height: number): void {
-      el.style.width = `${width}px`;
-      el.style.height = `${height}px`;
-      el.style.flex = 'none';
-    },
-    clearExplicitSize(): void {
-      el.style.width = '';
-      el.style.height = '';
-      el.style.flex = '';
-    },
-
-    onDidNavigate(cb): () => void {
-      const handler = ((e: DidNavigateCustomEvent) => cb(e.url)) as EventListener;
-      el.addEventListener('did-navigate', handler);
-      return () => el.removeEventListener('did-navigate', handler);
-    },
-    onDidNavigateInPage(cb): () => void {
-      const handler = ((e: DidNavigateCustomEvent) => cb(e.url)) as EventListener;
-      el.addEventListener('did-navigate-in-page', handler);
-      return () => el.removeEventListener('did-navigate-in-page', handler);
-    },
-    onIpcMessage(cb): () => void {
-      const handler = ((e: IpcMessageCustomEvent) => cb(e.channel, e.args)) as EventListener;
-      el.addEventListener('ipc-message', handler);
-      return () => el.removeEventListener('ipc-message', handler);
-    },
-    onBeforeInput(cb): () => void {
-      const handler = ((e: BeforeInputCustomEvent) => cb(e.input, () => e.preventDefault())) as EventListener;
-      el.addEventListener('before-input-event', handler);
-      return () => el.removeEventListener('before-input-event', handler);
-    },
-  };
-}
-
 /**
- * Phase 2 adapter — backed by a main-process `WebContentsView`.
+ * WebContentsView adapter (A5).
  *
  * The renderer holds a placeholder `<div>` that participates in DOM layout;
- * the native view will be positioned on top by Phase 3 (a ResizeObserver
- * watching the placeholder, forwarding bounds via `setBounds`). For now the
- * placeholder is created at zero size and the main-process view sits at
- * `{x:0,y:0,width:0,height:0}` until something drives setBounds.
- *
- * The adapter is created synchronously but the underlying viewId is only
- * known after the main-process create call resolves. Method calls made
- * before that resolution are queued and flushed on resolution; methods that
- * return data (capturePage) await the same promise.
+ * a ResizeObserver forwards bounds via `setBounds`. The adapter is created
+ * synchronously but the underlying viewId is only known after the main-process
+ * create call resolves. Method calls made before that are queued and flushed.
  */
 export interface CreateWebContentsViewAdapterInput {
   tabId: string;

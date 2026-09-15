@@ -12,9 +12,8 @@
  *    a discriminated `BrowserViewEvent` payload. One channel keeps the
  *    preload's `onEvent(viewId, cb)` subscription bookkeeping cheap.
  *
- * Status: Phase 5 default is on. New browser tabs use WebContentsView via
- * `BrowserTabInstance.useWebContentsView` (default `true`). The `<webview>`
- * adapter remains until in-page inspect/draw/flow clicks are confirmed.
+ * Status: A5 Phase 5 complete. Browser tabs use WebContentsView only
+ * (`webviewTag: false`). The legacy `<webview>` adapter has been deleted.
  */
 
 /** Stable opaque identifier for a main-process WebContentsView. */

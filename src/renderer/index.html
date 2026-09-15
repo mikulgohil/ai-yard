@@ -11,8 +11,8 @@
     connect-src ws://localhost:5173: Vite HMR WebSocket in dev (B9). Localhost-scoped, no
                                       production exposure. Mirror http://localhost:5173 covered by
                                       'self' when the page is loaded from the dev server.
-    frame-src 'none': renderer has no iframes; the browser-tab uses <webview> which is its own
-                      isolated WebContents and not subject to page CSP.
+    frame-src 'none': renderer has no iframes; browser tabs use WebContentsView
+                      (isolated WebContents, not subject to page CSP).
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://github.com ws://localhost:5173 http://localhost:5173; frame-src 'none'; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

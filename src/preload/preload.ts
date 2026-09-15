@@ -214,10 +214,8 @@ export interface AIYardApi {
     saveScreenshot(sessionId: string, dataUrl: string, projectPath?: string): Promise<string>;
   };
   /**
-   * WebContentsView-backed browser tab path (A5 Phase 2). Dormant unless the
-   * `BrowserTabInstance.useWebContentsView` flag is set; the flag defaults to
-   * `false` until Phase 5. Channel + payload contract lives in
-   * `src/shared/browser-view-contract.ts`.
+   * WebContentsView-backed browser tab path (A5 Phase 5 default).
+   * Channel + payload contract: `src/shared/browser-view-contract.ts`.
    */
   browserView: {
     create(input: BrowserViewCreateInput): Promise<BrowserViewCreateOutput>;

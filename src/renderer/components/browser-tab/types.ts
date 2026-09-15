@@ -70,30 +70,10 @@ export const VIEWPORT_PRESETS: ViewportPreset[] = [
   { label: 'iPad Pro',   width: 1024, height: 1366 },
 ];
 
-export interface WebviewElement extends HTMLElement {
-  src: string;
-  goBack(): void;
-  goForward(): void;
-  reload(): void;
-  stop(): void;
-  send(channel: string, ...args: unknown[]): void;
-  capturePage(rect?: { x: number; y: number; width: number; height: number }): Promise<{
-    toDataURL(): string;
-    toPNG(): Uint8Array;
-  }>;
-}
-
 export interface BrowserTabInstance {
   sessionId: string;
   element: HTMLDivElement;
   view: ViewAdapter;
-  /**
-   * A5 Phase 2 feature flag. When true, the view is a main-process
-   * `WebContentsView` driven through IPC. When false (default), the legacy
-   * `<webview>` element is used. Phase 5 will flip the default and delete
-   * the legacy path.
-   */
-  useWebContentsView: boolean;
   viewportContainer: HTMLDivElement;
   newTabPage: HTMLDivElement;
   urlInput: HTMLInputElement;

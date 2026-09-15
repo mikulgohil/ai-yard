@@ -12,7 +12,7 @@ import {
   toggleDrawMode,
 } from './draw-mode.js';
 import { dismissFlowPicker, showFlowPicker } from './flow-picker.js';
-import { addFlowStep, addFlowSuggestions, buildPlaywrightCode, clearFlow, replayFlow, renderFlowSteps, toggleFlowMode } from './flow-recording.js';
+import { addFlowStep, addFlowSuggestions, buildPlaywrightCode, clearFlow, renderFlowSteps, replayFlow, toggleFlowMode } from './flow-recording.js';
 import { createTaskFromInspect, dismissInspect, showElementInfo, toggleInspectMode } from './inspect-mode.js';
 import { getPreloadPath, instances } from './instance.js';
 import { navigateTo } from './navigation.js';
@@ -32,9 +32,8 @@ import {
   type FlowPickerAction,
   type FlowPickerMetadata,
   VIEWPORT_PRESETS,
-  type WebviewElement,
 } from './types.js';
-import { createWebContentsViewAdapter, createWebviewAdapter, type ViewAdapter } from './view-adapter.js';
+import { createWebContentsViewAdapter, type ViewAdapter } from './view-adapter.js';
 import { applyViewport, closeViewportDropdown, openViewportDropdown } from './viewport.js';
 
 export function createBrowserTabPane(sessionId: string, url?: string): void {
@@ -196,28 +195,15 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
 
   viewportContainer.appendChild(newTabPage);
 
-  // A5 Phase 5: WebContentsView is the default. The <webview> branch remains
-  // until in-page inspect/draw/flow clicks are confirmed, then it gets deleted.
-  const useWebContentsView = true;
-
-  const view: ViewAdapter = useWebContentsView
-    ? createWebContentsViewAdapter({
-        tabId: sessionId,
-        // The adapter awaits this internally and queues any operations made
-        // before it resolves, so we don't have to defer pane construction.
-        preloadPath: getPreloadPath(),
-        url,
-      })
-    : (() => {
-        const webview = document.createElement('webview') as unknown as WebviewElement;
-        webview.className = 'browser-webview';
-        webview.setAttribute('allowpopups', '');
-        webview.setAttribute('webpreferences', 'backgroundThrottling=false');
-        return createWebviewAdapter(webview);
-      })();
+  // A5 Phase 5: WebContentsView only. Preload + initial URL are set at create time.
+  const view: ViewAdapter = createWebContentsViewAdapter({
+    tabId: sessionId,
+    preloadPath: getPreloadPath(),
+    url,
+  });
   viewportContainer.appendChild(view.element);
 
-  // Floating pill toolbar lives inside the viewport container so it overlays the webview
+  // Floating pill toolbar lives inside the viewport container so it overlays the view
   viewportContainer.appendChild(toolbar);
 
   // Floating tool HUD — right-edge contextual tools
@@ -500,7 +486,6 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     sessionId,
     element: el,
     view,
-    useWebContentsView,
     viewportContainer,
     newTabPage,
     urlInput,
@@ -556,18 +541,6 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     } as KeyboardEvent;
     shortcutManager.matchEvent(synthetic);
   });
-
-  // Preload must be set before src to ensure the inspect script is injected.
-  // For the WebContentsView path the adapter handles preload + initial URL at
-  // create time, so this block is a no-op in that branch.
-  if (!useWebContentsView) {
-    getPreloadPath().then((p) => {
-      // DEBUG: temporary instrumentation for inspect-element regression.
-      console.log('[INSPECT] host setPreload', p, 'url:', url);
-      view.setPreload(p);
-      if (url) view.setSrc(url);
-    });
-  }
 
   backBtn.addEventListener('click', () => view.goBack());
   fwdBtn.addEventListener('click', () => view.goForward());
@@ -805,30 +778,6 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     }
   });
 
-  // DEBUG: forward webview-side console + load errors to host DevTools so the
-  // preload's logs show up in a single place. Only wires for the <webview> path.
-  if (!useWebContentsView) {
-    const wv = view.element as unknown as {
-      addEventListener: (type: string, listener: (e: Event) => void) => void;
-      openDevTools?: () => void;
-    };
-    wv.addEventListener('console-message', (e: Event) => {
-      const ev = e as Event & { message: string; level: number; line: number; sourceId: string };
-      console.log('[INSPECT][webview console]', ev.message, '@', ev.sourceId, ':', ev.line);
-    });
-    wv.addEventListener('did-fail-load', (e: Event) => {
-      const ev = e as Event & { errorCode: number; errorDescription: string; validatedURL: string };
-      console.warn('[INSPECT] webview did-fail-load', ev.errorCode, ev.errorDescription, ev.validatedURL);
-    });
-    wv.addEventListener('preload-error', (e: Event) => {
-      const ev = e as Event & { preloadPath?: string; error?: { message?: string } };
-      console.error('[INSPECT] webview preload-error', ev.preloadPath, ev.error?.message);
-    });
-    wv.addEventListener('dom-ready', () => {
-      console.log('[INSPECT] webview dom-ready');
-    });
-  }
-
 }
 
 export function attachBrowserTabToContainer(sessionId: string, container: HTMLElement): void {
@@ -861,8 +810,7 @@ export function destroyBrowserTabPane(sessionId: string): void {
   document.removeEventListener('mousedown', instance.viewportOutsideClickHandler);
   try { dismissSendMenu(instance); } catch {}
 
-  // <webview> calls throw if it isn't attached + dom-ready yet. Guard each
-  // one individually so a failure can't skip instance.element.remove() below.
+  // Guard each call so a failure can't skip instance.element.remove() below.
   try { if (instance.inspectMode) instance.view.send('exit-inspect-mode'); } catch {}
   try { if (instance.flowMode) instance.view.send('exit-flow-mode'); } catch {}
   try { if (instance.drawMode) instance.view.send('exit-draw-mode'); } catch {}

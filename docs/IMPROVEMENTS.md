@@ -13,45 +13,19 @@ Generated 2026-05-07 after a full architectural read of the codebase. Companion 
 
 ## ⏭️ Next session (pick up here)
 
-**Primary task: A5 Phase 5 — WebContentsView cutover.** Phases 1–4 are done (see decision log entries below for context). Phase 5 is mostly manual smoke-testing during a live `npm run dev` because every prior session was blocked by the harness's inability to launch Electron interactively.
+**A5 Phase 5 is done (2026-09-16).** WebContentsView is the only browser-tab path (`webviewTag: false`, legacy adapter deleted). Chrome e2e covers open/navigate/toggle tools. Soft follow-up: human-smoke in-page inspect/draw/flow clicks inside the native view.
 
-### Phase 5 — concrete steps
+**Recommended next product slice: F2 Prompt Template Library** (Tier 1 differentiator).
 
-1. **Flip the default** — `src/renderer/components/browser-tab/pane.ts:199`, change `useWebContentsView = false` → `true`.
-2. **Live-launch parity check** (the part every prior session deferred):
-   - New browser tab loads at the placeholder's bounds.
-   - Inspect Element → click DOM node → inspect panel populates with selectors.
-   - Record (flow) → click DOM node → flow picker popover; "Click + Record" appends a step.
-   - Draw → drag → release → draw popover at cursor.
-   - Global accelerators (`Cmd/Ctrl+W/T/F/P/[/]/Shift+[/]/…`) fire the app shortcut without the page double-handling.
-   - Universal text-editing combos (`Cmd/Ctrl+S/Z/C/V/X/A/R`) still reach the page.
-3. **Delete the legacy path** once parity is confirmed:
-   - Remove the `<webview>` branch in `pane.ts:199-215` (the `useWebContentsView ? … : (() => { … })()` ternary collapses to a single `createWebContentsViewAdapter(…)` call).
-   - Delete `createWebviewAdapter` and the `WebviewElement` type from `view-adapter.ts` + `types.ts`.
-   - Delete the legacy `setPreload` block in `pane.ts:493-498` (the WCV adapter handles preload at create time).
-   - Set `webviewTag: false` in `src/main/main.ts` (search for `webviewTag: true`).
-   - Remove the `useWebContentsView` field from `BrowserTabInstance` in `types.ts`.
-4. **Append a decision-log entry** under the existing 2026-05-07 entries with: parity check results, any accelerators that misbehaved, final test/lint/build numbers, bundle size after the legacy path is deleted (expected to drop a bit since `createWebviewAdapter` is removed).
-
-**Estimated effort**: 1–2 hours, almost all of it manual smoke-testing.
-
-### Known Phase 5 gaps to either close or document
-
-- **User-customized keybindings** aren't synced to main — non-default accelerators still fire our handler but the page also sees the keystroke. Fix is ~60 LoC (contract field + renderer observer + main cache). Optional for Phase 5; only blocks if a real user reports it.
-- **Linux device-pixel scaling** — Phase 3 used CSS-pixel rects (works on macOS/Windows). Linux may need device-pixel adjustment in `computeRect()` if we ever test there. Not a Phase 5 blocker.
-- **`view-adapter.test.ts`** doesn't exercise the `toPNG` path of the WCV `capturePage` shim against a real PNG payload — live launch will validate.
-
-### Other items still open (not Phase 5)
-
-Pick one of these up *after* Phase 5 lands:
+### Still open (engineering)
 
 - **B6** — typed IPC bridge (scaffolded only; ~80 channels need migrating in one PR — half-typed surface is worse than untyped).
-- **B8** — SQLite migration (schema in `src/main/store-sqlite-schema.sql`; no code yet — 1–2 day session).
-- **C11** — CDP console capture (was blocked on A5; unblocked once Phase 5 is done).
+- **B8** — SQLite migration (schema in `src/main/store-sqlite-schema.sql`; no code yet — 1–2 day session). Unlocks F1 transcript search.
+- **C11** — CDP console capture (unblocked now that A5 is done).
 - **C12** — MCP server marketplace UI (registry published; runtime UI not built).
 - **C17** — Jira integration for kanban + project overview (3-slice plan; user-asked).
-- **Pre-existing vitest+vite-7 resolver regression** — 37 main-process test files fail to load (`Failed to resolve entry for package "fs"`). Codemod to `node:`-prefixed imports is the recommended fix. Not blocking any feature, but should be done before B8 lands (B8 will add new tests subject to the same issue).
-- **Telemetry/Sentry secrets provisioning (operational)** — code is wired, just needs `gh secret set SENTRY_DSN / TELEMETRY_ENDPOINT / TELEMETRY_WEBSITE_ID`. First release after the secrets land is the first one with active reporting.
+- **User-customized keybindings** not synced to main for WCV accelerator suppression (~60 LoC).
+- **Telemetry/Sentry secrets provisioning (operational)** — `gh secret set SENTRY_DSN / TELEMETRY_ENDPOINT / TELEMETRY_WEBSITE_ID`.
 
 ---
 
@@ -476,12 +450,13 @@ Pick one of these up *after* Phase 5 lands:
 - **2026-05-07** — A5 Phase 3 landed in the parent repo. `createWebContentsViewAdapter` now owns a ResizeObserver on the placeholder + a `window.resize` listener, both feeding a rAF-debounced `flushBounds()` that pushes rounded CSS-pixel rects through `browser-view:setBounds`. Hidden panes (`offsetParent === null`) push `{0,0,0,0}` so the native view disappears without removeChildView churn. New `view-adapter.test.ts` (9 tests, no Node-builtin imports → loads cleanly past the resolver regression). Build clean, lint clean. Tests **1092 → 1101 (+9)**, 37 file load failures unchanged. `viewId` stayed inside the adapter as designed; Phase 4 (preload) and Phase 5 (cutover) still pending. Spot-checked with the flag flipped: build + lint pass and bundle goes 1,157.60 → 1,159.20 kB (the dead-code branch becoming live). Could not launch Electron interactively in this session, so the visual confirmation that the view actually renders at the placeholder's bounds remains for the next launch.
 - **2026-05-07** — A5 Phase 4 landed in the parent repo. `src/preload/browser-tab-preload.ts` gained a `bubbleHostMessage(channel, payload)` helper that dual-emits `ipcRenderer.sendToHost` + `ipcRenderer.send`; replaced the three `sendToHost` call sites (`draw-stroke-end`, `element-selected`, `flow-element-picked`). The dual emit avoids runtime context detection — `sendToHost` outside `<webview>` is a silent no-op (its `ipc-message-host` channel has no receiver) and `send` under `<webview>` lands in main where no handler is registered for these channels, so each path picks up only its correct one. The seven inbound `ipcRenderer.on(...)` listeners (`enter-inspect-mode` etc.) need no change — `webContents.send` is generic and fires them identically on both adapters. `src/main/ipc/browser-view.ts` gained an `isAppAccelerator(input)` matcher mirroring `SHORTCUT_DEFAULTS`; the `before-input-event` listener now calls `event.preventDefault()` synchronously for matches, before broadcasting to renderer (the renderer's async `preventDefault` arrives too late to block the page). Skips universal text-editing combos (Cmd/Ctrl+S/Z/Y/C/V/X/A/R), bare keys, Alt-modified keys, and `keyUp` events. **Known gap**: user-customized keybindings aren't synced to main, so non-default shortcuts still fire our handler but the page also sees the keystroke — fix is ~60 LoC across contract + preload + main + renderer observer; deferred until a real user hits it. Build clean, lint clean. Tests **1101 → 1109 (+8)**, 37 file load failures unchanged. Bundle under default flag unchanged (1,157.60 kB); flag-flipped bundle still 1,159.20 kB (Phase 4 didn't touch the renderer dispatch shape). Could not launch Electron interactively, so end-to-end inspect/draw/flow IPC roundtrips against the live native view remain to be confirmed by the first user run after Phase 5.
 - **2026-05-08** — Commit-consolidation session. The working tree had accumulated A5 Phases 1–4 + B9 Vite/HMR + a 15-file CSS sweep + cost-dashboard tweaks + doc updates, all uncommitted on top of `dd4e879`. Landed as 4 themed local commits (no push): `7a95041` A5 scaffolding (19 files, +1946/−153), `0d216e7` Vite + HMR pipeline (9 files, +653/−277), `5c1ac95` CSS + cost-dashboard (16 files, +576/−264), `197a601` docs refresh (CLAUDE.md + IMPROVEMENTS.md). Also added `.claude/worktrees/` to `.gitignore` (folded into the Vite commit). No code changes beyond the gitignore line — purely a state-capture session. Test state unchanged from Phase 4: **1109 pass / 37 file-load failures (pre-existing vitest+vite-7 regression)**. Branch is now 5 commits ahead of `origin/main`; Phase 5 cutover, B6, B8, and the `node:fs` codemod remain the parked-but-known follow-ups.
+- **2026-09-16** — A5 Phase 5 cutover complete. Default was already flipped (2026-09-15). Legacy path deleted: `createWebviewAdapter` / `WebviewElement` removed, `pane.ts` always uses `createWebContentsViewAdapter`, `useWebContentsView` field removed, `webviewTag: false`. Electron e2e `tests/e2e/browser-tab.spec.ts` still passes (placeholder bounds, native child view, navigate, tool toggles). Soft follow-up: human-smoke in-page inspect/draw/flow clicks. Next product slice: F2 prompt templates.
 
 ## Final session status (2026-05-07)
 
 **Completed (17 of 17 originally tracked):** Doc + A1 + A2 + A3 + A4 + A5 Phase 1 + A5 Phase 2 + B7 (full) + B9 (renderer HMR via plain Vite) + D14 (main + renderer) + D15 + D16 + #1 lint + #3 Playwright CI + #6 MCP marketplace UI + C10 cost dashboard + C13 telemetry
 
-**In progress (1):** A5 (Phase 5 cutover pending — Phases 3 + 4 landed in subsequent sessions; see decision log entries above)
+**In progress (1):** A5 Phase 5 was pending at this date — completed 2026-09-16 (see decision log)
 
 **Scaffolded for next session (2):** B6 (typed IPC bridge) + B8 (SQLite migration)
 
@@ -557,3 +532,99 @@ Pick one of these up *after* Phase 5 lands:
   - Collapsed icon-button mode: added `border-left: none; border-radius: var(--radius-sm)` to restore square pill appearance lost when global `border` was removed.
 - **Follow-ups**: None — collapsed and expanded modes both verified in CSS.
 - **Surgical sidebar re-renders** — `renderSessionTreeStatus()` and `renderSessionTreeCosts()` walk existing `.session-tree-row` DOM elements rather than destroying and rebuilding the tree; both guard via `window.getSelection()` to avoid wiping active text selections.
+
+---
+
+## 2026-05-08 — TODO: Draw mode screenshot — remote session support
+
+**Status**: Deferred  
+**Context**: `src/renderer/components/browser-tab/draw-mode.ts`, `src/main/ipc/app.ts`
+
+### Problem
+
+Screenshots captured in draw mode are saved to the local machine (currently `<project>/.aiyard/screenshots/draw-xxx.png` when a project is active, falling back to `os.tmpdir()`). The absolute path is embedded in the Claude prompt as text, and Claude uses its `Read` tool to view the image.
+
+This only works because AI-yard sessions always spawn Claude locally (PTY on the same machine as Electron). If a user manually SSH-s into a remote machine inside a terminal and runs Claude there, Claude cannot read the local file path — the file does not exist on the remote machine.
+
+### What was tried
+
+- Saving to `<project>/.aiyard/screenshots/` instead of `os.tmpdir()` — keeps the file next to the codebase but does not help remote machines.
+- Returning a project-relative path (`.aiyard/screenshots/xxx.png`) — still does not exist on the remote machine.
+- `claude --file` flag — only supports Anthropic Files API (`file_id:path` format), not local file attachment.
+
+### Proper fix options
+
+1. **Embed image as base64 in the API call** — requires plumbing a new attachment type through the session delivery layer (`setPendingPrompt` → `pty.create` → `buildArgs`). The Claude CLI would need to accept base64 image data as a flag or stdin.
+2. **Anthropic Files API** — upload the PNG with `client.beta.files.upload()` before creating the session, pass the `file_id` via `--file file_id:filename`. Requires an Anthropic API key in the main process and async upload step before session creation.
+3. **Local HTTP server** — Electron serves screenshots at `http://localhost:PORT/screenshot.png`; include the URL in the prompt. Only works if the remote machine can reach the local port (e.g. via SSH port forward).
+
+**Recommended**: Option 2 (Files API upload) for `sendDrawToNewSession`, with Option 1 as a stretch goal for `deliverDraw` (existing running sessions).
+
+### Acceptance criteria
+
+- Draw → Send to AI works when Claude is running on a remote machine (SSH session inside terminal).
+- Annotated screenshot is visible as a vision attachment in Claude's context, not just a text file path.
+- Fallback to current path approach when the Files API is unavailable (no API key configured).
+
+---
+
+## 2026-05-08 — Git feature roadmap — all 21 features implemented
+
+**Status**: Done. Build green (`npm run build`).
+**Spec**: `docs/GIT_FEATURES.md`
+
+### Summary
+
+All 21 features from `docs/GIT_FEATURES.md` (G1–G21) shipped together. Closes the local commit→push→CI→PR-review loop inside AI-yard so the terminal is no longer required for any common git workflow.
+
+### Files touched
+
+- **Main** (`src/main/`)
+  - `git-status.ts` — ~50 new operations + new `spawnGit` helper for streaming long-running ops (push/pull/fetch/rebase/submodule-update/cherry-pick/bisect-run can take >5 s, so `execFile`'s buffered behavior is insufficient).
+  - `ipc/git.ts` — every new operation gets an `ipcMain.handle`; mutating ops call `notifyGitChanged()` so the renderer poll updates immediately.
+  - `ipc/ai-util.ts` (new) — `callAiOnce(prompt, { cwd, timeoutMs })` shells out to `claude -p "<prompt>" --output-format text` via `ClaudeProvider.resolveBinaryPath()`. Returns `''` on failure so callers render a graceful "AI generation failed" affordance. Used by G11/G12/G14. Registered in the `ipc-handlers.ts` barrel as `registerAiUtilIpcHandlers`.
+  - `github-cli.ts` — `ghApi` now supports `method` (`POST/PATCH/PUT/DELETE`) + `body` (uses `gh api -f key=value`); new exports `getPrDetail`, `getPrFiles`, `getPrComments`, `submitPrReview`, `addPrComment`, `getCiStatus`, `getRepoStats` (parallel-fetches `repos/:repo`, `/stats/contributors`, `/stats/code_frequency`).
+  - `ipc/github.ts` — channels for the above.
+
+- **Preload** (`src/preload/preload.ts`)
+  - `git` namespace expanded to expose every new IPC channel as a typed method.
+  - New `ai` namespace: `callOnce(prompt, cwd?)`.
+  - `github` namespace expanded with `prDetail/prFiles/prComments/submitReview/addComment/ciStatus/repoStats`.
+
+- **Shared** (`src/shared/types.ts`)
+  - New types: `CommitEntry`, `TagEntry`, `StashEntry`, `ReflogEntry`, `BlameEntry`, `BranchCompareResult`, `ConflictedFile`, `SubmoduleEntry`, `RebaseAction`, `RebaseTodo`, `CheckRun`, `RepoStats`, `PRDetail`, `PRFile`, `PRComment`, `PickaxeMatch`, `GrepMatch`.
+  - Two reserved `SessionType` members: `'git-history'`, `'pr-review'` (currently driven via modal panes; reserved for future SessionType migration).
+  - Two new `OverviewWidgetType`s: `'ci-status'`, `'repo-stats'`.
+
+- **Renderer** (`src/renderer/`)
+  - `components/git-actions-panel.ts` (new) — sidebar panel mounted at `#git-actions-panel`. Always renders when the project is a git repo (independent of file changes). Hosts the branch toolbar, commit area + ✨ Generate (G11), conflict banner, stash (G4) / tags (G7) / reflog (G8) / submodule (G21) sections.
+  - `components/git-modals.ts` (new) — shared `git-modal-host` overlay shell hosting branch compare (G9 + G12 PR description), conflict resolver with AI assist (G10 + G14, with lockfile shortcut + UNSURE token handling), history search (G18 — pickaxe/grep/log-grep), interactive rebase (G19), bisect wizard (G15).
+  - `components/git-history-pane.ts` (new) — paginated commit list (`PAGE_SIZE=100`); SVG lane gutter (1.5 px line, larger circle for merge commits); right-click for cherry-pick (G20), Create branch from here, Open in GitHub, Copy hash. Filter input narrows visible rows client-side.
+  - `components/git-extras.ts` (new) — three smaller panes: hunk staging (G3 — diff parser → temp patch → `git apply --cached --whitespace=fix`), blame (G6 — porcelain parser, age-coded gutter via HSL hue interpolation), in-app PR review (G13 — diff with inline comments + ✨ AI review).
+  - `components/project-tab/widgets/git-github-widgets.ts` (new) — CI status widget (G16) + repo stats widget with weekly-activity sparkline (G17). Registered in `widget-registry.ts`.
+  - `components/project-tab/widgets/github-widgets.ts` — added `Review here` button alongside the existing Review/Plan buttons on PR rows; opens the in-app G13 panel via `showPrReview`.
+  - `components/git-panel.ts` — context menu now offers "Stage hunks…" (G3) and "Blame" (G6) on tracked files.
+  - `styles/git-features.css` (new) — all new styling. All colors come from existing CSS variables. Imported by `styles.css` next to `git-panel.css`.
+  - `index.html` — new mount point `<div id="git-actions-panel"></div>` directly below `#git-panel`.
+  - `index.ts` — `initGitActionsPanel()` runs alongside `initGitPanel()`.
+
+### Tests added
+
+- `src/main/git-status.test.ts` — 6 new test groups covering `gitLog`, `gitStashList`, `gitListTags`, `gitReflog`, `gitPickaxe`, `gitSubmoduleList`. Mocks for `child_process` (added `spawn`) and `os.tmpdir()` extended.
+
+### Decisions / accepted debt
+
+- **G5 + G13 ship as modal panes**, not full `SessionType`s. The reserved union members (`'git-history'`, `'pr-review'`) are placeholders for a future migration. Acceptance criteria from the spec are still met (paginated history, click-to-show-diff, right-click cherry-pick; PR diff with inline comments + AI review).
+- **Force push always uses `--force-with-lease`.** Plain `--force` is never invoked from the renderer. Non-fast-forward push triggers a confirmation modal that explicitly asks the user to consent to the safer `--force-with-lease` retry.
+- **Push auth-failure handling**: shows a toast nudge to authenticate via terminal rather than a modal, since interactive prompts (gh auth, ssh-add) can't be driven from within the IPC layer.
+- **AI helpers always use Claude** (`ClaudeProvider.resolveBinaryPath()`). If the active project uses Codex/Copilot/Gemini, the AI-assist buttons silently fall back to Claude (or no-op if Claude isn't installed). Per-project provider selection for one-shot calls is a deliberate follow-up.
+- **Renderer types drift**: the renderer's `types.ts` `AIYardApi` interface had pre-existing drift from the preload contract (missing `trashItem`, `listDir`, `addServer`, `settings`, `telemetry`, `zoom`, `envPaths`, etc.). I synced **only** the namespaces I touched (`git`, `github`, `ai`). Unrelated drift is left as-is — it doesn't affect main+preload typecheck (the only typecheck stages gated by `npm run build`) or the runtime.
+- **Bundle size**: grew from ~1.16 MB → ~1.24 MB JS. The new modal chunks are static imports from `git-actions-panel` so they're in the main chunk; deferring them via dynamic `import()` is a follow-up if the toolbar buttons aren't always used.
+
+### Follow-ups (not blocking)
+
+- Promote G5 (history) and G13 (PR review) to real `SessionType` panes with feature-rail icons.
+- Lazy-load the heavy git-modals/git-history-pane/git-extras chunks via dynamic `import()` to shrink the eager bundle.
+- Wire AI helpers through the active session's provider rather than pinning to Claude.
+- Sidebar CI-status indicator (small colored dot next to the branch name) — currently the CI widget is the only surface; G16's sidebar-dot subtask is deferred.
+- Per-PR "review-seen" tracking for the in-app review entry point (existing `github-unread.ts` covers list rows only).

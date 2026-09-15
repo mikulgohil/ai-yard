@@ -18,10 +18,8 @@ import {
  * (A5 Phase 2). See `docs/MIGRATION_WEBVIEW.md` and the contract in
  * `src/shared/browser-view-contract.ts`.
  *
- * Dormant by default — the renderer only reaches these handlers when a
- * `BrowserTabInstance` is constructed with `useWebContentsView: true`.
- * Phase 5 flips the default; Phase 3 will start positioning the views via
- * `setBounds` driven from a renderer-side ResizeObserver.
+ * A5 Phase 5: this is the only browser-tab view path. Phase 3 positions
+ * views via `setBounds` driven from a renderer-side ResizeObserver.
  */
 
 interface ManagedView {

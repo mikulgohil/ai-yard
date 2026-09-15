@@ -5,30 +5,11 @@
  * draw mode, and flow recording. Bubbles guest-side events back to the
  * host renderer via {@link bubbleHostMessage}.
  *
- * A5 Phase 4: this preload runs unchanged in both the legacy `<webview>`
- * adapter and the `WebContentsView` adapter. The two paths differ in how
- * preload → host messages are routed:
- *   - `<webview>`: `ipcRenderer.sendToHost(channel, payload)` triggers an
- *     `ipc-message` DOM event on the `<webview>` element in the host
- *     renderer, which `createWebviewAdapter` listens for.
- *   - `WebContentsView`: `ipcRenderer.send(channel, payload)` reaches the
- *     main process, where `wc.on('ipc-message', ...)` in
- *     `src/main/ipc/browser-view.ts` rebroadcasts it as a
- *     `BrowserViewEvent` with `kind: 'ipc-message'` for
- *     `createWebContentsViewAdapter` to dispatch.
- *
- * `sendToHost` outside of a `<webview>` context is a silent no-op (its
- * internal `ipc-message-host` channel has no receiver), and a stray
- * `ipcRenderer.send` under the `<webview>` path lands in main where no
- * handler is registered for these channels. So dual-emitting is safe in
- * both directions and saves us from runtime context detection.
+ * A5 Phase 5: guest pages run under WebContentsView. `bubbleHostMessage`
+ * dual-emits `sendToHost` (no-op outside a webview) and `send` (picked up by
+ * `browser-view.ts` and rebroadcast to `createWebContentsViewAdapter`).
  */
 import { ipcRenderer } from 'electron';
-
-// DEBUG: temporary instrumentation for inspect-element regression. Visible
-// from the host renderer DevTools because pane.ts forwards the webview's
-// console-message event into the host console.
-console.log('[INSPECT] preload script loaded');
 
 interface SelectorOption {
   type: 'qa' | 'attr' | 'id' | 'css' | 'aria';
@@ -39,10 +20,9 @@ interface SelectorOption {
 const QA_ATTRS = ['data-testid', 'data-qa', 'data-cy', 'data-test', 'data-automation', 'qaTag'];
 
 function bubbleHostMessage(channel: string, payload: unknown): void {
-  // Legacy <webview>: routes to host renderer's ipc-message DOM event.
-  ipcRenderer.sendToHost(channel, payload);
-  // WebContentsView: routes to main, which broadcasts back to the renderer.
-  ipcRenderer.send(channel, payload);
+  ipcRenderer.sendToHost(channel, payload); // no-op outside a webview
+  ipcRenderer.send(channel, payload); // WebContentsView path via main
+
 }
 
 let inspectMode = false;

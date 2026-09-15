@@ -1,9 +1,7 @@
 # Webview → WebContentsView migration plan (A5)
 
-> **Status**: Phases 1, 2, 3, 4 done (2026-05-07). Phase 5 (cutover) pending.
-> The new `WebContentsView`-backed path exists in main + renderer + preload
-> behind the `BrowserTabInstance.useWebContentsView` flag (default `false`),
-> so the legacy `<webview>` path still owns every browser tab today.
+> **Status**: Phases 1-5 done (cutover 2026-09-16). Browser tabs use
+> WebContentsView only. Legacy `<webview>` adapter deleted; `webviewTag: false`.
 
 ## Why migrate
 
@@ -277,10 +275,14 @@ the existing IPC bubbling is the necessary-but-not-sufficient fallback.
 **Outcome 2026-09-15**: default flipped to `true`. Electron e2e
 `tests/e2e/browser-tab.spec.ts` covers: new tab, WCV placeholder with
 non-zero bounds, zero `<webview>` tags, a native child view attached,
-file:// navigation, and inspect/draw/record chrome toggles. In-page
-clicks inside the native view are still unverified (Playwright cannot
-see WebContentsView contents). Legacy `<webview>` adapter and
-`webviewTag: true` stay until that human smoke lands.
+file:// navigation, and inspect/draw/record chrome toggles.
+
+**Outcome 2026-09-16**: legacy path deleted. `createWebviewAdapter` and
+`WebviewElement` removed; `pane.ts` always builds
+`createWebContentsViewAdapter`; `useWebContentsView` field removed;
+`webviewTag: false` in `main.ts`. Chrome e2e still green. In-page
+inspect/draw/flow clicks inside the native view remain a soft follow-up
+(Playwright cannot see WebContentsView contents).
 
 ## Acceptance criteria
 
