@@ -614,3 +614,9 @@ Build in this order to maximize reuse:
     - Primary toolbar is Fetch / Pull / Push / History / Compare. Search, rebase, and bisect live under More.
     - Stash, tags, reflog, and submodules start collapsed so the loop is visible without scrolling past extras.
   - Follow-ups: live smoke of commit → push in `npm run dev`; park remaining extras (bisect/rebase UI polish) until the loop is used daily.
+
+- **2026-09-15 23:40 (local)**
+  - Summary: Live-smoked the git loop. Found that Git Changes never listed files on boot because git polling started before state.load and never subscribed to state-loaded.
+  - Files touched: `src/renderer/git-status.ts`, `src/main/git-loop.integration.test.ts`, `tests/e2e/git-loop.spec.ts`, `docs/GIT_FEATURES.md`
+  - Decisions: start the git watcher + poll on state-loaded so the file list and staged counts appear without switching projects.
+  - Follow-ups: A5 Phase 5 WebContentsView cutover, then F5 multi-session broadcast.

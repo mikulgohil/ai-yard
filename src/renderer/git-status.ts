@@ -204,6 +204,19 @@ export function startPolling(): void {
     }
   });
 
+  // load() emits state-loaded, not project-changed. Without this, poll never
+  // starts on boot and the Git Changes file list stays empty until the user
+  // switches projects.
+  appState.on('state-loaded', () => {
+    worktreePollCounter = 0;
+    if (!appState.activeProject) {
+      stopInterval();
+      return;
+    }
+    window.aiyard.git.watchProject(appState.activeProject.path);
+    startInterval();
+  });
+
   // Immediate poll on project/session changes; manage interval lifecycle
   appState.on('project-changed', () => {
     worktreePollCounter = 0; // Force worktree refresh on project switch
