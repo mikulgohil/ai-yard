@@ -196,10 +196,9 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
 
   viewportContainer.appendChild(newTabPage);
 
-  // A5 Phase 2 feature flag. Default `false` so behavior is unchanged for all
-  // existing tabs; Phase 5 will flip this once the WebContentsView path has
-  // parity with the <webview> path.
-  const useWebContentsView = false;
+  // A5 Phase 5: WebContentsView is the default. The <webview> branch remains
+  // until in-page inspect/draw/flow clicks are confirmed, then it gets deleted.
+  const useWebContentsView = true;
 
   const view: ViewAdapter = useWebContentsView
     ? createWebContentsViewAdapter({

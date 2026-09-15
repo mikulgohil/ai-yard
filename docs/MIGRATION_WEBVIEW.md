@@ -274,6 +274,14 @@ the existing IPC bubbling is the necessary-but-not-sufficient fallback.
 - Once parity confirmed, delete the `<webview>` adapter and remove `webviewTag: true`
   from `BrowserWindow` config.
 
+**Outcome 2026-09-15**: default flipped to `true`. Electron e2e
+`tests/e2e/browser-tab.spec.ts` covers: new tab, WCV placeholder with
+non-zero bounds, zero `<webview>` tags, a native child view attached,
+file:// navigation, and inspect/draw/record chrome toggles. In-page
+clicks inside the native view are still unverified (Playwright cannot
+see WebContentsView contents). Legacy `<webview>` adapter and
+`webviewTag: true` stay until that human smoke lands.
+
 ## Acceptance criteria
 
 - All current browser-tab features work: navigation, back/forward, reload,
