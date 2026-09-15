@@ -115,6 +115,14 @@ export function registerPtyIpcHandlers(): void {
     writePty(sessionId, data);
   });
 
+  // F5: fan-out one prompt to many sessions. Missing PTYs are skipped by writePty.
+  ipcMain.on('pty:broadcast', (_event, sessionIds: string[], data: string) => {
+    if (!Array.isArray(sessionIds) || typeof data !== 'string' || data.length === 0) return;
+    for (const sessionId of sessionIds) {
+      if (typeof sessionId === 'string' && sessionId) writePty(sessionId, data);
+    }
+  });
+
   ipcMain.on('pty:resize', (_event, sessionId: string, cols: number, rows: number) => {
     resizePty(sessionId, cols, rows);
   });

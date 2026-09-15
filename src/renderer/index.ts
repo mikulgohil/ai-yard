@@ -1,8 +1,10 @@
 import type { InspectorEvent } from '../shared/types.js';
 import { initBoardSessionSync } from './board-session-sync.js';
 import { initBoard } from './components/board/board-view.js';
+import { initBroadcastBar } from './components/broadcast-bar.js';
 import { initCostDashboard } from './components/cost-dashboard/dashboard-view.js';
 import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
+import { initFeatureRail } from './components/feature-rail.js';
 import { initFilePrompt } from './components/file-prompt.js';
 import { initGitActionsPanel } from './components/git-actions-panel.js';
 import { initGitPanel } from './components/git-panel.js';
@@ -13,14 +15,13 @@ import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pan
 import { initSessionHistory } from './components/session-history.js';
 import { initSessionInspector } from './components/session-inspector.js';
 import { initSettingsGuard } from './components/settings-guard-ui.js';
-import { initFeatureRail } from './components/feature-rail.js';
-import { initTitlebar } from './components/titlebar.js';
 import { initSidebar, promptNewProject } from './components/sidebar.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { checkStarPrompt } from './components/star-prompt-dialog.js';
 import { initTabBar } from './components/tab-bar.js';
 import { initTeamView } from './components/team/team-view.js';
 import { applyThemeToAllTerminals, destroyTerminal, handlePtyData, updateContextDisplay, updateCostDisplay } from './components/terminal-pane.js';
+import { initTitlebar } from './components/titlebar.js';
 import { initToolAlert } from './components/tool-alert.js';
 import { initUpdateBanner } from './components/update-banner.js';
 import { showUsageModal } from './components/usage-modal.js';
@@ -176,6 +177,7 @@ async function main(): Promise<void> {
   initDebugPanel();
   initGitPanel();
   initGitActionsPanel();
+  initBroadcastBar();
   initSessionHistory();
   initUpdateBanner();
   initInsightAlert();

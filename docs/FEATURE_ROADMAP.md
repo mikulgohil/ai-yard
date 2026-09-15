@@ -19,7 +19,7 @@ Generated 2026-05-08. Companion to `docs/IMPROVEMENTS.md` (engineering/refactor 
 | F2 | Prompt Template Library | 1 | Low | High | Team personas pattern |
 | F3 | Context Window Visualizer ✅ | 1 | Low | High | `session-cost.ts` |
 | F4 | Environment Variables Manager | 1 | Medium | High | PTY spawn env injection |
-| F5 | Multi-Session Broadcast | 1 | Medium | High | None |
+| F5 | Multi-Session Broadcast ✅ | 1 | Medium | High | None |
 | F6 | Network Traffic Monitor | 2 | Medium | Very High | C11 CDP (depends on A5) |
 | F7 | Git Visual Panel | 2 | Medium | Medium | `git.ts` 12 handlers exist |
 | F8 | Responsive Design Tester | 2 | Medium | High | A5 WebContentsView |
@@ -110,7 +110,7 @@ Generated 2026-05-08. Companion to `docs/IMPROVEMENTS.md` (engineering/refactor 
 
 ### F5. Multi-Session Broadcast
 
-- **Status**: [ ] not started
+- **Status**: [x] done 2026-09-16
 - **Why**: Running the same refactor or formatting fix across 5 open sessions currently means typing the same prompt 5 times. Broadcast sends one prompt to selected sessions simultaneously.
 - **Current state**: `pty.write` IPC channel is per-session. `AppState` holds all active sessions and their PTY IDs.
 - **Implementation plan**:
@@ -121,6 +121,7 @@ Generated 2026-05-08. Companion to `docs/IMPROVEMENTS.md` (engineering/refactor 
   5. Persist broadcast group to `AppState` (not `state.json` — ephemeral per app launch).
 - **Affected files**: `src/main/ipc/pty.ts`, `src/renderer/components/terminal-pane.ts`, new `src/renderer/components/broadcast-bar.ts`, `src/renderer/styles/terminal.css`
 - **Acceptance**: Typing in broadcast bar sends to all selected PTY sessions simultaneously. Ring indicator clearly marks which sessions are in broadcast mode.
+- **Outcome 2026-09-16**: Titlebar broadcast button toggles a floating bar in `#content-area`. Opening with an empty set seeds all CLI sessions in the active project. Right-click opens a checklist picker. Enter/Send calls `pty:broadcast` with a trimmed prompt + `\r`. Membership is ephemeral. Accent rings mark targets on terminal panes, session-tree rows, and tab items while the bar is open.
 
 ---
 

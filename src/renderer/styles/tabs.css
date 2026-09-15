@@ -21,6 +21,7 @@
 
 /* Content area: everything to the right of the rail */
 #content-area {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;

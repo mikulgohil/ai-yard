@@ -525,3 +525,84 @@
 .terminal-list-item-close:hover {
   color: var(--accent);
 }
+
+/* F5 multi-session broadcast */
+.broadcast-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.broadcast-bar.hidden {
+  display: none;
+}
+
+.broadcast-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.broadcast-bar-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.broadcast-bar-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.broadcast-bar-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.broadcast-bar-send {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 12px;
+}
+
+#btn-broadcast.active {
+  color: var(--accent);
+}
+
+.terminal-pane.broadcast-target,
+.session-tree-row.broadcast-target,
+.tab-item.broadcast-target {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.broadcast-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.broadcast-picker-item input {
+  margin: 0;
+}

@@ -23,10 +23,10 @@ import type {
   GithubRepo,
   GrepMatch,
   InspectorEvent,
+  PickaxeMatch,
   PRComment,
   PRDetail,
   PRFile,
-  PickaxeMatch,
   ProviderConfig,
   ProviderId,
   ReadFileResult,
@@ -53,6 +53,7 @@ export interface AIYardApi {
     create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, systemPrompt?: string): Promise<void>;
     createShell(sessionId: string, cwd: string): Promise<void>;
     write(sessionId: string, data: string): void;
+    broadcast(sessionIds: string[], data: string): void;
     resize(sessionId: string, cols: number, rows: number): void;
     kill(sessionId: string): Promise<void>;
     getCwd(sessionId: string): Promise<string | null>;
@@ -316,6 +317,8 @@ const api: AIYardApi = {
       ipcRenderer.invoke('pty:createShell', sessionId, cwd),
     write: (sessionId, data) =>
       ipcRenderer.send('pty:write', sessionId, data),
+    broadcast: (sessionIds, data) =>
+      ipcRenderer.send('pty:broadcast', sessionIds, data),
     resize: (sessionId, cols, rows) =>
       ipcRenderer.send('pty:resize', sessionId, cols, rows),
     kill: (sessionId) =>
