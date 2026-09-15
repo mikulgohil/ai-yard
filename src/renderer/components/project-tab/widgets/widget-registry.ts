@@ -1,5 +1,6 @@
 import type { OverviewWidgetType } from '../../../../shared/types.js';
 import { createFavoriteSessionsWidget } from './favorite-sessions-widget.js';
+import { createCiStatusWidget, createRepoStatsWidget } from './git-github-widgets.js';
 import { createGithubIssuesWidget, createGithubPRsWidget } from './github-widgets.js';
 import { createKanbanWidget } from './kanban-widget.js';
 import { createProviderToolsWidget } from './provider-tools-widget.js';
@@ -100,6 +101,26 @@ const REGISTRY: Record<OverviewWidgetType, WidgetMeta> = {
     defaultSize: { w: 6, h: 6 },
     defaultConfig: {},
     factory: createFavoriteSessionsWidget,
+    allowMultiple: false,
+    hasSettings: false,
+  },
+  'ci-status': {
+    type: 'ci-status',
+    displayName: 'CI / GitHub Actions',
+    description: 'Latest check runs for the current branch. Pulls from gh CLI.',
+    defaultSize: { w: 6, h: 6 },
+    defaultConfig: { refreshSeconds: 300 },
+    factory: createCiStatusWidget,
+    allowMultiple: false,
+    hasSettings: false,
+  },
+  'repo-stats': {
+    type: 'repo-stats',
+    displayName: 'Repository Stats',
+    description: 'Stars, forks, contributors, weekly activity sparkline. From gh CLI.',
+    defaultSize: { w: 6, h: 8 },
+    defaultConfig: { refreshSeconds: 3600 },
+    factory: createRepoStatsWidget,
     allowMultiple: false,
     hasSettings: false,
   },

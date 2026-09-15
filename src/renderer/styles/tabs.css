@@ -1,23 +1,136 @@
-/* Main area */
+/* Main area — horizontal: feature rail + content area */
 #main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Feature rail: 48px vertical icon strip */
+#feature-rail {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-chrome);
+  border-right: 1px solid var(--border-subtle);
+  z-index: 10;
+  user-select: none;
+}
+
+/* Content area: everything to the right of the rail */
+#content-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
-/* Tab bar */
+/* Hidden tab bar (JS still uses it, visually replaced by feature rail) */
 #tab-bar {
+  display: none;
+}
+
+/* Feature rail icons container */
+#feature-rail-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) 0;
+  gap: 2px;
+  flex: 1;
+}
+
+/* Rail icon button */
+.rail-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  background: var(--bg-chrome);
-  box-shadow: inset 0 -1px 0 var(--border-subtle);
-  height: 38px;
-  min-height: 38px;
-  user-select: none;
-  gap: 12px;
-  padding-right: 4px;
+  justify-content: center;
+  font-size: 16px;
+  position: relative;
+  transition: background var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out);
+  flex-shrink: 0;
 }
+
+.rail-icon-btn:hover {
+  background: var(--bg-elevated-hover);
+  color: var(--text-primary);
+}
+
+.rail-icon-btn.active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+}
+
+.rail-icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tooltip via data-label */
+.rail-icon-btn[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-floating);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease-out);
+  z-index: 200;
+}
+
+.rail-icon-btn:hover[data-label]::after {
+  opacity: 1;
+}
+
+/* Unread badge on rail button */
+.rail-icon-btn .rail-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--bg-chrome);
+}
+
+/* Rail separator */
+.rail-separator {
+  width: 24px;
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-1) auto;
+  flex-shrink: 0;
+}
+
+/* Rail spacer — pushes items below it to the bottom */
+.rail-spacer {
+  flex: 1;
+}
+
+/* Tab bar (hidden but JS still constructs elements here) */
 
 #tab-list {
   display: flex;

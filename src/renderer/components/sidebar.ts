@@ -220,7 +220,11 @@ function buildSessionTree(project: ProjectRecord, sessions: typeof project.sessi
 
     const name = document.createElement('span');
     name.className = 'session-tree-name';
-    name.textContent = session.name || 'Unnamed';
+    const wtPrefix = session.worktreePath ? '🌿 ' : '';
+    name.textContent = `${wtPrefix}${session.name || 'Unnamed'}`;
+    if (session.worktreeBranch) {
+      row.title = `Worktree branch: ${session.worktreeBranch}`;
+    }
 
     const costEl = document.createElement('span');
     costEl.className = 'session-tree-cost';

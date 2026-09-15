@@ -45,6 +45,142 @@ export interface GitFileEntry {
   area: 'staged' | 'working' | 'untracked' | 'conflicted';
 }
 
+export interface CommitEntry {
+  hash: string;
+  parents: string[];
+  subject: string;
+  author: string;
+  email: string;
+  date: string;
+  refs: string[];
+}
+
+export interface TagEntry {
+  name: string;
+  hash: string;
+  date: string;
+  subject: string;
+}
+
+export interface StashEntry {
+  ref: string;
+  message: string;
+  date: string;
+}
+
+export interface ReflogEntry {
+  ref: string;
+  hash: string;
+  action: string;
+  date: string;
+}
+
+export interface BlameEntry {
+  hash: string;
+  author: string;
+  email: string;
+  date: string;
+  summary: string;
+  lineNumber: number;
+  lineContent: string;
+}
+
+export interface BranchCompareResult {
+  files: { path: string; status: 'added' | 'modified' | 'deleted' | 'renamed'; additions: number; deletions: number }[];
+  commits: { hash: string; subject: string; author: string; date: string }[];
+}
+
+export interface ConflictedFile {
+  ours: string;
+  theirs: string;
+  base: string;
+  current: string;
+}
+
+export interface SubmoduleEntry {
+  path: string;
+  hash: string;
+  name: string;
+  status: 'initialized' | 'uninitialized' | 'conflict' | 'modified';
+}
+
+export type RebaseAction = 'pick' | 'reword' | 'edit' | 'squash' | 'fixup' | 'drop';
+
+export interface RebaseTodo {
+  action: RebaseAction;
+  hash: string;
+  subject: string;
+}
+
+export interface CheckRun {
+  name: string;
+  status: 'queued' | 'in_progress' | 'completed';
+  conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'skipped' | 'timed_out' | 'action_required' | null;
+  htmlUrl: string;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+export interface RepoStats {
+  stars: number;
+  forks: number;
+  openIssues: number;
+  language: string | null;
+  defaultBranch: string;
+  pushedAt: string;
+  contributors: { login: string; avatarUrl: string; contributions: number }[];
+  weeklyActivity: { week: number; additions: number; deletions: number }[];
+}
+
+export interface PRDetail {
+  number: number;
+  title: string;
+  body: string;
+  base: string;
+  head: string;
+  author: string;
+  mergeable: boolean | null;
+  state: 'open' | 'closed';
+}
+
+export interface PRFile {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  patch?: string;
+}
+
+export interface PRComment {
+  id: number;
+  user: string;
+  body: string;
+  path?: string;
+  line?: number;
+  createdAt: string;
+}
+
+export interface PickaxeMatch {
+  hash: string;
+  subject: string;
+  author: string;
+  date: string;
+}
+
+export interface GrepMatch {
+  path: string;
+  line: number;
+  content: string;
+}
+
+export interface BisectStatus {
+  running: boolean;
+  bad?: string;
+  good?: string;
+  current?: string;
+  remaining?: number;
+}
+
 // --- Provider Config ---
 
 export interface McpServer { name: string; url: string; status: string; scope: 'user' | 'project'; filePath: string }
@@ -85,7 +221,9 @@ export type SessionType =
   | 'kanban'
   | 'team'
   | 'cost-dashboard'
-  | 'dev-server';
+  | 'dev-server'
+  | 'git-history'
+  | 'pr-review';
 
 export type PackageManager = 'pnpm' | 'yarn' | 'npm';
 
@@ -117,6 +255,10 @@ export interface SessionRecord {
   diffFilePath?: string;
   diffArea?: string;
   worktreePath?: string;
+  /** Branch checked out in this session's worktree (only set for AI-yard managed worktrees). */
+  worktreeBranch?: string;
+  /** True when AI-yard created the worktree on session creation; gates the cleanup confirm on session close. */
+  worktreeManaged?: boolean;
   fileReaderPath?: string;
   fileReaderLine?: number;
   createdAt: string;
@@ -322,7 +464,9 @@ export type OverviewWidgetType =
   | 'team'
   | 'kanban'
   | 'sessions'
-  | 'favorite-sessions';
+  | 'favorite-sessions'
+  | 'ci-status'
+  | 'repo-stats';
 
 export interface OverviewWidget {
   id: string;

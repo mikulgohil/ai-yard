@@ -5,6 +5,7 @@ import { getAvailableProviderMetas } from '../../../provider-availability.js';
 import { appState } from '../../../state.js';
 import { showContextMenu } from '../../board/board-context-menu.js';
 import { showTaskModal } from '../../board/board-task-modal.js';
+import { showPrReview } from '../../git-extras.js';
 import { setPendingPrompt } from '../../terminal-pane.js';
 import { DEFAULT_GITHUB_CONFIG, type GithubConfig } from './github-types.js';
 import type { WidgetFactory, WidgetHost, WidgetInstance } from './widget-host.js';
@@ -417,6 +418,16 @@ function buildPRActions(
   }
 
   actions.appendChild(reviewGroup);
+
+  const inAppReviewBtn = document.createElement('button');
+  inAppReviewBtn.className = 'widget-github-row-action-btn';
+  inAppReviewBtn.textContent = 'Review here';
+  inAppReviewBtn.title = 'Open the in-app PR review panel';
+  inAppReviewBtn.addEventListener('click', onAction(() => {
+    const project = appState.projects.find(p => p.id === projectId);
+    showPrReview(repo, item.number, project?.path || '');
+  }));
+  actions.appendChild(inAppReviewBtn);
 
   const kanbanBtn = document.createElement('button');
   kanbanBtn.className = 'widget-github-row-action-btn widget-github-row-action-btn-primary';

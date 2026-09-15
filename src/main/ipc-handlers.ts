@@ -1,3 +1,4 @@
+import { registerAiUtilIpcHandlers } from './ipc/ai-util';
 import { registerAppIpcHandlers } from './ipc/app';
 import { registerBrowserViewIpcHandlers } from './ipc/browser-view';
 import { registerDevRunnerIpcHandlers } from './ipc/dev-runner';
@@ -32,5 +33,6 @@ export function registerIpcHandlers(): void {
   registerGithubIpcHandlers();
   registerBrowserViewIpcHandlers();
   registerDevRunnerIpcHandlers();
+  registerAiUtilIpcHandlers();
   registerMcpHandlers();
 }

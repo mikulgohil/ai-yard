@@ -360,6 +360,45 @@ class AppState {
     return session;
   }
 
+  /**
+   * Create a CLI session running inside an isolated git worktree. The worktree
+   * is created at ~/.ai-yard/worktrees/<projectId>/<slug>/ on a new branch
+   * before the session is attached, so the PTY spawns with the worktree as cwd.
+   *
+   * Throws (and adds no session) if the git worktree creation fails — the
+   * caller is responsible for surfacing the error to the user.
+   */
+  async addIsolatedSession(
+    projectId: string,
+    name: string,
+    branch: string,
+    baseBranch: string,
+    args?: string,
+    providerId?: ProviderId,
+  ): Promise<SessionRecord | undefined> {
+    const project = this.state.projects.find((p) => p.id === projectId);
+    if (!project) return undefined;
+
+    const { path: worktreePath } = await window.aiyard.git.createWorktree(
+      project.path,
+      project.id,
+      branch,
+      baseBranch,
+    );
+
+    const session = buildCliSession({
+      name,
+      providerId: resolveCliProvider(this.state.preferences, providerId),
+      args: args ?? project.defaultArgs,
+      worktreePath,
+      worktreeBranch: branch,
+      worktreeManaged: true,
+    });
+    attachSessionToProject(project, session, { addToSwarm: true });
+    this.commitNewSession(projectId, session);
+    return session;
+  }
+
   private activateExistingSession(project: ProjectRecord, existing: SessionRecord): SessionRecord {
     if (project.activeSessionId !== existing.id) {
       project.activeSessionId = existing.id;
@@ -634,7 +673,11 @@ class AppState {
     return session;
   }
 
-  removeSession(projectId: string, sessionId: string): void {
+  removeSession(
+    projectId: string,
+    sessionId: string,
+    opts: { worktreeAction?: 'keep' | 'removeDir' | 'removeAll' } = {},
+  ): void {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return;
 
@@ -646,6 +689,13 @@ class AppState {
         this.archiveSession(project, session);
       }
     }
+
+    // Capture worktree info before pruning the session record.
+    const projectPath = project.path;
+    const worktreePath = session?.worktreePath;
+    const worktreeBranch = session?.worktreeBranch;
+    const worktreeManaged = session?.worktreeManaged ?? false;
+    const action = opts.worktreeAction ?? 'keep';
 
     const closingIndex = project.sessions.findIndex((s) => s.id === sessionId);
     project.sessions = project.sessions.filter((s) => s.id !== sessionId);
@@ -660,6 +710,23 @@ class AppState {
     this.persist();
     this.emit('session-removed', { projectId, sessionId });
     this.emit('session-changed');
+
+    // Worktree cleanup runs after the session record is gone — we don't want
+    // any UI that subscribes to 'session-removed' (e.g. terminal teardown) to
+    // race with `git worktree remove`. PTY is killed synchronously by the
+    // session-removed listener so the working dir is unlocked by the time we
+    // shell out.
+    if (worktreeManaged && worktreePath && action !== 'keep') {
+      void window.aiyard.git
+        .removeWorktree(projectPath, worktreePath)
+        .then(() => {
+          if (action === 'removeAll' && worktreeBranch) {
+            return window.aiyard.git.deleteBranch(projectPath, worktreeBranch);
+          }
+          return undefined;
+        })
+        .catch((err) => console.error('[aiyard] worktree cleanup failed', err));
+    }
   }
 
   private archiveSession(project: ProjectRecord, session: SessionRecord): void {

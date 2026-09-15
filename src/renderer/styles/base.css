@@ -4,76 +4,88 @@
  * :root carries midnight values so an unset [data-theme] still renders correctly.
  * dark/light are kept as deprecated aliases so users with persisted state from
  * the old two-theme world still get a sensible look without state migration.
+ *
+ * Design language: macOS Sonoma — neutral graphite grays, Apple HIG status colors,
+ * SF Pro typography stack, vibrancy surfaces.
  */
 
 :root {
-  /* ── Surfaces ─────────────────────────────────────────────── */
-  --bg-canvas: #15110F;
-  --bg-chrome: #100D0B;
-  --bg-elevated: #1F1A17;
-  --bg-elevated-hover: #2A2420;
+  /* ── Typography ───────────────────────────────────────────── */
+  --font-ui:   -apple-system, "SF Pro Text", BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', 'Fira Code', 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
-  /* Legacy surface aliases (kept for components that still reference them) */
-  --bg-primary: var(--bg-canvas);
+  /* ── Surfaces (Tokyo Night Storm — dark default) ──────────── */
+  --bg-canvas:         #24283b;
+  --bg-chrome:         #1f2335;
+  --bg-elevated:       #292e42;
+  --bg-elevated-hover: #343b58;
+
+  /* Legacy surface aliases */
+  --bg-primary:   var(--bg-canvas);
   --bg-secondary: var(--bg-chrome);
-  --bg-tertiary: var(--bg-elevated);
-  --bg-hover: var(--bg-elevated-hover);
+  --bg-tertiary:  var(--bg-elevated);
+  --bg-hover:     var(--bg-elevated-hover);
 
-  /* ── Text ─────────────────────────────────────────────────── */
-  --text-primary: #F0EBE6;
-  --text-secondary: #A89F95;
-  --text-muted: #6E6760;
+  /* ── Vibrancy surfaces ────────────────────────────────────── */
+  --surface-sidebar:  rgba(31, 35, 53, 0.92);
+  --surface-base:     var(--bg-canvas);
+  --surface-elevated: var(--bg-elevated);
+  --surface-floating: rgba(41, 46, 66, 0.98);
 
-  /* ── Brand ────────────────────────────────────────────────── */
-  --accent: #D97757;
-  --accent-dim: #C2643F;
-  --accent-fg: #FFFFFF;
+  /* ── Text (Tokyo Night hierarchy) ────────────────────────── */
+  --text-primary:   #c0caf5;
+  --text-secondary: #a9b1d6;
+  --text-muted:     #565f89;
 
-  /* ── Semantic status ──────────────────────────────────────── */
-  --status-info: #7AA2F7;
-  --status-success: #9ECE6A;
-  --status-warn: #E0AF68;
-  --status-danger: #E5484D;
-  --status-input: #E67E22;
+  /* ── Brand (Tokyo Night blue accent) ─────────────────────── */
+  --accent:         #7aa2f7;
+  --accent-dim:     #5d84e8;
+  --accent-vibrant: #89b4fa;
+  --accent-fg:      #1a1b26;
+
+  /* ── Semantic status (Tokyo Night palette) ───────────────── */
+  --status-info:    #7aa2f7;
+  --status-success: #9ece6a;
+  --status-warn:    #e0af68;
+  --status-danger:  #f7768e;
+  --status-input:   #ff9e64;
 
   /* ── Borders ──────────────────────────────────────────────── */
-  --border: #2D2722;
-  --border-subtle: #1E1916;
-  --border-strong: #3D352F;
+  --border:        rgba(192, 202, 245, 0.09);
+  --border-subtle: rgba(192, 202, 245, 0.05);
+  --border-strong: rgba(192, 202, 245, 0.20);
 
-  /* ── Tab states (legacy aliases for tabs.css) ─────────────── */
-  --tab-active: var(--bg-canvas);
+  /* ── Tab states ───────────────────────────────────────────── */
+  --tab-active:   var(--bg-canvas);
   --tab-inactive: var(--bg-chrome);
-  --pane-focus: var(--border-strong);
+  --pane-focus:   var(--border-strong);
   --pane-unfocus: var(--border);
 
   /* ── Misc ─────────────────────────────────────────────────── */
-  --bookmark: #E8A317;
-  --bookmark-fg: #1A1A1A;
+  --bookmark:      #e0af68;
+  --bookmark-fg:   #1a1b26;
   --color-warning: var(--status-warn);
 
-  /* ── Tag palette (theme-agnostic hues; derive bg/fg via color-mix
-   *    against --text-primary, so the same hue reads correctly on
-   *    midnight, paper, and slate). */
-  --tag-blue:   #2563EB;
-  --tag-green:  #22C55E;
-  --tag-amber:  #F59E0B;
-  --tag-red:    #EF4444;
-  --tag-purple: #A855F7;
-  --tag-cyan:   #06B6D4;
-  --tag-pink:   #EC4899;
-  --tag-gray:   #6B7280;
+  /* ── Tag palette (Tokyo Night colors) ───────────────────── */
+  --tag-blue:   #7aa2f7;
+  --tag-green:  #9ece6a;
+  --tag-amber:  #e0af68;
+  --tag-red:    #f7768e;
+  --tag-purple: #bb9af7;
+  --tag-cyan:   #7dcfff;
+  --tag-pink:   #ff75a0;
+  --tag-gray:   #565f89;
 
-  /* ── Type scale (comfortable density) ─────────────────────── */
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-base: 14px;
-  --text-md: 15px;
-  --text-lg: 17px;
-  --leading-xs: 18px;
-  --leading-sm: 20px;
-  --leading-base: 22px;
-  --leading-md: 24px;
+  /* ── Type scale ───────────────────────────────────────────── */
+  --text-xs:       11px;
+  --text-sm:       13px;
+  --text-base:     14px;
+  --text-md:       15px;
+  --text-lg:       17px;
+  --leading-xs:    18px;
+  --leading-sm:    20px;
+  --leading-base:  22px;
+  --leading-md:    24px;
 
   /* ── Spacing scale ────────────────────────────────────────── */
   --space-1: 4px;
@@ -82,135 +94,148 @@
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
 
-  /* ── Radius ───────────────────────────────────────────────── */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* ── Radius (macOS generous corners) ─────────────────────── */
+  --radius-sm:   5px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
   --radius-pill: 999px;
 
-  /* ── Letter-spacing for label/uppercase treatments ────────── */
-  --tracking-label: 0.06em;
+  /* ── Letter-spacing ───────────────────────────────────────── */
+  --tracking-label: 0.05em;
 
-  /* ── Shadows (used for cards / hover lift / modals) ───────── */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.50);
+  --shadow-3: 0 20px 48px rgba(0, 0, 0, 0.65);
 
   /* ── Motion ───────────────────────────────────────────────── */
   --motion-fast: 120ms;
   --motion-base: 180ms;
   --motion-slow: 260ms;
-  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out:    cubic-bezier(0.2, 0.7, 0.2, 1);
+  --spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --debug-panel-height: 300px;
 }
 
-/* dark/light selectors are co-listed with their canonical theme so legacy
-   persisted state still resolves to the right tokens if anything bypasses
-   resolveTheme() in the renderer. */
+/* dark/light selectors co-listed with midnight for legacy persisted state */
 [data-theme="midnight"],
 [data-theme="dark"] {
-  --bg-canvas: #15110F;
-  --bg-chrome: #100D0B;
-  --bg-elevated: #1F1A17;
-  --bg-elevated-hover: #2A2420;
-  --bg-primary: var(--bg-canvas);
-  --bg-secondary: var(--bg-chrome);
-  --bg-tertiary: var(--bg-elevated);
-  --bg-hover: var(--bg-elevated-hover);
-  --text-primary: #F0EBE6;
-  --text-secondary: #A89F95;
-  --text-muted: #6E6760;
-  --accent: #D97757;
-  --accent-dim: #C2643F;
-  --accent-fg: #FFFFFF;
-  --status-info: #7AA2F7;
-  --status-success: #9ECE6A;
-  --status-warn: #E0AF68;
-  --status-danger: #E5484D;
-  --status-input: #E67E22;
-  --border: #2D2722;
-  --border-subtle: #1E1916;
-  --border-strong: #3D352F;
-  --tab-active: var(--bg-canvas);
-  --tab-inactive: var(--bg-chrome);
-  --pane-focus: var(--border-strong);
-  --pane-unfocus: var(--border);
-  --bookmark: #E8A317;
-  --color-warning: var(--status-warn);
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --surface-sidebar:   rgba(31, 35, 53, 0.92);
+  --surface-floating:  rgba(41, 46, 66, 0.98);
+  --bg-canvas:         #24283b;
+  --bg-chrome:         #1f2335;
+  --bg-elevated:       #292e42;
+  --bg-elevated-hover: #343b58;
+  --bg-primary:        var(--bg-canvas);
+  --bg-secondary:      var(--bg-chrome);
+  --bg-tertiary:       var(--bg-elevated);
+  --bg-hover:          var(--bg-elevated-hover);
+  --text-primary:      #c0caf5;
+  --text-secondary:    #a9b1d6;
+  --text-muted:        #565f89;
+  --accent:            #7aa2f7;
+  --accent-dim:        #5d84e8;
+  --accent-vibrant:    #89b4fa;
+  --accent-fg:         #1a1b26;
+  --status-info:       #7aa2f7;
+  --status-success:    #9ece6a;
+  --status-warn:       #e0af68;
+  --status-danger:     #f7768e;
+  --status-input:      #ff9e64;
+  --border:            rgba(192, 202, 245, 0.09);
+  --border-subtle:     rgba(192, 202, 245, 0.05);
+  --border-strong:     rgba(192, 202, 245, 0.20);
+  --tab-active:        var(--bg-canvas);
+  --tab-inactive:      var(--bg-chrome);
+  --pane-focus:        var(--border-strong);
+  --pane-unfocus:      var(--border);
+  --bookmark:          #e0af68;
+  --color-warning:     var(--status-warn);
+  --shadow-1:          0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-2:          0 4px 16px rgba(0, 0, 0, 0.50);
+  --shadow-3:          0 20px 48px rgba(0, 0, 0, 0.65);
 }
 
+/* Tokyo Night Day — light counterpart to Tokyo Night Storm */
 [data-theme="paper"],
 [data-theme="light"] {
-  --bg-canvas: #FBF8F3;
-  --bg-chrome: #F4EFE7;
-  --bg-elevated: #FFFFFF;
-  --bg-elevated-hover: #F0EAE0;
-  --bg-primary: var(--bg-canvas);
-  --bg-secondary: var(--bg-chrome);
-  --bg-tertiary: var(--bg-elevated);
-  --bg-hover: var(--bg-elevated-hover);
-  --text-primary: #1F1A15;
-  --text-secondary: #4D453C;
-  --text-muted: #807668;
-  --accent: #C2643F;
-  --accent-dim: #A5512F;
-  --accent-fg: #FFFFFF;
-  --status-info: #2864C7;
-  --status-success: #2C7A3F;
-  --status-warn: #A16207;
-  --status-danger: #C8333A;
-  --status-input: #B05015;
-  --border: #DCD3C5;
-  --border-subtle: #ECE6DA;
-  --border-strong: #B8AC9A;
-  --tab-active: var(--bg-canvas);
-  --tab-inactive: var(--bg-chrome);
-  --pane-focus: var(--border-strong);
-  --pane-unfocus: var(--border);
-  --bookmark: #B8830F;
-  --color-warning: var(--status-warn);
-  --shadow-1: 0 1px 2px rgba(40, 40, 40, 0.08);
-  --shadow-2: 0 4px 12px rgba(40, 40, 40, 0.1);
-  --shadow-3: 0 16px 40px rgba(40, 40, 40, 0.12);
+  --surface-sidebar:   rgba(225, 226, 231, 0.92);
+  --surface-floating:  rgba(236, 237, 242, 0.98);
+  --bg-canvas:         #e1e2e7;
+  --bg-chrome:         #d4d5db;
+  --bg-elevated:       #ecedf2;
+  --bg-elevated-hover: #d0d1d9;
+  --bg-primary:        var(--bg-canvas);
+  --bg-secondary:      var(--bg-chrome);
+  --bg-tertiary:       var(--bg-elevated);
+  --bg-hover:          var(--bg-elevated-hover);
+  --text-primary:      #3760bf;
+  --text-secondary:    #6172b0;
+  --text-muted:        #939ab7;
+  --accent:            #2959aa;
+  --accent-dim:        #1d4491;
+  --accent-vibrant:    #3567c8;
+  --accent-fg:         #ffffff;
+  --status-info:       #2959aa;
+  --status-success:    #587539;
+  --status-warn:       #8c6c3e;
+  --status-danger:     #f52a65;
+  --status-input:      #b15c00;
+  --border:            rgba(55, 96, 191, 0.12);
+  --border-subtle:     rgba(55, 96, 191, 0.07);
+  --border-strong:     rgba(55, 96, 191, 0.25);
+  --tab-active:        var(--bg-canvas);
+  --tab-inactive:      var(--bg-chrome);
+  --pane-focus:        var(--border-strong);
+  --pane-unfocus:      var(--border);
+  --bookmark:          #8c6c3e;
+  --color-warning:     var(--status-warn);
+  --shadow-1:          0 1px 3px rgba(30, 40, 90, 0.08);
+  --shadow-2:          0 4px 16px rgba(30, 40, 90, 0.12);
+  --shadow-3:          0 20px 48px rgba(30, 40, 90, 0.18);
 }
 
+/* Slate — cooler, more neutral variant of Tokyo Night Day */
 [data-theme="slate"] {
-  --bg-canvas: #F7F8FA;
-  --bg-chrome: #EEF1F5;
-  --bg-elevated: #FFFFFF;
-  --bg-elevated-hover: #E5E9EF;
-  --bg-primary: var(--bg-canvas);
-  --bg-secondary: var(--bg-chrome);
-  --bg-tertiary: var(--bg-elevated);
-  --bg-hover: var(--bg-elevated-hover);
-  --text-primary: #1A1D23;
-  --text-secondary: #4A5160;
-  --text-muted: #768091;
-  --accent: #C2643F;
-  --accent-dim: #A5512F;
-  --accent-fg: #FFFFFF;
-  --status-info: #2864C7;
-  --status-success: #2C7A3F;
-  --status-warn: #A16207;
-  --status-danger: #C8333A;
-  --status-input: #B05015;
-  --border: #D2D7DF;
-  --border-subtle: #E5E9EF;
-  --border-strong: #A8B0BE;
-  --tab-active: var(--bg-canvas);
-  --tab-inactive: var(--bg-chrome);
-  --pane-focus: var(--border-strong);
-  --pane-unfocus: var(--border);
-  --bookmark: #B8830F;
-  --color-warning: var(--status-warn);
-  --shadow-1: 0 1px 2px rgba(20, 25, 35, 0.06);
-  --shadow-2: 0 4px 12px rgba(20, 25, 35, 0.08);
-  --shadow-3: 0 16px 40px rgba(20, 25, 35, 0.1);
+  --surface-sidebar:   rgba(224, 226, 233, 0.92);
+  --surface-floating:  rgba(238, 239, 245, 0.98);
+  --bg-canvas:         #e0e2e9;
+  --bg-chrome:         #d2d4de;
+  --bg-elevated:       #eaecf2;
+  --bg-elevated-hover: #cdd0db;
+  --bg-primary:        var(--bg-canvas);
+  --bg-secondary:      var(--bg-chrome);
+  --bg-tertiary:       var(--bg-elevated);
+  --bg-hover:          var(--bg-elevated-hover);
+  --text-primary:      #343b58;
+  --text-secondary:    #5a6080;
+  --text-muted:        #939ab7;
+  --accent:            #2959aa;
+  --accent-dim:        #1d4491;
+  --accent-vibrant:    #3567c8;
+  --accent-fg:         #ffffff;
+  --status-info:       #2959aa;
+  --status-success:    #587539;
+  --status-warn:       #8c6c3e;
+  --status-danger:     #f52a65;
+  --status-input:      #b15c00;
+  --border:            rgba(52, 59, 88, 0.12);
+  --border-subtle:     rgba(52, 59, 88, 0.07);
+  --border-strong:     rgba(52, 59, 88, 0.25);
+  --tab-active:        var(--bg-canvas);
+  --tab-inactive:      var(--bg-chrome);
+  --pane-focus:        var(--border-strong);
+  --pane-unfocus:      var(--border);
+  --bookmark:          #8c6c3e;
+  --color-warning:     var(--status-warn);
+  --shadow-1:          0 1px 3px rgba(30, 40, 80, 0.07);
+  --shadow-2:          0 4px 16px rgba(30, 40, 80, 0.11);
+  --shadow-3:          0 20px 48px rgba(30, 40, 80, 0.17);
 }
 
 * {
@@ -222,15 +247,18 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   line-height: var(--leading-base);
   color: var(--text-primary);
   background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
 }
 
@@ -238,7 +266,241 @@ body.debug-panel-open #app {
   height: calc(100vh - var(--debug-panel-height));
 }
 
-/* Reduced-motion: disable transitions/animations app-wide. */
+/* Three-zone layout: titlebar strip + app body */
+#titlebar {
+  height: 38px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+
+#titlebar-traffic {
+  /* 72px left pad for macOS traffic lights */
+  width: 72px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+#titlebar-project-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background var(--motion-fast) var(--ease-out);
+  max-width: 200px;
+  min-width: 80px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#titlebar-project-picker:hover {
+  background: var(--bg-elevated-hover);
+}
+
+#titlebar-project-picker .picker-caret {
+  color: var(--text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+#titlebar-breadcrumb {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  -webkit-app-region: drag;
+  pointer-events: none;
+  letter-spacing: 0.01em;
+}
+
+#titlebar-breadcrumb .breadcrumb-sep {
+  opacity: 0.4;
+}
+
+#titlebar-breadcrumb .breadcrumb-item {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+#titlebar-breadcrumb .breadcrumb-item:last-child {
+  color: var(--text-primary);
+}
+
+.breadcrumb-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  flex-shrink: 0;
+}
+
+.breadcrumb-worktree {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
+}
+
+
+#titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: var(--space-2);
+  -webkit-app-region: no-drag;
+}
+
+#app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* Titlebar button styles */
+.titlebar-btn {
+  /* inherit .icon-btn but slightly smaller for the dense titlebar */
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+
+.titlebar-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  transition: background var(--motion-fast) var(--ease-out);
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-picker:hover {
+  background: var(--bg-elevated-hover);
+}
+
+.titlebar-picker:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Titlebar project picker dropdown */
+.titlebar-picker-dropdown {
+  background: var(--surface-floating);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--motion-fast) var(--ease-out);
+}
+
+.titlebar-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.titlebar-picker-item.active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.titlebar-picker-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-success);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.titlebar-picker-item.active .titlebar-picker-item-dot {
+  background: var(--accent);
+  opacity: 1;
+}
+
+.titlebar-picker-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titlebar-picker-item-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.titlebar-picker-empty {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -258,24 +520,42 @@ body.debug-panel-open #app {
   justify-content: center;
   height: 100%;
   color: var(--text-muted);
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-6) var(--space-5);
   text-align: center;
 }
 
 .empty-state .empty-icon {
-  width: 36px;
-  height: 36px;
-  color: var(--text-muted);
-  opacity: 0.7;
-  margin-bottom: var(--space-1);
+  width: 48px;
+  height: 48px;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-bottom: var(--space-2);
+}
+
+/* Large hero empty state (no sessions in project) */
+.empty-state.empty-state-hero {
+  gap: var(--space-4);
+}
+
+.empty-state.empty-state-hero .empty-icon {
+  width: 72px;
+  height: 72px;
+  opacity: 1;
 }
 
 .empty-state .empty-title {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.empty-state .empty-subtitle {
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  letter-spacing: -0.01em;
+  line-height: 1.5;
+  max-width: 280px;
 }
 
 .empty-state .hint {
@@ -285,20 +565,51 @@ body.debug-panel-open #app {
 }
 
 .empty-state .empty-cta {
-  margin-top: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-lg);
+  color: var(--accent-fg);
   font-size: var(--text-sm);
-  font-family: inherit;
+  font-family: var(--font-ui);
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color var(--motion-fast) var(--ease-out),
-              background var(--motion-fast) var(--ease-out);
+  transition: background var(--motion-fast) var(--ease-out),
+              transform var(--motion-fast) var(--spring);
+  letter-spacing: -0.01em;
 }
 
 .empty-state .empty-cta:hover {
-  border-color: var(--accent);
+  background: var(--accent-vibrant);
+  transform: translateY(-1px);
+}
+
+.empty-state .empty-cta:active {
+  transform: translateY(0);
+}
+
+.empty-state .empty-cta.empty-cta-secondary {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.empty-state .empty-cta.empty-cta-secondary:hover {
   background: var(--bg-elevated-hover);
+  color: var(--text-primary);
+}
+
+/* Provider tag in empty state */
+.empty-state .empty-provider-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
 }

@@ -5,13 +5,34 @@ interface BaseOpts {
   createdAt?: string;
 }
 
-export function buildCliSession(opts: BaseOpts & { name: string; providerId: ProviderId; args?: string }): SessionRecord {
-  const { name, providerId, args, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
+export function buildCliSession(
+  opts: BaseOpts & {
+    name: string;
+    providerId: ProviderId;
+    args?: string;
+    worktreePath?: string;
+    worktreeBranch?: string;
+    worktreeManaged?: boolean;
+  },
+): SessionRecord {
+  const {
+    name,
+    providerId,
+    args,
+    worktreePath,
+    worktreeBranch,
+    worktreeManaged,
+    id = crypto.randomUUID(),
+    createdAt = new Date().toISOString(),
+  } = opts;
   return {
     id,
     name,
     providerId,
     ...(args ? { args } : {}),
+    ...(worktreePath ? { worktreePath } : {}),
+    ...(worktreeBranch ? { worktreeBranch } : {}),
+    ...(worktreeManaged ? { worktreeManaged: true } : {}),
     cliSessionId: null,
     createdAt,
   };

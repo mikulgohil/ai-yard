@@ -12,6 +12,7 @@
 @import url('./styles/dialogs.css');
 @import url('./styles/mcp-inspector.css');
 @import url('./styles/git-panel.css');
+@import url('./styles/git-features.css');
 @import url('./styles/file-viewer.css');
 @import url('./styles/session-history.css');
 @import url('./styles/alerts.css');

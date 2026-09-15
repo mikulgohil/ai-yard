@@ -4,6 +4,7 @@ import { onChange as onStatusChange } from '../session-activity.js';
 import { appState } from '../state.js';
 import type { GitFileEntry, } from '../types.js';
 import { showFileViewer } from './file-viewer.js';
+import { showBlame, showHunkStaging } from './git-extras.js';
 
 const MAX_FILES = 100;
 
@@ -76,6 +77,16 @@ function showGitFileContextMenu(x: number, y: number, entry: GitFileEntry, gitPa
   }
 
   menu.appendChild(createSeparator());
+
+  if (entry.area === 'staged' || entry.area === 'working') {
+    menu.appendChild(createMenuItem('Stage hunks…', () => {
+      showHunkStaging(gitPath, entry.path, entry.area === 'staged' ? 'staged' : 'working');
+    }));
+  }
+
+  menu.appendChild(createMenuItem('Blame', () => {
+    showBlame(gitPath, entry.path);
+  }));
 
   menu.appendChild(createMenuItem('Open in Editor', async () => {
     await window.aiyard.git.openInEditor(gitPath, entry.path);

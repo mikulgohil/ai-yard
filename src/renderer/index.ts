@@ -4,6 +4,7 @@ import { initBoard } from './components/board/board-view.js';
 import { initCostDashboard } from './components/cost-dashboard/dashboard-view.js';
 import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
 import { initFilePrompt } from './components/file-prompt.js';
+import { initGitActionsPanel } from './components/git-actions-panel.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initInsightAlert } from './components/insight-alert.js';
 import { initLargeFileAlert } from './components/large-file-alert.js';
@@ -12,6 +13,8 @@ import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pan
 import { initSessionHistory } from './components/session-history.js';
 import { initSessionInspector } from './components/session-inspector.js';
 import { initSettingsGuard } from './components/settings-guard-ui.js';
+import { initFeatureRail } from './components/feature-rail.js';
+import { initTitlebar } from './components/titlebar.js';
 import { initSidebar, promptNewProject } from './components/sidebar.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { checkStarPrompt } from './components/star-prompt-dialog.js';
@@ -161,7 +164,9 @@ async function main(): Promise<void> {
   // Initialize components
   initSessionUnread();
   initGithubUnread();
+  initTitlebar();
   initSidebar();
+  initFeatureRail();
   initTabBar();
   initSplitLayout();
   initKeybindings();
@@ -170,6 +175,7 @@ async function main(): Promise<void> {
   initProjectTerminal();
   initDebugPanel();
   initGitPanel();
+  initGitActionsPanel();
   initSessionHistory();
   initUpdateBanner();
   initInsightAlert();

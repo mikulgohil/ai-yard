@@ -3,7 +3,16 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { GITHUB_MAX_PER_PAGE } from '../shared/constants';
-import type { GithubFetchResult, GithubItem, GithubRepo } from '../shared/types';
+import type {
+  CheckRun,
+  GithubFetchResult,
+  GithubItem,
+  GithubRepo,
+  PRComment,
+  PRDetail,
+  PRFile,
+  RepoStats,
+} from '../shared/types';
 import { getGitRemoteUrl } from './git-status';
 import { isWin, whichCmd } from './platform';
 import { getFullPath } from './pty-manager';
@@ -67,6 +76,8 @@ export async function isGhAvailable(): Promise<boolean> {
 
 interface GhApiOptions {
   query?: Record<string, string | number>;
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+  body?: Record<string, unknown>;
 }
 
 async function ghApi<T = unknown>(apiPath: string, opts: GhApiOptions = {}): Promise<T> {
@@ -74,11 +85,20 @@ async function ghApi<T = unknown>(apiPath: string, opts: GhApiOptions = {}): Pro
     ? `?${Object.entries(opts.query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')}`
     : '';
   const fullPath = `${apiPath}${qs}`;
+  const args = ['api', fullPath, '-H', 'Accept: application/vnd.github+json'];
+  if (opts.method && opts.method !== 'GET') {
+    args.push('-X', opts.method);
+  }
+  if (opts.body) {
+    for (const [k, v] of Object.entries(opts.body)) {
+      args.push('-f', `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`);
+    }
+  }
 
   const stdout = await new Promise<string>((resolve, reject) => {
     execFile(
       ghBinaryName(),
-      ['api', fullPath, '-H', 'Accept: application/vnd.github+json'],
+      args,
       {
         env: { ...process.env, PATH: getFullPath() },
         maxBuffer: 5 * 1024 * 1024,
@@ -96,6 +116,7 @@ async function ghApi<T = unknown>(apiPath: string, opts: GhApiOptions = {}): Pro
     );
   });
 
+  if (!stdout.trim()) return {} as T;
   return JSON.parse(stdout) as T;
 }
 
@@ -148,4 +169,178 @@ export function parseGithubRepo(url: string | null): GithubRepo | null {
 export async function detectRepo(projectPath: string): Promise<GithubRepo | null> {
   const url = await getGitRemoteUrl(projectPath);
   return parseGithubRepo(url);
+}
+
+// ---------------------------------------------------------------------------
+// G13 — PR review
+// ---------------------------------------------------------------------------
+
+interface RawPR {
+  number: number;
+  title: string;
+  body: string | null;
+  base: { ref: string };
+  head: { ref: string };
+  user: { login: string };
+  mergeable: boolean | null;
+  state: 'open' | 'closed';
+}
+
+export async function getPrDetail(repo: string, prNumber: number): Promise<PRDetail> {
+  const pr = await ghApi<RawPR>(`repos/${repo}/pulls/${prNumber}`);
+  return {
+    number: pr.number,
+    title: pr.title,
+    body: pr.body || '',
+    base: pr.base.ref,
+    head: pr.head.ref,
+    author: pr.user.login,
+    mergeable: pr.mergeable,
+    state: pr.state,
+  };
+}
+
+export async function getPrFiles(repo: string, prNumber: number): Promise<PRFile[]> {
+  const items = await ghApi<Array<{ filename: string; status: string; additions: number; deletions: number; patch?: string }>>(
+    `repos/${repo}/pulls/${prNumber}/files`,
+    { query: { per_page: 100 } },
+  );
+  return items.map((f) => ({
+    filename: f.filename,
+    status: f.status,
+    additions: f.additions,
+    deletions: f.deletions,
+    patch: f.patch,
+  }));
+}
+
+export async function getPrComments(repo: string, prNumber: number): Promise<PRComment[]> {
+  const items = await ghApi<Array<{ id: number; user: { login: string }; body: string; path?: string; line?: number; created_at: string }>>(
+    `repos/${repo}/pulls/${prNumber}/comments`,
+  );
+  return items.map((c) => ({
+    id: c.id,
+    user: c.user.login,
+    body: c.body,
+    path: c.path,
+    line: c.line,
+    createdAt: c.created_at,
+  }));
+}
+
+export async function submitPrReview(
+  repo: string,
+  prNumber: number,
+  event: 'COMMENT' | 'APPROVE' | 'REQUEST_CHANGES',
+  body: string,
+): Promise<void> {
+  await ghApi(`repos/${repo}/pulls/${prNumber}/reviews`, {
+    method: 'POST',
+    body: { event, body },
+  });
+}
+
+export async function addPrComment(
+  repo: string,
+  prNumber: number,
+  filePath: string,
+  line: number,
+  body: string,
+): Promise<void> {
+  await ghApi(`repos/${repo}/pulls/${prNumber}/comments`, {
+    method: 'POST',
+    body: { path: filePath, line, body, side: 'RIGHT' },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// G16 — CI status
+// ---------------------------------------------------------------------------
+
+interface RawCheckRun {
+  name: string;
+  status: 'queued' | 'in_progress' | 'completed';
+  conclusion: CheckRun['conclusion'];
+  html_url: string;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export async function getCiStatus(repo: string, ref: string): Promise<CheckRun[]> {
+  try {
+    const result = await ghApi<{ check_runs: RawCheckRun[] }>(
+      `repos/${repo}/commits/${encodeURIComponent(ref)}/check-runs`,
+    );
+    return (result.check_runs || []).map((c) => ({
+      name: c.name,
+      status: c.status,
+      conclusion: c.conclusion,
+      htmlUrl: c.html_url,
+      startedAt: c.started_at,
+      completedAt: c.completed_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// G17 — Repository stats
+// ---------------------------------------------------------------------------
+
+interface RawRepo {
+  stargazers_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  language: string | null;
+  default_branch: string;
+  pushed_at: string;
+}
+
+interface RawContributor {
+  total: number;
+  author: { login: string; avatar_url: string };
+}
+
+export async function getRepoStats(repo: string): Promise<RepoStats | null> {
+  try {
+    const [info, contributors, freq] = await Promise.all([
+      ghApi<RawRepo>(`repos/${repo}`),
+      ghApi<RawContributor[] | unknown>(`repos/${repo}/stats/contributors`).catch(() => []),
+      ghApi<number[][]>(`repos/${repo}/stats/code_frequency`).catch(() => []),
+    ]);
+
+    const top = Array.isArray(contributors)
+      ? (contributors as RawContributor[])
+          .filter((c) => c?.author)
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 5)
+          .map((c) => ({
+            login: c.author.login,
+            avatarUrl: c.author.avatar_url,
+            contributions: c.total,
+          }))
+      : [];
+
+    const weekly = Array.isArray(freq)
+      ? freq.slice(-12).map(([week, additions, deletions]) => ({
+          week,
+          additions,
+          deletions: Math.abs(deletions),
+        }))
+      : [];
+
+    return {
+      stars: info.stargazers_count,
+      forks: info.forks_count,
+      openIssues: info.open_issues_count,
+      language: info.language,
+      defaultBranch: info.default_branch,
+      pushedAt: info.pushed_at,
+      contributors: top,
+      weeklyActivity: weekly,
+    };
+  } catch {
+    return null;
+  }
 }

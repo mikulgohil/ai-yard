@@ -4,21 +4,53 @@ import { vi } from 'vitest';
 // Mock child_process and fs before importing the module
 vi.mock('child_process', () => ({
   execFile: vi.fn(),
+  spawn: vi.fn(),
 }));
 
 vi.mock('fs', () => ({
   readFileSync: vi.fn(),
   promises: {
     rm: vi.fn(),
+    writeFile: vi.fn(),
+    readFile: vi.fn(),
+    mkdir: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
-import { execFile } from 'child_process';
+vi.mock('os', () => ({
+  tmpdir: () => '/tmp',
+  homedir: () => '/home/user',
+}));
+
+import { execFile, spawn } from 'child_process';
 import { promises as fsPromises, readFileSync } from 'fs';
 import * as path from 'path';
-import { getGitDiff, getGitFiles, getGitStatus, getGitWorktrees, gitDiscardFile } from './git-status';
+import {
+  createManagedWorktree,
+  deleteLocalBranch,
+  getGitDiff,
+  getGitFiles,
+  getGitStatus,
+  getGitWorktrees,
+  getManagedWorktreePath,
+  gitCommit,
+  gitDiscardFile,
+  gitFetch,
+  gitListTags,
+  gitLog,
+  gitPickaxe,
+  gitPull,
+  gitPush,
+  gitReflog,
+  gitStashList,
+  gitSubmoduleList,
+  localBranchExists,
+  removeManagedWorktree,
+  slugifyForFs,
+} from './git-status';
 
 const mockExecFile = vi.mocked(execFile);
+const mockSpawn = vi.mocked(spawn);
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockRm = vi.mocked(fsPromises.rm);
 
@@ -26,6 +58,27 @@ function simulateExecFile(err: ExecFileException | null, stdout: string) {
   mockExecFile.mockImplementationOnce((_cmd, _args, _opts, callback) => {
     (callback as (err: ExecFileException | null, stdout: string) => void)(err, stdout);
     return undefined as never;
+  });
+}
+
+function simulateSpawn(code: number, stdout = '', stderr = '') {
+  mockSpawn.mockImplementationOnce(() => {
+    const stdoutListeners: Array<(chunk: Buffer) => void> = [];
+    const stderrListeners: Array<(chunk: Buffer) => void> = [];
+    const closeListeners: Array<(code: number | null) => void> = [];
+    queueMicrotask(() => {
+      if (stdout) for (const fn of stdoutListeners) fn(Buffer.from(stdout));
+      if (stderr) for (const fn of stderrListeners) fn(Buffer.from(stderr));
+      for (const fn of closeListeners) fn(code);
+    });
+    return {
+      stdout: { on: (ev: string, cb: (chunk: Buffer) => void) => { if (ev === 'data') stdoutListeners.push(cb); } },
+      stderr: { on: (ev: string, cb: (chunk: Buffer) => void) => { if (ev === 'data') stderrListeners.push(cb); } },
+      on: (ev: string, cb: (arg: unknown) => void) => {
+        if (ev === 'close') closeListeners.push(cb as (code: number | null) => void);
+      },
+      kill: vi.fn(),
+    } as never;
   });
 }
 
@@ -341,5 +394,243 @@ describe('getGitWorktrees', () => {
 
     expect(worktrees).toHaveLength(1);
     expect(worktrees[0].path).toBe('/repo');
+  });
+});
+
+describe('gitCommit', () => {
+  it('runs git commit -m and returns the new hash and subject', async () => {
+    simulateExecFile(null, '');
+    simulateExecFile(null, 'a3f2bc1\nfeat: add login\n');
+    const result = await gitCommit('/repo', 'feat: add login', false);
+    expect(result).toEqual({ hash: 'a3f2bc1', subject: 'feat: add login' });
+    expect(mockExecFile).toHaveBeenNthCalledWith(
+      1,
+      'git',
+      ['commit', '-m', 'feat: add login'],
+      expect.objectContaining({ cwd: '/repo', timeout: 60_000 }),
+      expect.any(Function),
+    );
+  });
+
+  it('adds --amend when requested', async () => {
+    simulateExecFile(null, '');
+    simulateExecFile(null, 'a3f2bc1\nfeat: add login\n');
+    await gitCommit('/repo', 'feat: add login', true);
+    expect(mockExecFile.mock.calls[0][1]).toEqual(['commit', '-m', 'feat: add login', '--amend']);
+  });
+
+  it('rejects when git commit fails', async () => {
+    simulateExecFile(new Error('nothing to commit') as ExecFileException, '');
+    await expect(gitCommit('/repo', 'feat: nope', false)).rejects.toThrow('nothing to commit');
+  });
+});
+
+describe('gitFetch / gitPull / gitPush', () => {
+  it('fetches origin with --prune', async () => {
+    simulateSpawn(0, '', 'From origin\n');
+    const result = await gitFetch('/repo', 'origin');
+    expect(result.ok).toBe(true);
+    expect(mockSpawn).toHaveBeenCalledWith('git', ['fetch', 'origin', '--prune'], { cwd: '/repo' });
+  });
+
+  it('pulls with --rebase when requested', async () => {
+    simulateSpawn(0);
+    await gitPull('/repo', true);
+    expect(mockSpawn).toHaveBeenCalledWith('git', ['pull', '--rebase'], { cwd: '/repo' });
+  });
+
+  it('pulls without rebase when not requested', async () => {
+    simulateSpawn(0);
+    await gitPull('/repo', false);
+    expect(mockSpawn).toHaveBeenCalledWith('git', ['pull'], { cwd: '/repo' });
+  });
+
+  it('pushes with -u origin <branch> when setUpstream is set', async () => {
+    simulateSpawn(0);
+    await gitPush('/repo', { setUpstream: true, branch: 'feat/x' });
+    expect(mockSpawn).toHaveBeenCalledWith('git', ['push', '-u', 'origin', 'feat/x'], { cwd: '/repo' });
+  });
+
+  it('force-pushes with --force-with-lease, never --force', async () => {
+    simulateSpawn(0);
+    await gitPush('/repo', { force: true, setUpstream: true, branch: 'main' });
+    const args = mockSpawn.mock.calls[0][1] as string[];
+    expect(args).toContain('--force-with-lease');
+    expect(args).not.toContain('--force');
+  });
+
+  it('returns stderr when the remote op fails', async () => {
+    simulateSpawn(1, '', 'authentication failed');
+    const result = await gitPush('/repo', {});
+    expect(result.ok).toBe(false);
+    expect(result.stderr).toBe('authentication failed');
+  });
+});
+
+describe('gitLog', () => {
+  it('parses formatted log output into CommitEntry list', async () => {
+    const output = [
+      'aaaa1111|bbbb2222 cccc3333|fix: bug|Alice|alice@x.com|2026-05-08 12:00:00 +0000|HEAD -> main, origin/main',
+      'bbbb2222|cccc3333|feat: ui|Bob|bob@x.com|2026-05-07 10:00:00 +0000|',
+      '',
+    ].join('\n');
+    simulateExecFile(null, output);
+    const commits = await gitLog('/repo', { limit: 10 });
+    expect(commits).toHaveLength(2);
+    expect(commits[0].hash).toBe('aaaa1111');
+    expect(commits[0].parents).toEqual(['bbbb2222', 'cccc3333']);
+    expect(commits[0].subject).toBe('fix: bug');
+    expect(commits[0].refs).toEqual(['HEAD -> main', 'origin/main']);
+    expect(commits[1].refs).toEqual([]);
+  });
+});
+
+describe('gitStashList', () => {
+  it('parses stash entries', async () => {
+    simulateExecFile(null, 'stash@{0}|WIP on main: abc f|2026-05-08 12:00:00 +0000\nstash@{1}|test stash|2026-05-07 10:00:00 +0000\n');
+    const stashes = await gitStashList('/repo');
+    expect(stashes).toHaveLength(2);
+    expect(stashes[0].ref).toBe('stash@{0}');
+    expect(stashes[1].message).toBe('test stash');
+  });
+});
+
+describe('gitListTags', () => {
+  it('parses tag entries', async () => {
+    simulateExecFile(null, 'v1.0.0|abc1234|2026-05-08|Release 1.0.0\nv0.9.0|def5678|2026-04-01|Beta\n');
+    const tags = await gitListTags('/repo');
+    expect(tags).toHaveLength(2);
+    expect(tags[0]).toEqual({ name: 'v1.0.0', hash: 'abc1234', date: '2026-05-08', subject: 'Release 1.0.0' });
+  });
+});
+
+describe('gitReflog', () => {
+  it('parses reflog entries', async () => {
+    simulateExecFile(null, 'HEAD@{0}|abc123|commit: fix login|2026-05-08\nHEAD@{1}|def456|checkout: moving from main to feat|2026-05-07\n');
+    const entries = await gitReflog('/repo');
+    expect(entries).toHaveLength(2);
+    expect(entries[0].action).toBe('commit: fix login');
+  });
+});
+
+describe('gitPickaxe', () => {
+  it('parses pickaxe matches', async () => {
+    simulateExecFile(null, 'aaa|removed flag|Alice|2026-05-08\nbbb|added flag|Bob|2026-05-01\n');
+    const matches = await gitPickaxe('/repo', 'flag');
+    expect(matches).toHaveLength(2);
+    expect(matches[0].subject).toBe('removed flag');
+  });
+});
+
+describe('gitSubmoduleList', () => {
+  it('parses submodule status', async () => {
+    simulateExecFile(null, ' abcdef1 ext/lib (heads/main)\n-12345 ext/uninit\n+abc ext/dirty\n');
+    const subs = await gitSubmoduleList('/repo');
+    expect(subs).toHaveLength(3);
+    expect(subs[0].status).toBe('initialized');
+    expect(subs[1].status).toBe('uninitialized');
+    expect(subs[2].status).toBe('modified');
+  });
+
+  it('returns [] on error', async () => {
+    simulateExecFile(new Error('not in a repo') as ExecFileException, '');
+    const subs = await gitSubmoduleList('/repo');
+    expect(subs).toEqual([]);
+  });
+});
+
+describe('slugifyForFs', () => {
+  it('replaces forward slashes with dashes', () => {
+    expect(slugifyForFs('aiyard/fix-login')).toBe('aiyard-fix-login');
+  });
+
+  it('lowercases input', () => {
+    expect(slugifyForFs('FEATURE/Login')).toBe('feature-login');
+  });
+
+  it('strips characters that are not alphanumeric, dash, or underscore', () => {
+    expect(slugifyForFs('feature/foo bar?!.baz')).toBe('feature-foo-bar-baz');
+  });
+
+  it('collapses repeated dashes', () => {
+    expect(slugifyForFs('foo//bar')).toBe('foo-bar');
+    expect(slugifyForFs('foo--bar')).toBe('foo-bar');
+  });
+
+  it('trims leading and trailing dashes', () => {
+    expect(slugifyForFs('---foo---')).toBe('foo');
+  });
+
+  it('falls back to "worktree" when input slugifies to empty', () => {
+    expect(slugifyForFs('!!!')).toBe('worktree');
+    expect(slugifyForFs('')).toBe('worktree');
+  });
+
+  it('preserves underscores and digits', () => {
+    expect(slugifyForFs('feature_42/v2')).toBe('feature_42-v2');
+  });
+});
+
+describe('getManagedWorktreePath', () => {
+  it('roots paths under ~/.ai-yard/worktrees/<projectId>/<slug>', () => {
+    const result = getManagedWorktreePath('proj-1', 'aiyard/fix');
+    expect(result).toBe(path.join('/home/user', '.ai-yard', 'worktrees', 'proj-1', 'aiyard-fix'));
+  });
+
+  it('uses the slugified branch name as the dirname', () => {
+    const result = getManagedWorktreePath('proj-1', 'FEATURE/My Branch');
+    expect(result.endsWith(path.join('proj-1', 'feature-my-branch'))).toBe(true);
+  });
+});
+
+describe('createManagedWorktree', () => {
+  it('runs `git worktree add <path> -b <branch> <base>` and returns the destination', async () => {
+    simulateExecFile(null, '');
+    const result = await createManagedWorktree('/repo', 'proj-1', 'aiyard/x', 'main');
+    expect(result.path).toBe(path.join('/home/user', '.ai-yard', 'worktrees', 'proj-1', 'aiyard-x'));
+
+    const callArgs = mockExecFile.mock.calls[0];
+    expect(callArgs[0]).toBe('git');
+    expect(callArgs[1]).toEqual([
+      'worktree',
+      'add',
+      path.join('/home/user', '.ai-yard', 'worktrees', 'proj-1', 'aiyard-x'),
+      '-b',
+      'aiyard/x',
+      'main',
+    ]);
+  });
+
+  it('propagates errors from git', async () => {
+    simulateExecFile(new Error('fatal: branch already exists') as ExecFileException, '');
+    await expect(createManagedWorktree('/repo', 'proj-1', 'existing', 'main')).rejects.toThrow();
+  });
+});
+
+describe('removeManagedWorktree', () => {
+  it('runs `git worktree remove <path> --force`', async () => {
+    simulateExecFile(null, '');
+    await removeManagedWorktree('/repo', '/path/to/worktree');
+    expect(mockExecFile.mock.calls[0][1]).toEqual(['worktree', 'remove', '/path/to/worktree', '--force']);
+  });
+});
+
+describe('deleteLocalBranch', () => {
+  it('runs `git branch -D <branch>`', async () => {
+    simulateExecFile(null, '');
+    await deleteLocalBranch('/repo', 'aiyard/x');
+    expect(mockExecFile.mock.calls[0][1]).toEqual(['branch', '-D', 'aiyard/x']);
+  });
+});
+
+describe('localBranchExists', () => {
+  it('returns true when rev-parse succeeds', async () => {
+    simulateExecFile(null, 'abc123\n');
+    expect(await localBranchExists('/repo', 'main')).toBe(true);
+  });
+
+  it('returns false when rev-parse errors (branch missing)', async () => {
+    simulateExecFile(new Error('fatal: needed a single revision') as ExecFileException, '');
+    expect(await localBranchExists('/repo', 'no-such-branch')).toBe(false);
   });
 });

@@ -24,58 +24,113 @@
 </head>
 <body>
   <div id="app">
-    <div id="sidebar">
-      <div id="sidebar-header">
-        <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar (Cmd+B)" style="font-size:13px;">&#x25E7;</button>
-        <span class="sidebar-title">Projects</span>
-        <div class="sidebar-header-actions">
-          <button id="btn-preferences" class="icon-btn" title="Preferences">&#x2699;</button>
-          <button id="btn-add-project" class="icon-btn" title="New Project (Ctrl+Shift+P)">+</button>
-        </div>
+
+    <!-- ── Titlebar strip (38px, macOS traffic-light height) ── -->
+    <div id="titlebar">
+      <!-- macOS traffic lights sit here, -webkit-app-region:drag fills gap -->
+      <div id="titlebar-traffic"></div>
+
+      <!-- Project / workspace name picker -->
+      <button id="titlebar-project-picker" class="titlebar-picker" title="Switch project">
+        <span id="titlebar-project-name">Projects</span>
+        <span class="picker-caret">▾</span>
+      </button>
+
+      <!-- Breadcrumb: ProjectName › SessionName or Feature -->
+      <div id="titlebar-breadcrumb" aria-label="Current location">
+        <span class="breadcrumb-item" id="breadcrumb-project"></span>
+        <span class="breadcrumb-sep" id="breadcrumb-sep" aria-hidden="true" style="display:none">›</span>
+        <span class="breadcrumb-item" id="breadcrumb-context"></span>
       </div>
-      <div id="sidebar-content">
-        <div id="project-list"></div>
-        <div id="git-panel"></div>
+
+      <!-- Right-side icon actions -->
+      <div id="titlebar-actions">
+        <button id="btn-add-session" class="icon-btn titlebar-btn" title="New Session (Ctrl+Shift+N)" aria-label="New Session">+</button>
+        <button id="btn-add-session-menu" class="icon-btn titlebar-btn" title="More session options" aria-haspopup="menu" aria-label="More session options">▾</button>
+        <button id="btn-add-browser-tab" class="icon-btn titlebar-btn" title="New Browser Tab" aria-label="New Browser Tab">
+          <span class="toolbar-icon toolbar-icon-browser" aria-hidden="true"></span>
+        </button>
+        <button id="btn-toggle-swarm" class="icon-btn titlebar-btn" title="Toggle Swarm Mode (Ctrl+\)" aria-label="Toggle Swarm Mode">&#x229E;</button>
+        <button id="btn-toggle-terminal" class="icon-btn titlebar-btn" title="Toggle Terminal (Ctrl+`)" aria-label="Toggle Terminal">&#x2588;</button>
+        <button id="btn-add-mcp-inspector" class="icon-btn titlebar-btn" title="MCP Inspector" style="font-size:11px;font-weight:600;">MCP</button>
+        <button id="btn-usage-stats" class="icon-btn titlebar-btn" title="Usage Stats (Ctrl+Shift+U)" aria-label="Usage Stats">&#x2261;</button>
+        <button id="btn-help" class="icon-btn titlebar-btn" title="Session Indicators Help (F1)" aria-label="Help">?</button>
       </div>
-      <div id="sidebar-discussions"></div>
-      <div id="sidebar-footer"></div>
     </div>
-    <div id="sidebar-resize-handle"></div>
-    <div id="main-area">
-      <div id="tab-bar">
-        <div id="tab-list"></div>
-        <div id="git-status"></div>
-        <div id="tab-actions">
-          <button id="btn-help" class="icon-btn" title="Session Indicators Help (F1)" style="font-size:13px;">?</button>
-          <button id="btn-usage-stats" class="icon-btn" title="Usage Stats (Ctrl+Shift+U)" style="font-size:12px;">&#x2261;</button>
-          <button id="btn-toggle-terminal" class="icon-btn" title="Toggle Terminal (Ctrl+`)" style="font-size:13px;">&#x2588;</button>
-          <button id="btn-add-mcp-inspector" class="icon-btn" title="MCP Inspector" style="font-size:11px;font-weight:600;">MCP</button>
-          <button id="btn-toggle-swarm" class="icon-btn" title="Toggle Swarm Mode (Ctrl+\)">&#x229E;</button>
-          <button id="btn-add-browser-tab" class="icon-btn" title="New Browser Tab" aria-label="New Browser Tab">
-            <span class="toolbar-icon toolbar-icon-browser" aria-hidden="true"></span>
-          </button>
-          <div class="split-btn-group">
-            <button id="btn-add-session" class="icon-btn split-btn-main" title="New Session (Ctrl+Shift+N)">+</button>
-            <button id="btn-add-session-menu" class="icon-btn split-btn-caret" title="More session options" aria-haspopup="menu">&#x25BE;</button>
+
+    <!-- ── App body: sidebar + sidebar-resize + main area ──── -->
+    <div id="app-body">
+      <div id="sidebar">
+        <!-- sidebar header: just the toggle + title (no action buttons in new design) -->
+        <div id="sidebar-header">
+          <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar (Cmd+B)" aria-label="Toggle Sidebar" style="font-size:13px;">&#x25E7;</button>
+          <span class="sidebar-title">Projects</span>
+          <div class="sidebar-header-actions">
+            <button id="btn-preferences" class="icon-btn" title="Preferences" aria-label="Preferences">&#x2699;</button>
+            <button id="btn-add-project" class="icon-btn" title="New Project (Ctrl+Shift+P)" aria-label="New Project">+</button>
+          </div>
+        </div>
+
+        <div id="sidebar-content">
+          <!-- Recents section (injected by sidebar.ts) -->
+          <div id="sidebar-recents" class="sidebar-section"></div>
+
+          <!-- Projects section -->
+          <div id="sidebar-projects-section" class="sidebar-section">
+            <div class="sidebar-section-header">Projects</div>
+            <div id="project-list"></div>
+          </div>
+
+          <div id="git-panel"></div>
+          <div id="git-actions-panel"></div>
+        </div>
+
+        <div id="sidebar-discussions"></div>
+
+        <!-- Pinned footer: settings + version -->
+        <div id="sidebar-footer"></div>
+      </div>
+
+      <div id="sidebar-resize-handle"></div>
+
+      <div id="main-area">
+        <!-- Feature rail: replaces horizontal tab bar for feature switching -->
+        <div id="feature-rail" role="tablist" aria-label="Features">
+          <!-- Tab bar content is preserved for JS compatibility;
+               session tabs render here but are visually hidden — session switching
+               happens via sidebar. Feature tabs are rendered as rail items. -->
+          <div id="tab-bar" aria-hidden="true">
+            <div id="tab-list"></div>
+            <div id="git-status"></div>
+            <!-- tab-actions removed from tab bar; buttons moved to titlebar -->
+            <div id="tab-actions" style="display:none;"></div>
+          </div>
+
+          <!-- Visual feature nav icons (populated by feature-rail.ts) -->
+          <div id="feature-rail-icons"></div>
+        </div>
+
+        <!-- Content area: stacks vertically, fills remaining space beside the rail -->
+        <div id="content-area">
+          <div id="terminal-container"></div>
+          <div id="project-terminal-resize-handle" class="hidden"></div>
+          <div id="project-terminal-panel" class="hidden">
+            <div id="project-terminal-header">
+              <span class="project-terminal-title">Terminal</span>
+              <div class="project-terminal-header-actions">
+                <button id="btn-new-terminal" class="icon-btn" title="New Terminal" aria-label="New Terminal">+</button>
+                <button id="btn-close-terminal" class="icon-btn" title="Close Terminal" aria-label="Close Terminal">&times;</button>
+              </div>
+            </div>
+            <div id="project-terminal-body">
+              <div id="project-terminal-container"></div>
+              <div id="project-terminal-sidebar" class="hidden"></div>
+            </div>
           </div>
         </div>
       </div>
-      <div id="terminal-container"></div>
-      <div id="project-terminal-resize-handle" class="hidden"></div>
-      <div id="project-terminal-panel" class="hidden">
-        <div id="project-terminal-header">
-          <span class="project-terminal-title">Terminal</span>
-          <div class="project-terminal-header-actions">
-            <button id="btn-new-terminal" class="icon-btn" title="New Terminal">+</button>
-            <button id="btn-close-terminal" class="icon-btn" title="Close Terminal">&times;</button>
-          </div>
-        </div>
-        <div id="project-terminal-body">
-          <div id="project-terminal-container"></div>
-          <div id="project-terminal-sidebar" class="hidden"></div>
-        </div>
-      </div>
     </div>
+
   </div>
 
   <div id="modal-overlay" class="hidden">

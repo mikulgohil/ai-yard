@@ -180,8 +180,11 @@ function onSessionAdded(data: unknown): void {
     createDevServerPane(session.id, projectId, session.devServerCommand ?? '');
     renderLayout();
   } else {
-    // Create and spawn immediately
-    createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude', project.id);
+    // Create and spawn immediately. Sessions bound to a worktree spawn their
+    // PTY there instead of the project root, so multiple AI sessions can work
+    // on the same repo without colliding on git state.
+    const cwd = session.worktreePath ?? project.path;
+    createTerminalPane(session.id, cwd, session.cliSessionId, !!session.cliSessionId, session.args || '', (session.providerId as import('../../shared/types').ProviderId) || 'claude', project.id);
     const pending = appState.consumePendingInitialPrompt(project.id, session.id);
     if (pending) {
       setPendingPrompt(session.id, pending);
@@ -299,7 +302,8 @@ export function renderLayout(): void {
       }
     } else {
       if (!getTerminalInstance(session.id)) {
-        createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude', project.id);
+        const cwd = session.worktreePath ?? project.path;
+        createTerminalPane(session.id, cwd, session.cliSessionId, !!session.cliSessionId, session.args || '', session.providerId || 'claude', project.id);
       }
     }
   }
@@ -521,18 +525,59 @@ function updateSwarmPaneStyles(project: ProjectRecord): void {
 function showEmptyState(project: ProjectRecord | undefined): void {
   removeEmptyState();
   const el = document.createElement('div');
-  el.className = 'empty-state';
+
   if (!project) {
+    el.className = 'empty-state';
     el.innerHTML = `
-      <div>No project selected</div>
-      <div class="hint">Create a project with the + button in the sidebar</div>
+      <svg class="empty-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="40" height="40" rx="12" fill="currentColor" opacity="0.1"/>
+        <text x="24" y="32" text-anchor="middle" font-family="-apple-system,SF Pro Display,system-ui" font-size="20" font-weight="700" fill="currentColor">AY</text>
+      </svg>
+      <div class="empty-title">Welcome to AI-yard</div>
+      <div class="empty-subtitle">Create a project to start a session with Claude or another AI CLI tool.</div>
     `;
   } else {
-    el.innerHTML = `
-      <div>No sessions in "${project.name}"</div>
-      <div class="hint">Create a session with the + button in the tab bar</div>
+    el.className = 'empty-state empty-state-hero';
+
+    const providerLabel = project.sessions[0]?.providerId ?? 'claude';
+
+    const monogram = document.createElement('svg');
+    monogram.setAttribute('class', 'empty-icon');
+    monogram.setAttribute('viewBox', '0 0 72 72');
+    monogram.setAttribute('fill', 'none');
+    monogram.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    monogram.innerHTML = `
+      <rect width="72" height="72" rx="18" fill="currentColor" opacity="0.12"/>
+      <text x="36" y="50" text-anchor="middle" font-family="-apple-system,'SF Pro Display',system-ui,sans-serif" font-size="30" font-weight="800" letter-spacing="-1" fill="currentColor">AY</text>
     `;
+
+    const title = document.createElement('div');
+    title.className = 'empty-title';
+    title.textContent = 'Start a new session';
+
+    const subtitle = document.createElement('div');
+    subtitle.className = 'empty-subtitle';
+    subtitle.textContent = `No active sessions in "${project.name}". Launch a new session to get started.`;
+
+    const cta = document.createElement('button');
+    cta.className = 'empty-cta';
+    cta.textContent = 'New Session';
+    cta.addEventListener('click', () => {
+      const sessionNum = (project.sessions.length || 0) + 1;
+      appState.addSession(project.id, `Session ${sessionNum}`);
+    });
+
+    const providerTag = document.createElement('div');
+    providerTag.className = 'empty-provider-tag';
+    providerTag.textContent = providerLabel;
+
+    el.appendChild(monogram);
+    el.appendChild(title);
+    el.appendChild(subtitle);
+    el.appendChild(cta);
+    el.appendChild(providerTag);
   }
+
   container.appendChild(el);
 }
 

@@ -403,11 +403,13 @@ function render(): void {
     const isDevServer = session.type === 'dev-server';
     const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam || isCostDashboard || isDevServer;
     const sharing = isSharing(session.id);
-    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : isCostDashboard ? `${project.name} - Cost` : isDevServer ? `${project.name} - Dev Server` : session.name;
+    const wtPrefix = session.worktreePath && !isSpecial ? '🌿 ' : '';
+    const displayName = isProjectTab ? `${project.name} - Overview` : isKanban ? `${project.name} - Kanban` : isTeam ? `${project.name} - Team` : isCostDashboard ? `${project.name} - Cost` : isDevServer ? `${project.name} - Dev Server` : `${wtPrefix}${session.name}`;
     tab.className = `tab-item${isActive ? ' active' : ''}${unread ? ' unread' : ''}${sharing ? ' tab-sharing' : ''}${isRemoteTab ? ' tab-remote' : ''}`;
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : isCostDashboard ? 'Cost dashboard' : isDevServer ? `Dev server: ${session.devServerCommand || ''}` : buildTooltip(getStatus(session.id), session.cliSessionId);
+    const baseTitle = isDiff ? `Diff: ${session.diffFilePath || session.name}` : isMcp ? `MCP Inspector` : isFileReader ? `File: ${session.fileReaderPath || session.name}` : isRemoteTab ? `Remote: ${session.remoteHostName || session.name}` : isBrowserTab ? `Browser: ${session.browserTabUrl || 'New Tab'}` : isProjectTab ? 'Project tools' : isKanban ? 'Kanban board' : isTeam ? 'Team' : isCostDashboard ? 'Cost dashboard' : isDevServer ? `Dev server: ${session.devServerCommand || ''}` : buildTooltip(getStatus(session.id), session.cliSessionId);
+    tab.title = session.worktreeBranch && !isSpecial ? `${baseTitle}\nWorktree: ${session.worktreeBranch}` : baseTitle;
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
     const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? '<span class="tab-project-badge">&#x2699;</span> ' : isKanban ? '<span class="tab-kanban-badge">&#x25A6;</span> ' : isTeam ? '<span class="tab-team-badge">TEAM</span> ' : isCostDashboard ? '<span class="tab-cost-badge">$</span> ' : isDevServer ? '<span class="tab-dev-server-badge">&#x25B6;</span> ' : !isSpecial ? providerIcon : '';
@@ -823,6 +825,27 @@ function showAddSessionContextMenu(x: number, y: number): void {
   if (rect.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - rect.height - 4}px`;
 }
 
+/** Slugify a session name into the trailing segment of an aiyard/<slug> branch. */
+function slugifySessionName(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return slug || 'session';
+}
+
+/** Show or hide the isolated-only fields by walking up to their `.modal-field` wrapper. */
+function setIsolatedFieldsVisible(visible: boolean): void {
+  for (const id of ['branch-name', 'base-branch']) {
+    const el = document.getElementById(`modal-${id}`);
+    const parent = el?.closest('.modal-field') as HTMLElement | null;
+    if (parent) parent.style.display = visible ? '' : 'none';
+  }
+}
+
 export async function promptNewSession(onCreated?: (session: SessionRecord) => void): Promise<void> {
   const project = appState.activeProject;
   if (!project) return;
@@ -837,16 +860,61 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
   const providers = providerSnapshot?.providers ?? [];
   const availabilityMap = providerSnapshot?.availability ?? new Map();
 
+  // Best-effort git probe so the isolated-worktree fields know what branches
+  // to suggest. Skipped when the project isn't a git repo — the checkbox is
+  // omitted entirely in that case.
+  let isGitRepo = false;
+  let currentBranch = 'main';
+  let branches: { name: string; current: boolean }[] = [];
+  try {
+    const status = (await window.aiyard.git.getStatus(project.path)) as { isGitRepo: boolean; branch: string | null };
+    isGitRepo = status.isGitRepo;
+    if (status.branch) currentBranch = status.branch;
+    if (isGitRepo) {
+      branches = await window.aiyard.git.listBranches(project.path);
+    }
+  } catch {
+    // Git probe failed — treat as non-repo.
+  }
+
+  const defaultName = `Session ${sessionNum}`;
+  const defaultBranch = `aiyard/${slugifySessionName(defaultName)}`;
+
   const fields: FieldDef[] = [
-    { label: 'Name', id: 'session-name', placeholder: `Session ${sessionNum}`, defaultValue: `Session ${sessionNum}` },
+    { label: 'Name', id: 'session-name', placeholder: defaultName, defaultValue: defaultName },
     { label: 'Arguments', id: 'session-args', placeholder: 'e.g. --model sonnet', defaultValue: project.defaultArgs ?? '' },
-    {
-      label: 'Keep args for future sessions',
-      id: 'keep-args',
-      type: 'checkbox',
-      defaultValue: project.defaultArgs ? 'true' : undefined,
-    },
   ];
+
+  if (isGitRepo) {
+    fields.push({
+      label: '🌿 Run in isolated worktree (new branch)',
+      id: 'isolated',
+      type: 'checkbox',
+      onChange: (checked) => setIsolatedFieldsVisible(checked),
+    });
+    fields.push({
+      label: 'Branch name',
+      id: 'branch-name',
+      placeholder: defaultBranch,
+      defaultValue: defaultBranch,
+    });
+    fields.push({
+      label: 'Based on',
+      id: 'base-branch',
+      type: 'select',
+      defaultValue: currentBranch,
+      options: branches.length > 0
+        ? branches.map((b) => ({ value: b.name, label: b.name }))
+        : [{ value: currentBranch, label: currentBranch }],
+    });
+  }
+
+  fields.push({
+    label: 'Keep args for future sessions',
+    id: 'keep-args',
+    type: 'checkbox',
+    defaultValue: project.defaultArgs ? 'true' : undefined,
+  });
 
   if (providers.length > 1) {
     const preferred = appState.preferences.defaultProvider ?? 'claude';
@@ -863,18 +931,74 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
     });
   }
 
-  showModal('New Session', fields, (values) => {
+  showModal('New Session', fields, async (values) => {
     const name = values['session-name']?.trim();
-    if (name) {
-      closeModal();
-      const args = values['session-args']?.trim() || undefined;
-      const keepArgs = values['keep-args'] === 'true';
-      project.defaultArgs = keepArgs ? (args || undefined) : undefined;
-      const providerId = (values.provider || 'claude') as ProviderId;
-      const session = appState.addSession(project.id, name, args, providerId);
-      if (session && onCreated) onCreated(session);
+    if (!name) return;
+
+    const args = values['session-args']?.trim() || undefined;
+    const keepArgs = values['keep-args'] === 'true';
+    const providerId = (values.provider || 'claude') as ProviderId;
+    const isolated = values['isolated'] === 'true';
+
+    if (isolated) {
+      const branch = values['branch-name']?.trim();
+      const baseBranch = values['base-branch']?.trim() || currentBranch;
+      if (!branch) {
+        setModalError('branch-name', 'Branch name is required');
+        return;
+      }
+      // Reject obvious garbage early; git itself will reject more (refs with .., spaces, etc).
+      if (!/^[A-Za-z0-9_./-]+$/.test(branch)) {
+        setModalError('branch-name', 'Use letters, digits, dot, slash, dash or underscore');
+        return;
+      }
+      try {
+        if (await window.aiyard.git.branchExists(project.path, branch)) {
+          setModalError('branch-name', `Branch "${branch}" already exists`);
+          return;
+        }
+      } catch {
+        // Branch existence check failed — proceed and let git surface the error.
+      }
+      try {
+        const session = await appState.addIsolatedSession(project.id, name, branch, baseBranch, args, providerId);
+        if (!session) {
+          setModalError('branch-name', 'Failed to create session');
+          return;
+        }
+        project.defaultArgs = keepArgs ? (args || undefined) : undefined;
+        closeModal();
+        if (onCreated) onCreated(session);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setModalError('branch-name', `Worktree creation failed: ${msg.slice(0, 200)}`);
+      }
+      return;
     }
+
+    closeModal();
+    project.defaultArgs = keepArgs ? (args || undefined) : undefined;
+    const session = appState.addSession(project.id, name, args, providerId);
+    if (session && onCreated) onCreated(session);
   });
+
+  // Hide the isolated-only fields by default. The checkbox onChange reveals them.
+  if (isGitRepo) {
+    setIsolatedFieldsVisible(false);
+    // Live-update the suggested branch name from the session name unless the
+    // user has manually edited the branch field.
+    const nameInput = document.getElementById('modal-session-name') as HTMLInputElement | null;
+    const branchInput = document.getElementById('modal-branch-name') as HTMLInputElement | null;
+    if (nameInput && branchInput) {
+      let userEditedBranch = false;
+      branchInput.addEventListener('input', () => { userEditedBranch = true; });
+      nameInput.addEventListener('input', () => {
+        if (!userEditedBranch) {
+          branchInput.value = `aiyard/${slugifySessionName(nameInput.value || defaultName)}`;
+        }
+      });
+    }
+  }
 }
 
 function promptNewMcpInspector(): void {
